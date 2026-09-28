@@ -26,8 +26,8 @@ interface WireDraft {
   currentY: number;
 }
 
-const NODE_WIDTH = 172;
-const NODE_HEIGHT = 72;
+const NODE_WIDTH = 204;
+const NODE_HEIGHT = 82;
 
 export default function SpatialCanvas({ simulation }: { simulation: SimulationResult }) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -565,14 +565,14 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                   letterSpacing="0.08em"
                   fontWeight="700"
                 >
-                  {styling.icon} {styling.label}
+                  {styling.icon} {isBottleneck && styling.label.length > 12 ? styling.label.split(' ')[0] : styling.label}
                 </text>
 
                 {/* Bottleneck Badge */}
                 {isBottleneck && (
                   <g transform={`translate(${NODE_WIDTH - 76}, 6)`}>
-                    <rect x="0" y="0" width="70" height="15" rx="3" fill="#f59e0b" />
-                    <text x="35" y="11" textAnchor="middle" fill="#000000" fontSize="8" fontFamily="var(--font-mono)" fontWeight="800">
+                    <rect x="0" y="0" width="68" height="15" rx="3" fill="#f59e0b" />
+                    <text x="34" y="11" textAnchor="middle" fill="#000000" fontSize="8" fontFamily="var(--font-mono)" fontWeight="800">
                       BOTTLENECK
                     </text>
                   </g>
@@ -581,19 +581,19 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                 {/* Component Name */}
                 <text
                   x="12"
-                  y="36"
+                  y="38"
                   fill="var(--color-text)"
                   fontSize="12"
                   fontFamily="var(--font-sans)"
                   fontWeight="600"
                 >
-                  {node.label.length > 20 ? `${node.label.slice(0, 19)}…` : node.label}
+                  {node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label}
                 </text>
 
                 {/* Metrics Row: Cost / Latency / Share */}
                 <text
                   x="12"
-                  y="56"
+                  y="62"
                   fill="var(--color-accent)"
                   fontSize="11"
                   fontFamily="var(--font-mono)"
@@ -604,14 +604,14 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
 
                 <text
                   x={NODE_WIDTH - 12}
-                  y="56"
+                  y="62"
                   textAnchor="end"
                   fill="var(--color-text-secondary)"
                   fontSize="10"
                   fontFamily="var(--font-mono)"
                   fontWeight="500"
                 >
-                  {latencyText}{costPctText ? ` • ${costPctText}` : ''}
+                  {latencyText}{costPctText ? ` · ${costPctText}` : ''}
                 </text>
 
                 {/* Input Port (Top Center) */}

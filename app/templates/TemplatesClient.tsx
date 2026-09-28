@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { TEMPLATES, simulate, formatCurrency, formatLatency } from '@/lib/simulation/engine';
 
-const CATEGORIES = ['All', 'Generative AI', 'Agents', 'Infrastructure', 'Data'];
+const CATEGORIES = ['All', 'Generative AI', 'Data', 'Infrastructure'];
 
 export default function TemplatesClient() {
   const [category, setCategory] = useState('All');

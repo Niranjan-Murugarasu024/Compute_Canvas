@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
+import { useState, useCallback, useMemo, useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/navigation/Navigation';
 import SpatialCanvas from '@/components/simulator/SpatialCanvas';
+import SimulatorErrorBoundary from '@/components/simulator/SimulatorErrorBoundary';
 import { useArchitectureStore } from '@/lib/state/architectureStore';
 import {
   simulate,
@@ -22,9 +23,10 @@ import {
 import {
   encodeArchitectureState,
   decodeArchitectureState,
+  type V1ShareState,
 } from '@/lib/simulation/sharing';
 
-// ── 6 Core V1 Components ──
+// ── 6 Core V1 Building Blocks ──
 const CORE_COMPONENTS: {
   type: ArchNode['type'];
   label: string;
@@ -91,9 +93,42 @@ const FRONTIER_MODELS = Object.entries(MODEL_PRICING)
   .filter(([_, p]) => p.category === 'frontier')
   .map(([id, p]) => ({ id, name: p.product, provider: p.provider, cost: `$${p.inputPricePer1M}/M` }));
 
-function SimulatorContent() {
+// ── Isolated Query Sync Component (prevents full-page SSR bailout) ──
+function SimulatorQuerySync({
+  onLoadShare,
+  onLoadTemplate,
+  onError,
+}: {
+  onLoadShare: (data: V1ShareState) => void;
+  onLoadTemplate: (templateId: string) => void;
+  onError: (msg: string) => void;
+}) {
   const searchParams = useSearchParams();
 
+  useEffect(() => {
+    if (!searchParams) return;
+
+    const queryData = searchParams.get('data');
+    if (queryData) {
+      const decoded = decodeArchitectureState(queryData);
+      if (decoded.success && decoded.data) {
+        onLoadShare(decoded.data);
+      } else {
+        onError('Unable to restore this shared architecture. Loaded default baseline.');
+      }
+      return;
+    }
+
+    const templateParam = searchParams.get('template');
+    if (templateParam) {
+      onLoadTemplate(templateParam);
+    }
+  }, [searchParams, onLoadShare, onLoadTemplate, onError]);
+
+  return null;
+}
+
+function SimulatorContent() {
   const {
     architecture,
     workload,
@@ -102,7 +137,6 @@ function SimulatorContent() {
     selectedNodeId,
     selectedEdgeIndex,
     setWorkload,
-    setCalibration,
     applyCalibration,
     clearCalibration,
     addNode,
@@ -116,17 +150,21 @@ function SimulatorContent() {
   } = useArchitectureStore();
 
   // Local UI states
-  const [activeTab, setActiveTab] = useState<'canvas' | 'workload' | 'economics'>('canvas');
+  const [leftTab, setLeftTab] = useState<'all' | 'components' | 'workload' | 'calibration'>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calBillInput, setCalBillInput] = useState(calibration.actualBill ? String(calibration.actualBill) : '4500');
   const [calReqInput, setCalReqInput] = useState(calibration.actualRequests ? String(calibration.actualRequests) : '1200000');
   const [isAssumptionsOpen, setIsAssumptionsOpen] = useState(false);
+  const [shareModalUrl, setShareModalUrl] = useState<string | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('router-cache');
+  const [calibrationError, setCalibrationError] = useState<string | null>(null);
 
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    toastTimerRef.current = setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
   // 1. Authoritative deterministic simulation
@@ -153,48 +191,19 @@ function SimulatorContent() {
     );
   }, [previousState, workload, architecture, result]);
 
-  // Read URL query params on initial load (?data=... or ?template=...)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Check share data
-    const queryData = searchParams.get('data');
-    if (queryData) {
-      const decoded = decodeArchitectureState(queryData);
-      if (decoded.success && decoded.data) {
-        loadArchitecture(
-          decoded.data.architecture,
-          decoded.data.workload,
-          decoded.data.calibration
-        );
-        showToast('Shared architecture restored.');
-        return;
-      } else {
-        showToast('Unable to restore this architecture. Baseline loaded.');
-      }
-    }
-
-    // Check template param
-    const templateParam = searchParams.get('template');
-    if (templateParam) {
-      const match = TEMPLATES.find(t => t.id === templateParam || t.id.includes(templateParam));
-      if (match) {
-        loadArchitecture(match.architecture, match.defaultWorkload);
-        setSelectedTemplateId(match.id);
-        showToast(`Template loaded: ${match.name}`);
-      }
-    }
-  }, [searchParams, loadArchitecture, showToast]);
-
   // Share architecture action: Base64URL encode and copy to clipboard
   const handleShare = useCallback(async () => {
     try {
       const encoded = encodeArchitectureState({ architecture, workload, calibration });
-      const origin = window.location.origin;
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://computecanvas.io';
       const shareUrl = `${origin}/simulator?data=${encoded}`;
 
-      await navigator.clipboard.writeText(shareUrl);
-      showToast('Architecture link copied to clipboard.');
+      if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Architecture link copied to clipboard.');
+      } else {
+        setShareModalUrl(shareUrl);
+      }
     } catch {
       showToast('Architecture URL generated.');
     }
@@ -240,17 +249,23 @@ function SimulatorContent() {
   // Calibration submit
   const handleApplyCalibration = (e: React.FormEvent) => {
     e.preventDefault();
-    const billNum = parseFloat(calBillInput.replace(/[^0-9.]/g, '')) || 0;
-    const reqNum = parseInt(calReqInput.replace(/[^0-9]/g, ''), 10) || 1;
+    setCalibrationError(null);
 
-    if (billNum <= 0 || reqNum <= 0) {
-      showToast('Please enter positive values for bill and requests.');
+    const billNum = parseFloat(calBillInput.replace(/[^0-9.]/g, '')) || 0;
+    const reqNum = parseInt(calReqInput.replace(/[^0-9]/g, ''), 10) || 0;
+
+    if (billNum <= 0) {
+      setCalibrationError('Actual bill must be greater than $0.');
+      return;
+    }
+    if (reqNum <= 0) {
+      setCalibrationError('Monthly requests must be greater than 0.');
       return;
     }
 
     applyCalibration(billNum, reqNum, result.monthlyCost);
     setIsCalibrating(false);
-    showToast('Calibrated estimate applied.');
+    showToast('Calibrated baseline applied.');
   };
 
   const selectedNode = architecture.nodes.find(n => n.id === selectedNodeId);
@@ -258,14 +273,36 @@ function SimulatorContent() {
 
   return (
     <div className="simulator-v1-root">
+      {/* Navigation */}
       <Navigation />
+
+      {/* Query Sync for URL-based architecture sharing */}
+      <Suspense fallback={null}>
+        <SimulatorQuerySync
+          onLoadShare={(data) => {
+            loadArchitecture(data.architecture, data.workload, data.calibration);
+            showToast('Shared architecture restored.');
+          }}
+          onLoadTemplate={(id) => {
+            const match = TEMPLATES.find(t => t.id === id || t.id.includes(id));
+            if (match) {
+              loadArchitecture(match.architecture, match.defaultWorkload);
+              setSelectedTemplateId(match.id);
+              showToast(`Template loaded: ${match.name}`);
+            }
+          }}
+          onError={(msg) => {
+            showToast(msg);
+          }}
+        />
+      </Suspense>
 
       {/* Main Top Header Bar */}
       <header className="simulator-header-bar">
         <div className="simulator-header-left">
           <div className="simulator-title-group">
             <span className="badge badge--primary text-mono">SIMULATOR V1</span>
-            <h1 className="simulator-app-title">AI Architecture & Economics</h1>
+            <h1 className="simulator-app-title">AI Architecture &amp; Economics</h1>
           </div>
 
           {/* Canonical Template Selector */}
@@ -287,13 +324,13 @@ function SimulatorContent() {
         </div>
 
         <div className="simulator-header-right">
-          <button
-            onClick={() => setIsAssumptionsOpen(true)}
+          <Link
+            href="/assumptions"
             className="btn btn-secondary btn-sm"
             title="View transparent pricing & latency formulas"
           >
             Assumptions
-          </button>
+          </Link>
 
           <button
             onClick={handleExport}
@@ -331,229 +368,280 @@ function SimulatorContent() {
       <div className="simulator-body-grid">
         {/* ── LEFT COLUMN: Palette + Workload + Calibration ── */}
         <aside className="simulator-sidebar-left">
+          {/* Quick Section Switcher */}
+          <div className="left-sidebar-tabs" role="tablist" aria-label="Sidebar sections">
+            <button
+              className={`sidebar-tab-btn ${leftTab === 'all' ? 'active' : ''}`}
+              onClick={() => setLeftTab('all')}
+              role="tab"
+              aria-selected={leftTab === 'all'}
+            >
+              All
+            </button>
+            <button
+              className={`sidebar-tab-btn ${leftTab === 'components' ? 'active' : ''}`}
+              onClick={() => setLeftTab('components')}
+              role="tab"
+              aria-selected={leftTab === 'components'}
+            >
+              Components
+            </button>
+            <button
+              className={`sidebar-tab-btn ${leftTab === 'workload' ? 'active' : ''}`}
+              onClick={() => setLeftTab('workload')}
+              role="tab"
+              aria-selected={leftTab === 'workload'}
+            >
+              Workload
+            </button>
+            <button
+              className={`sidebar-tab-btn ${leftTab === 'calibration' ? 'active' : ''}`}
+              onClick={() => {
+                setLeftTab('calibration');
+                setIsCalibrating(true);
+              }}
+              role="tab"
+              aria-selected={leftTab === 'calibration'}
+            >
+              Anchor Bill {calibration.enabled && '✓'}
+            </button>
+          </div>
+
           {/* Section 1: Core Components Palette */}
-          <div className="sidebar-card">
-            <div className="sidebar-card-header">
-              <h2 className="sidebar-section-title">COMPONENTS</h2>
-              <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                Drag or click to add
-              </span>
-            </div>
-
-            <div className="palette-components-list">
-              {CORE_COMPONENTS.map(comp => (
-                <div
-                  key={comp.type}
-                  className="palette-component-item"
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData('application/computecanvas-type', comp.type);
-                    e.dataTransfer.setData('application/computecanvas-label', comp.label);
-                  }}
-                  onClick={() => addNode(comp.type, comp.label)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      addNode(comp.type, comp.label);
-                    }
-                  }}
-                  aria-label={`Add ${comp.label}`}
-                >
-                  <div className="palette-item-icon" style={{ color: comp.color }}>
-                    {comp.icon}
-                  </div>
-                  <div className="palette-item-info">
-                    <div className="palette-item-name">{comp.label}</div>
-                    <div className="palette-item-desc">{comp.desc}</div>
-                  </div>
-                  <span className="palette-item-badge text-mono" style={{ borderColor: comp.color, color: comp.color }}>
-                    {comp.badge}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 2: Workload Controls (3 Primary Controls) */}
-          <div className="sidebar-card">
-            <div className="sidebar-card-header">
-              <h2 className="sidebar-section-title">WORKLOAD CONTROLS</h2>
-              <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                Real-time
-              </span>
-            </div>
-
-            <div className="workload-controls-stack">
-              {/* 1. Monthly Requests */}
-              <div className="control-field">
-                <div className="control-label-row">
-                  <label htmlFor="req-slider" className="control-label">Monthly Requests</label>
-                  <span className="control-val text-mono">{formatNumber(workload.requestsPerMonth)}</span>
-                </div>
-                <input
-                  id="req-slider"
-                  type="range"
-                  min={100000}
-                  max={20000000}
-                  step={100000}
-                  value={workload.requestsPerMonth}
-                  onChange={(e) => setWorkload({ requestsPerMonth: Number(e.target.value) })}
-                  className="simulator-slider"
-                />
+          {(leftTab === 'all' || leftTab === 'components') && (
+            <div className="sidebar-card">
+              <div className="sidebar-card-header">
+                <h2 className="sidebar-section-title">COMPONENTS</h2>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
+                  Drag or click to add
+                </span>
               </div>
 
-              {/* 2. Average Tokens: Input & Output */}
-              <div className="control-field">
-                <div className="control-label-row">
-                  <label htmlFor="input-token-slider" className="control-label">Input Tokens / Req</label>
-                  <span className="control-val text-mono">{formatNumber(workload.avgInputTokens)}</span>
-                </div>
-                <input
-                  id="input-token-slider"
-                  type="range"
-                  min={200}
-                  max={12000}
-                  step={100}
-                  value={workload.avgInputTokens}
-                  onChange={(e) => setWorkload({ avgInputTokens: Number(e.target.value) })}
-                  className="simulator-slider"
-                />
-              </div>
-
-              <div className="control-field">
-                <div className="control-label-row">
-                  <label htmlFor="output-token-slider" className="control-label">Output Tokens / Req</label>
-                  <span className="control-val text-mono">{formatNumber(workload.avgOutputTokens)}</span>
-                </div>
-                <input
-                  id="output-token-slider"
-                  type="range"
-                  min={50}
-                  max={4000}
-                  step={50}
-                  value={workload.avgOutputTokens}
-                  onChange={(e) => setWorkload({ avgOutputTokens: Number(e.target.value) })}
-                  className="simulator-slider"
-                />
-              </div>
-
-              {/* 3. Cache Hit Rate */}
-              <div className="control-field">
-                <div className="control-label-row">
-                  <label htmlFor="cache-slider" className="control-label">Cache Hit Rate</label>
-                  <span className="control-val text-mono" style={{ color: 'var(--color-quality)' }}>
-                    {Math.round(workload.cacheHitRate * 100)}%
-                  </span>
-                </div>
-                <input
-                  id="cache-slider"
-                  type="range"
-                  min={0}
-                  max={0.90}
-                  step={0.05}
-                  value={workload.cacheHitRate}
-                  onChange={(e) => setWorkload({ cacheHitRate: Number(e.target.value) })}
-                  className="simulator-slider"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Bill Calibration ("Anchor to My Bill") */}
-          <div className="sidebar-card">
-            <div className="sidebar-card-header">
-              <h2 className="sidebar-section-title">ANCHOR TO MY BILL</h2>
-              {calibration.enabled ? (
-                <button onClick={clearCalibration} className="calibration-reset-btn text-mono">
-                  RESET
-                </button>
-              ) : null}
-            </div>
-
-            {calibration.enabled ? (
-              <div className="calibration-active-card">
-                <div className="calibration-status-badge">
-                  <span className="status-dot-green" />
-                  <span className="text-mono" style={{ fontSize: '0.75rem', fontWeight: 600 }}>CALIBRATED</span>
-                </div>
-
-                <div className="calibration-meta-grid">
-                  <div className="meta-col">
-                    <span className="meta-sub">Actual Bill</span>
-                    <span className="meta-num text-mono">{formatCurrency(calibration.actualBill)}/mo</span>
-                  </div>
-                  <div className="meta-col">
-                    <span className="meta-sub">Simulated Base</span>
-                    <span className="meta-num text-mono">{formatCurrency(calibration.baselineSimulatedCost)}/mo</span>
-                  </div>
-                  <div className="meta-col">
-                    <span className="meta-sub">Variance</span>
-                    <span className="meta-num text-mono" style={{ color: calibrated.variancePercentage <= 0 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                      {calibrated.variancePercentage > 0 ? `+${calibrated.variancePercentage}%` : `${calibrated.variancePercentage}%`}
+              <div className="palette-components-list">
+                {CORE_COMPONENTS.map(comp => (
+                  <div
+                    key={comp.type}
+                    className="palette-component-item"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/computecanvas-type', comp.type);
+                      e.dataTransfer.setData('application/computecanvas-label', comp.label);
+                    }}
+                    onClick={() => addNode(comp.type, comp.label)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        addNode(comp.type, comp.label);
+                      }
+                    }}
+                    aria-label={`Add ${comp.label}`}
+                  >
+                    <div className="palette-item-icon" style={{ color: comp.color }}>
+                      {comp.icon}
+                    </div>
+                    <div className="palette-item-info">
+                      <div className="palette-item-name">{comp.label}</div>
+                      <div className="palette-item-desc">{comp.desc}</div>
+                    </div>
+                    <span className="palette-item-badge text-mono" style={{ borderColor: comp.color, color: comp.color }}>
+                      {comp.badge}
                     </span>
                   </div>
-                </div>
-
-                <p className="calibration-explainer">
-                  Economics now scale relative to your real-world baseline.
-                </p>
+                ))}
               </div>
-            ) : isCalibrating ? (
-              <form onSubmit={handleApplyCalibration} className="calibration-form">
-                <div className="calibration-input-row">
-                  <label className="text-caption">Last Month&apos;s AI Bill ($)</label>
+            </div>
+          )}
+
+          {/* Section 2: Workload Controls (3 Primary Controls) */}
+          {(leftTab === 'all' || leftTab === 'workload') && (
+            <div className="sidebar-card">
+              <div className="sidebar-card-header">
+                <h2 className="sidebar-section-title">WORKLOAD CONTROLS</h2>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
+                  Real-time
+                </span>
+              </div>
+
+              <div className="workload-controls-stack">
+                {/* 1. Monthly Requests */}
+                <div className="control-field">
+                  <div className="control-label-row">
+                    <label htmlFor="req-slider" className="control-label">Monthly Requests</label>
+                    <span className="control-val text-mono">{formatNumber(workload.requestsPerMonth)}</span>
+                  </div>
                   <input
-                    type="text"
-                    value={calBillInput}
-                    onChange={(e) => setCalBillInput(e.target.value)}
-                    className="simulator-text-input text-mono"
-                    placeholder="4500"
-                    required
+                    id="req-slider"
+                    type="range"
+                    min={100000}
+                    max={20000000}
+                    step={100000}
+                    value={workload.requestsPerMonth}
+                    onChange={(e) => setWorkload({ requestsPerMonth: Number(e.target.value) })}
+                    className="simulator-slider"
                   />
                 </div>
 
-                <div className="calibration-input-row">
-                  <label className="text-caption">Monthly Requests</label>
+                {/* 2. Average Tokens: Input & Output */}
+                <div className="control-field">
+                  <div className="control-label-row">
+                    <label htmlFor="input-token-slider" className="control-label">Input Tokens / Req</label>
+                    <span className="control-val text-mono">{formatNumber(workload.avgInputTokens)}</span>
+                  </div>
                   <input
-                    type="text"
-                    value={calReqInput}
-                    onChange={(e) => setCalReqInput(e.target.value)}
-                    className="simulator-text-input text-mono"
-                    placeholder="1200000"
-                    required
+                    id="input-token-slider"
+                    type="range"
+                    min={200}
+                    max={12000}
+                    step={100}
+                    value={workload.avgInputTokens}
+                    onChange={(e) => setWorkload({ avgInputTokens: Number(e.target.value) })}
+                    className="simulator-slider"
                   />
                 </div>
 
-                <div className="calibration-btn-row">
-                  <button type="submit" className="btn btn-primary btn-sm" style={{ flex: 1 }}>
-                    Apply Calibration
+                <div className="control-field">
+                  <div className="control-label-row">
+                    <label htmlFor="output-token-slider" className="control-label">Output Tokens / Req</label>
+                    <span className="control-val text-mono">{formatNumber(workload.avgOutputTokens)}</span>
+                  </div>
+                  <input
+                    id="output-token-slider"
+                    type="range"
+                    min={50}
+                    max={4000}
+                    step={50}
+                    value={workload.avgOutputTokens}
+                    onChange={(e) => setWorkload({ avgOutputTokens: Number(e.target.value) })}
+                    className="simulator-slider"
+                  />
+                </div>
+
+                {/* 3. Cache Hit Rate */}
+                <div className="control-field">
+                  <div className="control-label-row">
+                    <label htmlFor="cache-slider" className="control-label">Cache Hit Rate</label>
+                    <span className="control-val text-mono" style={{ color: 'var(--color-quality)' }}>
+                      {Math.round(workload.cacheHitRate * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    id="cache-slider"
+                    type="range"
+                    min={0}
+                    max={0.90}
+                    step={0.05}
+                    value={workload.cacheHitRate}
+                    onChange={(e) => setWorkload({ cacheHitRate: Number(e.target.value) })}
+                    className="simulator-slider"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section 3: Bill Calibration ("Anchor to My Bill") */}
+          {(leftTab === 'all' || leftTab === 'calibration') && (
+            <div className="sidebar-card">
+              <div className="sidebar-card-header">
+                <h2 className="sidebar-section-title">ANCHOR TO MY BILL</h2>
+                {calibration.enabled ? (
+                  <button onClick={clearCalibration} className="calibration-reset-btn text-mono" title="Disable calibration">
+                    RESET
                   </button>
+                ) : null}
+              </div>
+
+              {calibration.enabled ? (
+                <div className="calibration-active-card">
+                  <div className="calibration-status-badge">
+                    <span className="status-dot-green" />
+                    <span className="text-mono" style={{ fontSize: '0.75rem', fontWeight: 600 }}>CALIBRATED</span>
+                  </div>
+
+                  <div className="calibration-meta-grid">
+                    <div className="meta-col">
+                      <span className="meta-sub">Actual Bill</span>
+                      <span className="meta-num text-mono">{formatCurrency(calibration.actualBill)}/mo</span>
+                    </div>
+                    <div className="meta-col">
+                      <span className="meta-sub">Simulated Base</span>
+                      <span className="meta-num text-mono">{formatCurrency(calibration.baselineSimulatedCost)}/mo</span>
+                    </div>
+                    <div className="meta-col">
+                      <span className="meta-sub">Variance</span>
+                      <span className="meta-num text-mono" style={{ color: calibrated.variancePercentage <= 0 ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                        {calibrated.variancePercentage > 0 ? `+${calibrated.variancePercentage}%` : `${calibrated.variancePercentage}%`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="calibration-explainer">
+                    Economics are grounded to your empirical bill scale ({formatNumber(calibration.actualRequests)} reqs).
+                  </p>
+                </div>
+              ) : isCalibrating ? (
+                <form onSubmit={handleApplyCalibration} className="calibration-form">
+                  <div className="calibration-input-row">
+                    <label className="text-caption">Last Month&apos;s AI Bill ($)</label>
+                    <input
+                      type="text"
+                      value={calBillInput}
+                      onChange={(e) => setCalBillInput(e.target.value)}
+                      className="simulator-text-input text-mono"
+                      placeholder="4500"
+                      required
+                    />
+                  </div>
+
+                  <div className="calibration-input-row">
+                    <label className="text-caption">Monthly Requests</label>
+                    <input
+                      type="text"
+                      value={calReqInput}
+                      onChange={(e) => setCalReqInput(e.target.value)}
+                      className="simulator-text-input text-mono"
+                      placeholder="1200000"
+                      required
+                    />
+                  </div>
+
+                  {calibrationError && (
+                    <div className="calibration-error-msg text-caption text-mono" style={{ color: '#ef4444' }}>
+                      {calibrationError}
+                    </div>
+                  )}
+
+                  <div className="calibration-btn-row">
+                    <button type="submit" className="btn btn-primary btn-sm" style={{ flex: 1 }}>
+                      Apply Calibration
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsCalibrating(false)}
+                      className="btn btn-ghost btn-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="calibration-idle-box">
+                  <p className="calibration-idle-desc">
+                    Anchor the simulator to your real provider invoice to ground architectural changes in empirical reality.
+                  </p>
                   <button
-                    type="button"
-                    onClick={() => setIsCalibrating(false)}
-                    className="btn btn-ghost btn-sm"
+                    onClick={() => setIsCalibrating(true)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ width: '100%', marginTop: 'var(--space-2)' }}
                   >
-                    Cancel
+                    Anchor to My Bill
                   </button>
                 </div>
-              </form>
-            ) : (
-              <div className="calibration-idle-box">
-                <p className="calibration-idle-desc">
-                  Calibrate the simulator to your real-world provider bill to ground architecture comparisons in reality.
-                </p>
-                <button
-                  onClick={() => setIsCalibrating(true)}
-                  className="btn btn-secondary btn-sm"
-                  style={{ width: '100%', marginTop: 'var(--space-2)' }}
-                >
-                  Anchor to My Bill
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </aside>
 
         {/* ── CENTER COLUMN: Architecture Canvas ── */}
@@ -844,12 +932,49 @@ function SimulatorContent() {
         </aside>
       </div>
 
+      {/* Share URL Fallback Modal */}
+      {shareModalUrl && (
+        <div className="assumptions-modal-overlay" onClick={() => setShareModalUrl(null)}>
+          <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
+            <div className="dialog-header">
+              <h3 className="dialog-title">Share Architecture</h3>
+              <button onClick={() => setShareModalUrl(null)} className="btn btn-ghost btn-sm">✕</button>
+            </div>
+            <div className="dialog-content">
+              <p className="dialog-intro">
+                Copy this URL to share this exact architecture, components, workload parameters, and bill calibration:
+              </p>
+              <input
+                type="text"
+                readOnly
+                value={shareModalUrl}
+                className="simulator-text-input text-mono"
+                style={{ width: '100%', fontSize: '0.75rem', padding: '8px' }}
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+            </div>
+            <div className="dialog-footer">
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText?.(shareModalUrl);
+                  showToast('Architecture link copied.');
+                  setShareModalUrl(null);
+                }}
+                className="btn btn-primary btn-sm"
+              >
+                Copy Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Assumptions Modal */}
       {isAssumptionsOpen && (
         <div className="assumptions-modal-overlay" onClick={() => setIsAssumptionsOpen(false)}>
           <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="dialog-header">
-              <h3 className="dialog-title">Pricing & Simulation Assumptions</h3>
+              <h3 className="dialog-title">Pricing &amp; Simulation Assumptions</h3>
               <button onClick={() => setIsAssumptionsOpen(false)} className="btn btn-ghost btn-sm">
                 ✕
               </button>
@@ -940,7 +1065,7 @@ function SimulatorContent() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: var(--space-3) var(--space-6);
+          padding: 8px var(--space-6);
           border-bottom: 1px solid var(--color-border);
           background: var(--color-bg-elevated);
           z-index: 30;
@@ -962,7 +1087,7 @@ function SimulatorContent() {
         }
 
         .simulator-app-title {
-          font-size: 1.125rem;
+          font-size: 1.05rem;
           font-weight: 700;
           letter-spacing: -0.01em;
           margin: 0;
@@ -1035,22 +1160,52 @@ function SimulatorContent() {
         .simulator-sidebar-left {
           border-right: 1px solid var(--color-border);
           background: var(--color-bg);
-          padding: var(--space-4);
+          padding: var(--space-3);
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: var(--space-4);
+          gap: var(--space-3);
           max-height: calc(100vh - 120px);
+        }
+
+        .left-sidebar-tabs {
+          display: flex;
+          background: var(--color-bg-elevated);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          padding: 2px;
+          gap: 2px;
+        }
+
+        .sidebar-tab-btn {
+          flex: 1;
+          background: none;
+          border: none;
+          padding: 4px 6px;
+          border-radius: 3px;
+          font-size: 0.6875rem;
+          font-family: var(--font-mono);
+          color: var(--color-text-muted);
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .sidebar-tab-btn.active {
+          background: var(--color-bg-surface);
+          color: var(--color-text);
+          font-weight: 700;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .simulator-sidebar-right {
           border-left: 1px solid var(--color-border);
           background: var(--color-bg);
-          padding: var(--space-4);
+          padding: var(--space-3);
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: var(--space-4);
+          gap: var(--space-3);
           max-height: calc(100vh - 120px);
         }
 
@@ -1058,14 +1213,14 @@ function SimulatorContent() {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-md);
-          padding: var(--space-4);
+          padding: var(--space-3);
         }
 
         .sidebar-card-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: var(--space-3);
+          margin-bottom: var(--space-2);
         }
 
         .sidebar-section-title {
@@ -1081,7 +1236,7 @@ function SimulatorContent() {
         .palette-components-list {
           display: flex;
           flex-direction: column;
-          gap: var(--space-2);
+          gap: 6px;
         }
 
         .palette-component-item {
@@ -1091,7 +1246,7 @@ function SimulatorContent() {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border-subtle);
           border-radius: var(--radius-sm);
-          padding: 8px 10px;
+          padding: 6px 8px;
           cursor: grab;
           transition: all var(--duration-fast);
           user-select: none;
@@ -1104,8 +1259,8 @@ function SimulatorContent() {
         }
 
         .palette-item-icon {
-          font-size: 1.1rem;
-          width: 24px;
+          font-size: 1rem;
+          width: 20px;
           text-align: center;
           flex-shrink: 0;
         }
@@ -1125,7 +1280,7 @@ function SimulatorContent() {
         }
 
         .palette-item-desc {
-          font-size: 0.6875rem;
+          font-size: 0.65rem;
           color: var(--color-text-muted);
           white-space: nowrap;
           overflow: hidden;
@@ -1133,7 +1288,7 @@ function SimulatorContent() {
         }
 
         .palette-item-badge {
-          font-size: 0.625rem;
+          font-size: 0.5625rem;
           font-weight: 700;
           border: 1px solid;
           border-radius: 3px;
@@ -1145,13 +1300,13 @@ function SimulatorContent() {
         .workload-controls-stack {
           display: flex;
           flex-direction: column;
-          gap: var(--space-3);
+          gap: var(--space-2);
         }
 
         .control-field {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 2px;
         }
 
         .control-label-row {
@@ -1355,13 +1510,13 @@ function SimulatorContent() {
         .metrics-primary-stack {
           display: flex;
           flex-direction: column;
-          gap: var(--space-3);
+          gap: var(--space-2);
         }
 
         .metric-box {
           background: var(--color-bg-surface);
           border-radius: var(--radius-sm);
-          padding: var(--space-3);
+          padding: 10px 12px;
           display: flex;
           flex-direction: column;
           gap: 2px;
@@ -1420,10 +1575,10 @@ function SimulatorContent() {
           background: rgba(245, 158, 11, 0.08);
           border: 1px solid rgba(245, 158, 11, 0.3);
           border-radius: var(--radius-sm);
-          padding: 10px 12px;
+          padding: 8px 10px;
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 4px;
         }
 
         .bottleneck-head-row {
@@ -1477,7 +1632,7 @@ function SimulatorContent() {
         .breakdown-legend-list {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 5px;
           margin-top: 4px;
         }
 
@@ -1509,7 +1664,7 @@ function SimulatorContent() {
         .why-changed-box {
           background: var(--color-bg-surface);
           border-radius: var(--radius-sm);
-          padding: 10px 12px;
+          padding: 8px 10px;
         }
 
         .why-changed-text {
@@ -1652,7 +1807,7 @@ function SimulatorContent() {
         /* Responsive Layout Breakpoints */
         @media (max-width: 1100px) {
           .simulator-body-grid {
-            grid-template-columns: 260px 1fr 280px;
+            grid-template-columns: 270px 1fr 290px;
           }
         }
 
@@ -1676,10 +1831,39 @@ function SimulatorContent() {
   );
 }
 
+// ── SSR Fallback Shell (eliminates unstyled text and ensures instant visual structure) ──
+function SimulatorFallbackShell() {
+  return (
+    <div style={{ minHeight: '100vh', background: '#09090b', color: '#f4f4f5', display: 'flex', flexDirection: 'column' }}>
+      <header style={{ height: '60px', borderBottom: '1px solid #27272a', background: '#121215', display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', background: 'rgba(99,102,241,0.15)', color: '#6366f1', padding: '2px 6px', borderRadius: '4px' }}>SIMULATOR V1</span>
+          <span style={{ fontWeight: 700, fontSize: '1rem' }}>AI Architecture &amp; Economics</span>
+        </div>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: '310px 1fr 340px', flex: 1, minHeight: 'calc(100vh - 60px)' }}>
+        <div style={{ borderRight: '1px solid #27272a', padding: '16px', background: '#09090b' }}>
+          <div style={{ height: '24px', background: '#18181b', borderRadius: '4px', marginBottom: '12px' }} />
+          <div style={{ height: '180px', background: '#18181b', borderRadius: '8px' }} />
+        </div>
+        <div style={{ background: '#0d0d10', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#71717a', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+          Initializing interactive architecture canvas…
+        </div>
+        <div style={{ borderLeft: '1px solid #27272a', padding: '16px', background: '#09090b' }}>
+          <div style={{ height: '140px', background: '#18181b', borderRadius: '8px', marginBottom: '12px' }} />
+          <div style={{ height: '90px', background: '#18181b', borderRadius: '8px' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SimulatorPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0A0A0B', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading simulator...</div>}>
-      <SimulatorContent />
-    </Suspense>
+    <SimulatorErrorBoundary>
+      <Suspense fallback={<SimulatorFallbackShell />}>
+        <SimulatorContent />
+      </Suspense>
+    </SimulatorErrorBoundary>
   );
 }

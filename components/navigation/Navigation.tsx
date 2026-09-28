@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isSimulator = pathname === '/simulator';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -17,10 +20,10 @@ export default function Navigation() {
   return (
     <>
       <motion.nav
-        className={`nav ${scrolled ? 'nav--scrolled' : ''}`}
+        className={`nav ${scrolled ? 'nav--scrolled' : ''} ${isSimulator ? 'nav--simulator' : ''}`}
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="nav__inner container">
           <Link href="/" className="nav__logo" aria-label="ComputeCanvas Home">
@@ -34,16 +37,33 @@ export default function Navigation() {
           </Link>
 
           <div className="nav__links">
-            <Link href="/simulator" className="nav__link">Simulator</Link>
-            <Link href="/simulator?template=rag-pipeline" className="nav__link">Templates</Link>
-            <Link href="/pricing" className="nav__link">Pricing Assumptions</Link>
-            <Link href="/docs" className="nav__link">Documentation</Link>
+            <Link href="/simulator" className={`nav__link ${pathname === '/simulator' ? 'nav__link--active' : ''}`}>
+              Simulator
+            </Link>
+            <Link href="/templates" className={`nav__link ${pathname === '/templates' ? 'nav__link--active' : ''}`}>
+              Templates
+            </Link>
+            <Link href="/assumptions" className={`nav__link ${pathname === '/assumptions' ? 'nav__link--active' : ''}`}>
+              Assumptions
+            </Link>
+            <Link href="/pricing" className={`nav__link ${pathname === '/pricing' ? 'nav__link--active' : ''}`}>
+              Pricing
+            </Link>
+            <Link href="/docs" className={`nav__link ${pathname === '/docs' ? 'nav__link--active' : ''}`}>
+              Documentation
+            </Link>
           </div>
 
           <div className="nav__actions">
-            <Link href="/simulator" className="btn btn-primary nav__cta">
-              Open Simulator
-            </Link>
+            {!isSimulator ? (
+              <Link href="/simulator" className="btn btn-primary nav__cta">
+                Open Simulator
+              </Link>
+            ) : (
+              <span className="badge badge--success text-mono" style={{ fontSize: '0.6875rem' }}>
+                LIVE V1
+              </span>
+            )}
           </div>
 
           <button
@@ -216,6 +236,11 @@ export default function Navigation() {
         .nav__link:hover {
           color: var(--color-text);
           background: rgba(255, 255, 255, 0.04);
+        }
+        .nav__link--active {
+          color: var(--color-accent) !important;
+          background: var(--color-accent-dim) !important;
+          font-weight: 600;
         }
       `}</style>
     </>

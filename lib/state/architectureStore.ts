@@ -916,17 +916,28 @@ export const useArchitectureStore = create<ArchitectureState>()(
       },
     }),
     {
-      name: 'computecanvas_architecture_store_v2',
+      name: 'computecanvas_architecture_store_v1_prod',
+      version: 1,
       partialize: (state) => ({
         architecture: state.architecture,
         workload: state.workload,
         calibration: state.calibration,
-        savedArchitectures: state.savedArchitectures,
-        scenarios: state.scenarios,
-        comments: state.comments,
-        versions: state.versions,
-        regionalDeployments: state.regionalDeployments,
       }),
+      migrate: (persistedState: unknown) => {
+        try {
+          const s = persistedState as Partial<ArchitectureState>;
+          if (s && s.architecture && Array.isArray(s.architecture.nodes) && s.workload) {
+            return s as ArchitectureState;
+          }
+        } catch {
+          // ignore corrupted migration
+        }
+        return {
+          architecture: DEFAULT_ARCH,
+          workload: DEFAULT_V1_WORKLOAD,
+          calibration: DEFAULT_V1_CALIBRATION,
+        } as ArchitectureState;
+      },
     }
   )
 );

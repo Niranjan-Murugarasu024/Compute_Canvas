@@ -13,18 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ComputeCanvas — Build the architecture. See the economics.",
-  description: "Interactive AI architecture and economics simulator. Design and simulate AI systems before committing engineering resources. See how architecture choices affect cost, latency, capacity, and quality.",
+  title: "ComputeCanvas — Design AI Architecture. See the Cost Before You Build It.",
+  description: "Interactive AI architecture simulator for modeling estimated cost, latency, bottlenecks, and architecture trade-offs.",
   openGraph: {
-    title: "ComputeCanvas — Build the architecture. See the economics.",
-    description: "Interactive AI architecture and economics simulator. Design and simulate AI systems before committing engineering resources.",
+    title: "ComputeCanvas — Design AI Architecture. See the Cost Before You Build It.",
+    description: "Interactive AI architecture simulator for modeling estimated cost, latency, bottlenecks, and architecture trade-offs.",
     type: "website",
     siteName: "ComputeCanvas",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ComputeCanvas — Build the architecture. See the economics.",
-    description: "Interactive AI architecture and economics simulator.",
+    title: "ComputeCanvas — Design AI Architecture. See the Cost Before You Build It.",
+    description: "Interactive AI architecture simulator for modeling estimated cost, latency, bottlenecks, and architecture trade-offs.",
   },
   robots: {
     index: true,

@@ -43,31 +43,21 @@ function Section({ children, className = '', id = '' }: {
 // ──────────────────────────────────────────────
 
 const SYSTEM_NODES = [
-  { id: 'user', label: 'USER', color: 'var(--color-text-muted)' },
-  { id: 'api', label: 'API', color: 'var(--color-border-strong)' },
-  { id: 'auth', label: 'AUTH', color: 'var(--color-border-strong)' },
-  { id: 'router', label: 'ROUTER', color: 'var(--color-cost)' },
-  { id: 'embedding', label: 'EMBEDDING', color: 'var(--color-performance)' },
-  { id: 'vector', label: 'VECTOR SEARCH', color: 'var(--color-performance)' },
-  { id: 'model', label: 'MODEL', color: 'var(--color-accent)' },
-  { id: 'tool', label: 'TOOL', color: 'var(--color-quality)' },
-  { id: 'model2', label: 'MODEL', color: 'var(--color-accent)' },
-  { id: 'storage', label: 'STORAGE', color: 'var(--color-capacity)' },
-  { id: 'obs', label: 'OBSERVABILITY', color: 'var(--color-text-muted)' },
+  { id: 'api', label: 'API INGRESS', color: '#38bdf8' },
+  { id: 'cache', label: 'SEMANTIC CACHE', color: '#34d399' },
+  { id: 'router', label: 'COMPLEXITY ROUTER', color: '#a78bfa' },
+  { id: 'vector', label: 'VECTOR DATABASE', color: '#fbbf24' },
+  { id: 'fast', label: 'FAST REASONING', color: '#06b6d4' },
+  { id: 'frontier', label: 'FRONTIER REASONING', color: '#ec4899' },
 ];
 
 const NODE_DETAILS: Record<string, { role: string; cost: string; latency: string }> = {
-  user: { role: 'End user or client application', cost: '—', latency: '—' },
-  api: { role: 'Request ingestion and validation', cost: '$1.00/M requests', latency: '~5ms' },
-  auth: { role: 'Authentication and rate limiting', cost: '$0.50/M requests', latency: '~3ms' },
-  router: { role: 'Route to appropriate model based on complexity', cost: '$5.00/M requests', latency: '~15ms' },
-  embedding: { role: 'Convert query to vector representation', cost: '$0.10/M tokens', latency: '~10ms' },
-  vector: { role: 'Retrieve relevant documents', cost: '$0.20/M queries', latency: '~25ms' },
-  model: { role: 'Primary LLM inference', cost: '$2.50–15.00/M tokens', latency: '~90–420ms' },
-  tool: { role: 'External tool or API call', cost: 'Variable', latency: '~50–200ms' },
-  model2: { role: 'Follow-up inference with tool results', cost: '$2.50–15.00/M tokens', latency: '~90–420ms' },
-  storage: { role: 'Persist conversation and results', cost: '$0.023/GB/month', latency: '~5ms' },
-  obs: { role: 'Logging, tracing, and metrics', cost: '$0.50/GB ingested', latency: '~2ms' },
+  api: { role: 'Request ingestion, TLS termination, and rate limits', cost: '$1.00 / 1M requests', latency: '~12ms' },
+  cache: { role: 'Prompt and semantic response cache tier', cost: '$65/mo base + memory footprint', latency: '~5ms' },
+  router: { role: 'Traffic steering between fast and frontier models', cost: '$0.50 / 1M requests', latency: '~8ms' },
+  vector: { role: 'Document embeddings & nearest-neighbor search for RAG', cost: '$120/mo + $0.20/1M queries', latency: '~45ms' },
+  fast: { role: 'Sub-150ms reasoning tier (GPT-4o Mini / Gemini Flash)', cost: '$0.10–0.15 / 1M tokens', latency: '~90–140ms' },
+  frontier: { role: 'High-intelligence reasoning & synthesis (GPT-4o / Claude Sonnet)', cost: '$2.50–3.00 / 1M tokens', latency: '~380–420ms' },
 };
 
 export function EveryRequestSection() {
@@ -238,23 +228,18 @@ export function CostDecompositionSection() {
 
   const arch: Architecture = useMemo(() => ({
     nodes: [
-      { id: 'api', type: 'api', label: 'API Gateway' },
+      { id: 'api', type: 'api', label: 'API Ingress' },
       { id: 'cache', type: 'cache', label: 'Semantic Cache' },
       { id: 'router', type: 'router', label: 'Complexity Router' },
-      { id: 'model-1', type: 'model', label: modelChoice === 'gpt-4o' ? 'GPT-4o' : modelChoice === 'claude-3.5-sonnet' ? 'Claude 3.5 Sonnet' : 'Gemini 2.0 Flash', modelId: modelChoice },
+      { id: 'model-1', type: 'frontier-model', label: modelChoice === 'gpt-4o' ? 'GPT-4o' : modelChoice === 'claude-3.5-sonnet' ? 'Claude 3.5 Sonnet' : 'Gemini 2.0 Flash', modelId: modelChoice },
       { id: 'vectordb', type: 'vectordb', label: 'Vector DB' },
-      { id: 'embedding', type: 'embedding', label: 'Embedding' },
-      { id: 'compute', type: 'compute', label: 'Worker Compute' },
-      { id: 'observability', type: 'observability', label: 'Observability' },
     ],
     edges: [
       { source: 'api', target: 'cache' },
       { source: 'cache', target: 'router' },
       { source: 'router', target: 'model-1', trafficShare: 0.8 },
       { source: 'router', target: 'vectordb', trafficShare: 0.2 },
-      { source: 'model-1', target: 'vectordb' },
-      { source: 'vectordb', target: 'compute' },
-      { source: 'compute', target: 'observability' },
+      { source: 'vectordb', target: 'model-1' },
     ],
   }), [modelChoice]);
 
