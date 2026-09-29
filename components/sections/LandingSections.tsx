@@ -47,17 +47,15 @@ interface SubsystemDetail {
   tag: string;
   label: string;
   subsystemIndex: string;
-  role: string;
+  shortRole: string;
   unitCost: string;
-  unitCostSub: string;
   baselineLatency: string;
-  latencySub: string;
-  systemImpact: string;
   impactPercent: number;
-  inputSignal: string;
-  outputSignal: string;
-  failureMode: string;
-  mitigation: string;
+  flowSteps: string[];
+  activeFlowIdx: number;
+  diagnosticTitle: string;
+  diagnosticDesc: string;
+  diagnosticMitigation: string;
   tradeoffLabel: string;
   tradeoffRows: { condition: string; cost: string; latency: string; impact: string }[];
 }
@@ -68,17 +66,15 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     tag: 'INGRESS',
     label: 'API Ingress Gateway',
     subsystemIndex: 'SUBSYSTEM // 01_INGRESS',
-    role: 'First operational boundary for inbound requests. Enforces TLS termination, client credential validation, rate-limiting token buckets, DDoS shedding, and distributed trace ID injection before dispatching downstream.',
+    shortRole: 'First operational boundary for inbound traffic. Enforces TLS termination, token bucket rate limits, and trace ID injection.',
     unitCost: '$1.00 / 1M REQ',
-    unitCostSub: 'AWS HTTP API Gateway / Cloudflare Workers tier',
     baselineLatency: '+12 MS',
-    latencySub: 'P95 TLS handshake & edge routing dispatch',
-    systemImpact: '5.6% OF SYSTEM SPEND',
     impactPercent: 6,
-    inputSignal: 'Client HTTPS POST /v1/chat/completions (JSON Payload)',
-    outputSignal: 'Authenticated Internal RPC Context + Trace ID',
-    failureMode: 'Edge rate-limit saturation (HTTP 429), regional routing DNS delays, client retry storms under load.',
-    mitigation: 'Adaptive client backoff with full jitter, token bucket rate limits, edge DNS anycast failover.',
+    flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'COMPLEXITY ROUTER', 'FAST / FRONTIER'],
+    activeFlowIdx: 0,
+    diagnosticTitle: 'RATE LIMIT SATURATION & RETRY STORMS',
+    diagnosticDesc: 'High client concurrency spikes can saturate edge rate-limit buckets (HTTP 429) or cause regional DNS latency delays.',
+    diagnosticMitigation: 'Adaptive client backoff with full jitter, token bucket rate limits, and edge DNS anycast failover.',
     tradeoffLabel: 'INGRESS PROTOCOL COMPARISON',
     tradeoffRows: [
       { condition: 'Standard REST Request / Response', cost: '$1.00 / 1M req', latency: '12 ms', impact: 'Low overhead' },
@@ -90,17 +86,15 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     tag: 'CACHE',
     label: 'Semantic Response & Prompt Cache',
     subsystemIndex: 'SUBSYSTEM // 02_CACHE',
-    role: 'Evaluates prompt text and high-dimensional semantic embeddings against recent query completions. Exact and cosine-similarity matches (>0.92) return cached responses in single-digit milliseconds, entirely bypassing frontier LLM costs.',
+    shortRole: 'Evaluates prompt text and embeddings against recent completions. Exact and cosine matches (>0.92) return in single-digit milliseconds.',
     unitCost: '$65.00 / MO',
-    unitCostSub: 'Redis Cloud High-Availability tier + RAM scale',
     baselineLatency: '+5 MS',
-    latencySub: 'In-memory KV / HNSW vector index lookup',
-    systemImpact: 'SAVES UP TO 78% INFERENCE COST',
     impactPercent: 78,
-    inputSignal: 'Normalized Prompt String + Query Vector Key',
-    outputSignal: 'Instant Cached Completion OR Cache-Miss Bypass',
-    failureMode: 'Cache stampede during cold boots, memory exhaustion from long context histories, stale retrieval answers.',
-    mitigation: 'Probabilistic early expiration (XFetch algorithm), TTL boundaries, strict cosine similarity thresholds.',
+    flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'COMPLEXITY ROUTER', 'FAST / FRONTIER'],
+    activeFlowIdx: 1,
+    diagnosticTitle: 'CACHE STAMPEDE & STALE CONTEXT DRIFT',
+    diagnosticDesc: 'Cold boots and sudden traffic spikes can stampede downstream models, while stale contexts risk outdated completions.',
+    diagnosticMitigation: 'Probabilistic early expiration (XFetch algorithm) with strict cosine similarity (>0.92) thresholds.',
     tradeoffLabel: 'CACHE HIT RATE SENSITIVITY',
     tradeoffRows: [
       { condition: 'Semantic Cache Hit (70–80% Rate)', cost: '$0.00 / req', latency: '5 ms', impact: '98% latency reduction' },
@@ -112,17 +106,15 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     tag: 'ROUTER',
     label: 'Complexity Classifier & Router',
     subsystemIndex: 'SUBSYSTEM // 03_ROUTER',
-    role: 'Analyzes prompt reasoning requirements, multi-step dependencies, and token length using lightweight heuristic classifiers. Dynamically routes routine extraction to fast models and reserves frontier models for complex multi-hop synthesis.',
+    shortRole: 'Routes requests between fast and frontier inference tiers according to estimated reasoning complexity.',
     unitCost: '$0.50 / 1M REQ',
-    unitCostSub: 'Edge rule engine / Sub-10M parameter classifier',
     baselineLatency: '+8 MS',
-    latencySub: 'Regex parser + classifier inference pass',
-    systemImpact: '4.2× ECONOMIC MULTIPLIER',
     impactPercent: 65,
-    inputSignal: 'Uncached User Query + System Prompt Instructions',
-    outputSignal: 'Deterministic Model Route Dispatch Tag',
-    failureMode: 'Misclassification routing complex reasoning queries to small models, leading to user hallucinations and re-prompts.',
-    mitigation: 'Classifier confidence scoring with automatic escalation thresholds and user feedback loop triggers.',
+    flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'COMPLEXITY ROUTER', 'FAST / FRONTIER'],
+    activeFlowIdx: 2,
+    diagnosticTitle: 'MISROUTING QUALITY RISK',
+    diagnosticDesc: 'Complex requests routed to the fast tier can increase quality failures, user frustration, and re-prompts.',
+    diagnosticMitigation: 'Confidence thresholds with automatic escalation rules to frontier models.',
     tradeoffLabel: 'ROUTING TRAFFIC DISTRIBUTION',
     tradeoffRows: [
       { condition: '80% Fast Model / 20% Frontier', cost: '$1,189 / mo', latency: '142 ms', impact: 'Optimal cost-performance frontier' },
@@ -134,17 +126,15 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     tag: 'RETRIEVAL',
     label: 'Vector Database & RAG Retrieval',
     subsystemIndex: 'SUBSYSTEM // 04_RETRIEVAL',
-    role: 'Performs approximate nearest-neighbor (ANN) vector search over document chunk embeddings. Retrieves top-k relevant grounding chunks and injects them into the model prompt preamble to eliminate hallucinations and provide domain context.',
+    shortRole: 'Performs approximate nearest-neighbor vector search over document chunks to inject relevant grounding context into prompt preambles.',
     unitCost: '$120.00 / MO',
-    unitCostSub: 'Managed serverless index + $0.20/1M queries',
     baselineLatency: '+45 MS',
-    latencySub: 'Hierarchical Navigable Small World (HNSW) scan',
-    systemImpact: '9.2% OF TOTAL ARCHITECTURE SPEND',
     impactPercent: 15,
-    inputSignal: 'Query Embedding Vector (1536 / 3072 Dimensions)',
-    outputSignal: 'Top-3 Grounded Document Chunks (Token Payload)',
-    failureMode: 'Context window bloat driving up token input charges, index fragmentation, high tail latency on large corpora (>10M vectors).',
-    mitigation: 'Hybrid lexical + dense search, semantic chunk deduplication, cross-encoder reranker score filtering.',
+    flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'VECTOR DB', 'MODEL INFERENCE'],
+    activeFlowIdx: 2,
+    diagnosticTitle: 'CONTEXT WINDOW BLOAT & RETRIEVAL NOISE',
+    diagnosticDesc: 'Excessive top-k retrieval chunks drive up prompt input token costs and increase tail latency across large vector indexes.',
+    diagnosticMitigation: 'Hybrid lexical + dense search, semantic chunk deduplication, and cross-encoder reranker score filtering.',
     tradeoffLabel: 'RETRIEVAL DEPTH TRADEOFF',
     tradeoffRows: [
       { condition: 'Top-3 Chunks (1.2K Tokens Context)', cost: '+$0.0003 / req', latency: '45 ms', impact: 'Lean, low latency context' },
@@ -156,17 +146,15 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     tag: 'FAST LLM',
     label: 'Fast Reasoning Model Tier',
     subsystemIndex: 'SUBSYSTEM // 05_FAST_LLM',
-    role: 'Engineered for sub-150ms execution, high concurrency, and massive request throughput. Ideal for classification, JSON data extraction, dialogue formatting, filtering, and initial triage before escalating to heavy reasoning tiers.',
+    shortRole: 'Sub-150ms execution tier for high concurrency and throughput. Ideal for classification, JSON extraction, and conversational dialogue.',
     unitCost: '$0.15 / 1M TOKENS',
-    unitCostSub: 'GPT-4o Mini / Gemini 2.0 Flash / Claude 3.5 Haiku',
-    baselineLatency: '~120 MS',
-    latencySub: 'TTFT ~80ms, 45 tokens/sec completion stream',
-    systemImpact: '14.2% OF INFERENCE SPEND',
+    baselineLatency: '+120 MS',
     impactPercent: 25,
-    inputSignal: 'Hydrated Prompt + RAG Context Chunks',
-    outputSignal: 'Structured Completion Stream (Fast Return)',
-    failureMode: 'Degraded accuracy on symbolic logic, complex mathematical proofs, or multi-step tool calling orchestration.',
-    mitigation: 'Strict system prompt constraints, schema validation guards, automated retry with frontier tier escalation.',
+    flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'COMPLEXITY ROUTER', 'FAST MODEL'],
+    activeFlowIdx: 3,
+    diagnosticTitle: 'SYMBOLIC LOGIC & SYNTHESIS BOUNDARY',
+    diagnosticDesc: 'Fast models experience degraded reasoning fidelity on complex symbolic logic, mathematical proofs, or multi-step tool loops.',
+    diagnosticMitigation: 'Strict schema validation guards, system prompt constraints, and automated escalation to frontier models.',
     tradeoffLabel: 'SCALE TRAFFIC ECONOMICS',
     tradeoffRows: [
       { condition: '1.0 Million Monthly Requests', cost: '$180.00 / mo', latency: '120 ms', impact: 'Predictable high-scale operations' },
@@ -178,17 +166,15 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     tag: 'FRONTIER',
     label: 'Frontier Reasoning & Synthesis Model',
     subsystemIndex: 'SUBSYSTEM // 06_FRONTIER',
-    role: 'State-of-the-art multi-step reasoning, mathematical proof, architecture generation, and nuanced code synthesis. Forms the core intelligence engine, but represents the single largest cost bottleneck (up to 84%) and latency center in the pipeline.',
+    shortRole: 'State-of-the-art multi-step reasoning, mathematical proof, and code synthesis. Primary intelligence tier for high-complexity queries.',
     unitCost: '$2.50 / 1M TOKENS',
-    unitCostSub: 'GPT-4o / Claude 3.5 Sonnet / Gemini 1.5 Pro',
-    baselineLatency: '~382 MS',
-    latencySub: 'TTFT ~240ms, 30 tokens/sec completion stream',
-    systemImpact: '78.4% OF TOTAL SYSTEM COST (PRIMARY BOTTLENECK)',
+    baselineLatency: '+382 MS',
     impactPercent: 84,
-    inputSignal: 'Complex Synthesized Prompt + Tool Definitions',
-    outputSignal: 'High-Fidelity Multi-Step Reasoning Completion',
-    failureMode: 'Runaway token expenditures during unconstrained recursive agent loops, severe P99 latency spikes, provider rate limits.',
-    mitigation: 'Aggressive upstream semantic caching, max_tokens output clamps, offloading 70%+ volume to Complexity Router.',
+    flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'COMPLEXITY ROUTER', 'FRONTIER MODEL'],
+    activeFlowIdx: 3,
+    diagnosticTitle: 'EXPONENTIAL SPEND & LATENCY BOTTLENECK',
+    diagnosticDesc: 'Forms up to 84% of total system spend and the primary latency center during recursive or unconstrained agent execution loops.',
+    diagnosticMitigation: 'Aggressive upstream semantic caching, max_tokens output clamps, and offloading 70%+ volume via Complexity Router.',
     tradeoffLabel: 'SYSTEM BOTTLENECK MITIGATION',
     tradeoffRows: [
       { condition: 'Un-architected (Direct Frontier LLM)', cost: '$6,097 / mo', latency: '382 ms', impact: 'Primary cost and latency bottleneck' },
@@ -198,8 +184,8 @@ const SYSTEM_NODES: SubsystemDetail[] = [
 ];
 
 export function EveryRequestSection() {
-  // Default to 'router' so the inspection console is NEVER empty on initial page load
   const [selectedId, setSelectedId] = useState<string>('router');
+  const [showTradeoffs, setShowTradeoffs] = useState<boolean>(false);
   const activeSubsystem = SYSTEM_NODES.find(n => n.id === selectedId) || SYSTEM_NODES[0];
 
   return (
@@ -217,200 +203,158 @@ export function EveryRequestSection() {
           {/* Left Column: Chain of 6 Architectural Modules */}
           <div className="request-system__chain-col">
             <div className="chain-header">
-              <span className="text-technical-label">REQUEST PIPELINE CHAIN</span>
-              <span className="text-mono" style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
-                6 V1 COMPONENTS
-              </span>
+              <span className="chain-title text-mono">REQUEST PIPELINE</span>
+              <span className="chain-subtitle text-mono">6 COMPONENTS</span>
             </div>
 
             <div className="request-system__chain">
-              {SYSTEM_NODES.map((node, i) => {
+              {SYSTEM_NODES.map((node) => {
                 const isSelected = selectedId === node.id;
                 return (
-                  <div key={node.id} className="request-system__node-wrapper">
-                    <button
-                      className={`request-system__node ${isSelected ? 'selected' : ''}`}
-                      onClick={() => setSelectedId(node.id)}
-                      aria-label={`Inspect ${node.label}`}
-                    >
-                      <div className="node-top-row">
-                        <span className="node-tag text-mono">{node.tag}</span>
-                        <span className="node-latency text-mono">{node.baselineLatency.replace('+', '')}</span>
-                      </div>
-                      <div className="node-main-row">
-                        <span className="node-title">{node.label}</span>
-                        {isSelected && <span className="node-active-arrow text-mono">&rarr;</span>}
-                      </div>
-                      <div className="node-meta-row text-mono">
-                        <span>{node.unitCost.split('/')[0].trim()}</span>
-                        <span style={{ opacity: 0.6 }}>&bull;</span>
-                        <span style={{ color: node.impactPercent >= 70 ? 'var(--color-warning)' : 'var(--color-text-muted)' }}>
-                          {node.impactPercent >= 70 ? `${node.impactPercent}% LOAD` : `${node.impactPercent}%`}
-                        </span>
-                      </div>
-                    </button>
-
-                    {i < SYSTEM_NODES.length - 1 && (
-                      <div className="request-system__connector">
-                        <svg width="2" height="18" viewBox="0 0 2 18">
-                          <line x1="1" y1="0" x2="1" y2="18" stroke="var(--color-border-strong)" strokeWidth="1" strokeDasharray="3 3" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    key={node.id}
+                    type="button"
+                    className={`request-system__node ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedId(node.id)}
+                    aria-label={`Inspect ${node.label}`}
+                  >
+                    <div className="node-top-row">
+                      <span className="node-tag text-mono">{node.tag}</span>
+                      <span className="node-latency text-mono">{node.baselineLatency}</span>
+                    </div>
+                    <div className="node-main-row">
+                      <span className="node-title">{node.label}</span>
+                      {isSelected && <span className="node-active-arrow text-mono">&rarr;</span>}
+                    </div>
+                    <div className="node-meta-row text-mono">
+                      <span className="node-cost">{node.unitCost.split('/')[0].trim()}</span>
+                      <span className="node-share">{node.impactPercent}%</span>
+                    </div>
+                  </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Right Column: High-Density Architectural Inspection Console */}
+          {/* Right Column: Refined Two-Column Architectural Inspection Console */}
           <motion.div
             key={activeSubsystem.id}
             className="request-system__console"
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
           >
-            {/* Console Header Bar */}
+            {/* Top Subsystem Breadcrumb & Status */}
             <div className="console-top-bar">
-              <div className="console-top-left">
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
-                  {activeSubsystem.subsystemIndex}
-                </span>
-                <span className="text-technical-label" style={{ color: 'var(--color-text-secondary)' }}>
-                  INSPECTION TELEMETRY
-                </span>
-              </div>
-              <div className="console-top-right">
-                <span className="status-dot-pulse" />
-                <span className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                  DETERMINISTIC V1 SPEC
-                </span>
+              <span className="console-breadcrumb text-mono">{activeSubsystem.subsystemIndex}</span>
+              <div className="console-status text-mono">
+                <span className="status-dot" />
+                <span>DETERMINISTIC V1 SPEC</span>
               </div>
             </div>
 
-            {/* Subsystem Name & Primary Role */}
+            {/* Subsystem Name & Short Description (Max 2 lines) */}
             <div className="console-heading-block">
               <h3 className="subsystem-title">{activeSubsystem.label}</h3>
-              <p className="subsystem-role">{activeSubsystem.role}</p>
+              <p className="subsystem-role">{activeSubsystem.shortRole}</p>
             </div>
 
-            {/* Telemetry Metric Cards Strip (3-column instrument display) */}
+            {/* Telemetry Metrics: Exactly 3 Equal-Width Cards */}
             <div className="console-metrics-grid">
               <div className="console-metric-cell">
-                <span className="metric-cell-tag text-mono">UNIT COST RATE</span>
+                <span className="metric-cell-tag text-mono">UNIT COST</span>
                 <span className="metric-cell-val text-mono">{activeSubsystem.unitCost}</span>
-                <span className="metric-cell-sub text-mono">{activeSubsystem.unitCostSub}</span>
               </div>
 
               <div className="console-metric-cell">
-                <span className="metric-cell-tag text-mono">BASELINE LATENCY PENALTY</span>
+                <span className="metric-cell-tag text-mono">LATENCY</span>
                 <span className="metric-cell-val text-mono">{activeSubsystem.baselineLatency}</span>
-                <span className="metric-cell-sub text-mono">{activeSubsystem.latencySub}</span>
               </div>
 
               <div className="console-metric-cell">
-                <span className="metric-cell-tag text-mono">SYSTEM SPEND CONTRIBUTION</span>
-                <span className="metric-cell-val text-mono" style={{ color: activeSubsystem.impactPercent >= 70 ? 'var(--color-warning)' : 'var(--color-text)' }}>
-                  {activeSubsystem.impactPercent}%
-                </span>
-                <div className="console-meter-track">
-                  <div
-                    className="console-meter-fill"
-                    style={{
-                      width: `${Math.min(100, activeSubsystem.impactPercent)}%`,
-                      backgroundColor: activeSubsystem.impactPercent >= 70 ? 'var(--color-warning)' : 'var(--color-text)',
-                    }}
-                  />
-                </div>
-                <span className="metric-cell-sub text-mono">{activeSubsystem.systemImpact}</span>
+                <span className="metric-cell-tag text-mono">SYSTEM SHARE</span>
+                <span className="metric-cell-val text-mono">{activeSubsystem.impactPercent}%</span>
               </div>
             </div>
 
-            {/* Signal Flow Trace */}
-            <div className="console-signal-trace">
-              <div className="signal-trace-header">
-                <span className="text-technical-label">SIGNAL FLOW STAGE</span>
-                <span className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                  INBOUND &rarr; SUBSYSTEM &rarr; OUTBOUND
-                </span>
-              </div>
-
-              <div className="signal-flow-row">
-                <div className="signal-hop">
-                  <span className="signal-hop-label text-mono">INPUT SIGNAL</span>
-                  <span className="signal-hop-text text-mono">{activeSubsystem.inputSignal}</span>
-                </div>
-                <div className="signal-arrow text-mono">&rarr;</div>
-                <div className="signal-hop active-hop">
-                  <span className="signal-hop-label text-mono">PROCESSING</span>
-                  <span className="signal-hop-text">{activeSubsystem.tag} EXECUTION</span>
-                </div>
-                <div className="signal-arrow text-mono">&rarr;</div>
-                <div className="signal-hop">
-                  <span className="signal-hop-label text-mono">OUTPUT SIGNAL</span>
-                  <span className="signal-hop-text text-mono">{activeSubsystem.outputSignal}</span>
-                </div>
+            {/* Architecture Flow Strip */}
+            <div className="console-flow-strip">
+              <span className="flow-strip-label text-mono">ARCHITECTURE FLOW</span>
+              <div className="flow-nodes-row">
+                {activeSubsystem.flowSteps.map((step, idx) => {
+                  const isCurrent = idx === activeSubsystem.activeFlowIdx;
+                  return (
+                    <div key={step} className="flow-step-item">
+                      <span className={`flow-node-badge text-mono ${isCurrent ? 'active' : ''}`}>
+                        {step}
+                      </span>
+                      {idx < activeSubsystem.flowSteps.length - 1 && (
+                        <span className="flow-step-arrow text-mono">&rarr;</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Failure Modes & Defense Grid */}
-            <div className="console-diagnostics-grid">
-              <div className="diagnostic-card">
-                <span className="diagnostic-tag text-mono" style={{ color: 'var(--color-warning)' }}>
-                  FAILURE MODES &amp; BOTTLENECKS
-                </span>
-                <p className="diagnostic-text">{activeSubsystem.failureMode}</p>
+            {/* Primary Diagnostic: One Compact Horizontal Panel */}
+            <div className="console-diagnostic-panel">
+              <div className="diagnostic-header-row">
+                <span className="diagnostic-badge text-mono">PRIMARY DIAGNOSTIC</span>
+                <span className="diagnostic-sep text-mono">//</span>
+                <span className="diagnostic-subject text-mono">{activeSubsystem.diagnosticTitle}</span>
               </div>
-
-              <div className="diagnostic-card">
-                <span className="diagnostic-tag text-mono" style={{ color: 'var(--color-text-secondary)' }}>
-                  ARCHITECTURAL MITIGATION
-                </span>
-                <p className="diagnostic-text">{activeSubsystem.mitigation}</p>
+              <p className="diagnostic-desc">
+                {activeSubsystem.diagnosticDesc}
+              </p>
+              <div className="diagnostic-mitigation-row">
+                <span className="mitigation-label text-mono">MITIGATION &rarr;</span>
+                <span className="mitigation-text">{activeSubsystem.diagnosticMitigation}</span>
               </div>
             </div>
 
-            {/* Tradeoff Empirical Matrix Table */}
-            <div className="console-tradeoff-block">
-              <div className="tradeoff-header-row">
-                <span className="text-technical-label">{activeSubsystem.tradeoffLabel}</span>
-                <span className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                  EMPIRICAL TRADE-OFF DELTAS
-                </span>
-              </div>
+            {/* Collapsible Tradeoff Matrix (Data preserved, zero default clutter) */}
+            <div className="console-tradeoff-drawer">
+              <button
+                type="button"
+                className="tradeoff-toggle-btn text-mono"
+                onClick={() => setShowTradeoffs(!showTradeoffs)}
+                aria-expanded={showTradeoffs}
+              >
+                <span>{showTradeoffs ? '− HIDE EMPIRICAL TRADE-OFF DELTAS' : '+ VIEW EMPIRICAL TRADE-OFF DELTAS'}</span>
+                <span className="tradeoff-toggle-count">({activeSubsystem.tradeoffRows.length} OPERATING STATES)</span>
+              </button>
 
-              <div className="tradeoff-table-wrap">
-                <table className="tradeoff-table text-mono">
-                  <thead>
-                    <tr>
-                      <th>Operating State</th>
-                      <th>Modeled Cost</th>
-                      <th>Latency Impact</th>
-                      <th>Architectural Consequence</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeSubsystem.tradeoffRows.map((row, idx) => (
-                      <tr key={idx}>
-                        <td style={{ color: 'var(--color-text)', fontWeight: 500 }}>{row.condition}</td>
-                        <td style={{ color: '#FFFFFF' }}>{row.cost}</td>
-                        <td style={{ color: '#D4D4D8' }}>{row.latency}</td>
-                        <td style={{ color: 'var(--color-text-secondary)' }}>{row.impact}</td>
+              {showTradeoffs && (
+                <div className="tradeoff-table-wrap">
+                  <table className="tradeoff-table text-mono">
+                    <thead>
+                      <tr>
+                        <th>Operating State</th>
+                        <th>Modeled Cost</th>
+                        <th>Latency Impact</th>
+                        <th>Architectural Consequence</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {activeSubsystem.tradeoffRows.map((row, idx) => (
+                        <tr key={idx}>
+                          <td style={{ color: 'var(--color-text)', fontWeight: 500 }}>{row.condition}</td>
+                          <td style={{ color: '#FFFFFF' }}>{row.cost}</td>
+                          <td style={{ color: '#D4D4D8' }}>{row.latency}</td>
+                          <td style={{ color: 'var(--color-text-secondary)' }}>{row.impact}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
-            {/* Footer Action Bar */}
+            {/* Single Primary Action Footer */}
             <div className="console-footer-bar">
-              <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                Simulate this layer with custom tokens &amp; latency formulas:
-              </span>
               <Link href="/simulator" className="btn btn-primary btn-sm">
-                Open in Workstation &rarr;
+                OPEN IN WORKSTATION &rarr;
               </Link>
             </div>
           </motion.div>
@@ -420,52 +364,79 @@ export function EveryRequestSection() {
       <style jsx>{`
         .request-system {
           display: grid;
-          grid-template-columns: 240px 1fr;
-          gap: var(--space-6);
-          align-items: start;
+          grid-template-columns: 310px minmax(0, 1fr);
+          gap: 36px;
+          align-items: stretch;
         }
 
         /* ── Left Column: Chain ── */
         .request-system__chain-col {
+          background: var(--color-bg-elevated);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          padding: 24px 18px;
           display: flex;
           flex-direction: column;
-          gap: var(--space-2);
+          gap: 16px;
         }
 
         .chain-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding-bottom: var(--space-2);
+          padding-bottom: 12px;
           border-bottom: 1px solid var(--color-border);
-          margin-bottom: var(--space-1);
+          min-height: 29px;
+        }
+
+        .chain-title {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-weight: 500;
+          color: #A1A1AA;
+          letter-spacing: 0.08em;
+        }
+
+        .chain-subtitle {
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          color: #71717A;
+          letter-spacing: 0.05em;
         }
 
         .request-system__chain {
           display: flex;
           flex-direction: column;
-          align-items: stretch;
-        }
-
-        .request-system__node-wrapper {
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
+          gap: 8px;
+          flex: 1;
+          justify-content: space-between;
         }
 
         .request-system__node {
+          width: 100%;
+          height: 98px;
+          padding: 12px 14px;
+          box-sizing: border-box;
           display: flex;
           flex-direction: column;
-          align-items: stretch;
-          gap: 3px;
-          padding: 10px 12px;
+          justify-content: space-between;
           background: var(--color-bg-surface);
-          border: 1px solid var(--color-border);
+          border: 1px solid #242428;
           border-radius: var(--radius-sm);
           cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out);
           text-align: left;
-          width: 100%;
+          transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .request-system__node:hover {
+          border-color: var(--color-border-strong);
+          background: #111114;
+        }
+
+        .request-system__node.selected {
+          border-color: #F5F5F5;
+          background: #141418;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         }
 
         .node-top-row {
@@ -475,59 +446,61 @@ export function EveryRequestSection() {
         }
 
         .node-tag {
-          font-size: 0.5625rem;
-          color: var(--color-text-muted);
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          color: #A1A1AA;
           letter-spacing: 0.08em;
-          text-transform: uppercase;
         }
 
         .node-latency {
-          font-size: 0.625rem;
-          color: var(--color-text-muted);
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: #D4D4D8;
+          font-variant-numeric: tabular-nums;
         }
 
         .node-main-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
+          margin: 2px 0;
         }
 
         .node-title {
           font-family: var(--font-ui);
           font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--color-text);
+          font-weight: 600;
+          color: #FFFFFF;
+          line-height: 1.25;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .node-active-arrow {
-          font-size: 0.75rem;
-          color: var(--color-text);
+          font-family: var(--font-mono);
+          font-size: 0.8125rem;
+          color: #FFFFFF;
+          flex-shrink: 0;
         }
 
         .node-meta-row {
           display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 6px;
+          font-family: var(--font-mono);
           font-size: 0.6875rem;
-          color: var(--color-text-secondary);
         }
 
-        .request-system__node:hover {
-          border-color: var(--color-border-strong);
-          background: var(--color-bg-elevated);
+        .node-cost {
+          color: #A1A1AA;
         }
 
-        .request-system__node.selected {
-          border-color: var(--color-border-focus);
-          background: var(--color-bg-elevated);
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-        }
-
-        .request-system__connector {
-          display: flex;
-          justify-content: center;
-          padding: 2px 0;
+        .node-share {
+          color: #D4D4D8;
+          font-variant-numeric: tabular-nums;
         }
 
         /* ── Right Column: Architectural Inspection Console ── */
@@ -535,210 +508,262 @@ export function EveryRequestSection() {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
-          padding: var(--space-6);
+          padding: 24px 28px;
           display: flex;
           flex-direction: column;
-          gap: var(--space-5);
+          gap: 20px;
+          justify-content: space-between;
         }
 
         .console-top-bar {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding-bottom: var(--space-3);
+          padding-bottom: 12px;
           border-bottom: 1px solid var(--color-border);
+          min-height: 29px;
         }
 
-        .console-top-left {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        .console-breadcrumb {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          letter-spacing: 0.08em;
+          color: #A1A1AA;
         }
 
-        .console-top-right {
+        .console-status {
           display: flex;
           align-items: center;
           gap: 6px;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: #71717A;
+          letter-spacing: 0.06em;
         }
 
-        .status-dot-pulse {
+        .status-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
           background: #FFFFFF;
-          display: inline-block;
         }
 
         .console-heading-block {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 8px;
         }
 
         .subsystem-title {
           font-family: var(--font-display);
-          font-size: 1.5rem;
+          font-size: clamp(1.5rem, 2vw, 1.875rem);
           font-weight: 600;
-          letter-spacing: -0.01em;
-          color: var(--color-text);
+          letter-spacing: -0.02em;
+          color: #FFFFFF;
           margin: 0;
+          line-height: 1.15;
         }
 
         .subsystem-role {
           font-family: var(--font-ui);
-          font-size: 0.875rem;
-          line-height: 1.55;
+          font-size: 0.9375rem;
+          line-height: 1.5;
           color: var(--color-text-secondary);
           margin: 0;
+          max-width: 760px;
         }
 
         /* ── Telemetry 3-Column Strip ── */
         .console-metrics-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: var(--space-3);
+          gap: 14px;
         }
 
         .console-metric-cell {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
-          padding: var(--space-3) var(--space-4);
+          padding: 14px 16px;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          justify-content: center;
+          gap: 6px;
+          min-height: 76px;
         }
 
         .metric-cell-tag {
+          font-family: var(--font-mono);
           font-size: 0.625rem;
-          color: var(--color-text-muted);
-          letter-spacing: 0.04em;
+          color: #71717A;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
         .metric-cell-val {
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: var(--color-text);
+          font-family: var(--font-mono);
+          font-size: 1.375rem;
+          font-weight: 500;
+          font-variant-numeric: tabular-nums;
+          color: #FFFFFF;
+          line-height: 1.1;
         }
 
-        .metric-cell-sub {
-          font-size: 0.6875rem;
-          color: var(--color-text-secondary);
-          line-height: 1.3;
-        }
-
-        .console-meter-track {
-          height: 3px;
-          background: var(--color-border);
-          border-radius: 1px;
-          overflow: hidden;
-          margin-top: 2px;
-        }
-
-        .console-meter-fill {
-          height: 100%;
-          transition: width 0.25s ease;
-        }
-
-        /* ── Signal Flow ── */
-        .console-signal-trace {
+        /* ── Architecture Flow ── */
+        .console-flow-strip {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
-          padding: var(--space-4);
+          padding: 14px 18px;
           display: flex;
           flex-direction: column;
-          gap: var(--space-2);
+          gap: 10px;
         }
 
-        .signal-trace-header {
+        .flow-strip-label {
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          color: #71717A;
+          letter-spacing: 0.08em;
+        }
+
+        .flow-nodes-row {
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          margin-bottom: 2px;
+          gap: 10px;
+          flex-wrap: wrap;
         }
 
-        .signal-flow-row {
-          display: grid;
-          grid-template-columns: 1fr auto 1fr auto 1fr;
+        .flow-step-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .flow-node-badge {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          letter-spacing: 0.05em;
+          padding: 4px 10px;
+          border-radius: 2px;
+          border: 1px solid var(--color-border-subtle);
+          color: #A1A1AA;
+          background: transparent;
+        }
+
+        .flow-node-badge.active {
+          border-color: #FFFFFF;
+          background: #18181B;
+          color: #FFFFFF;
+          font-weight: 600;
+        }
+
+        .flow-step-arrow {
+          font-family: var(--font-mono);
+          font-size: 0.8125rem;
+          color: var(--color-border-strong);
+        }
+
+        /* ── Primary Diagnostic Panel ── */
+        .console-diagnostic-panel {
+          background: var(--color-bg-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          padding: 14px 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .diagnostic-header-row {
+          display: flex;
           align-items: center;
           gap: 8px;
         }
 
-        .signal-hop {
-          background: var(--color-bg);
-          border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-sm);
-          padding: 8px 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .signal-hop.active-hop {
-          border-color: var(--color-border-strong);
-          background: #111115;
-        }
-
-        .signal-hop-label {
-          font-size: 0.5625rem;
-          color: var(--color-text-muted);
-          letter-spacing: 0.05em;
-        }
-
-        .signal-hop-text {
-          font-size: 0.6875rem;
-          color: var(--color-text);
-          line-height: 1.3;
-          word-break: break-word;
-        }
-
-        .signal-arrow {
-          color: var(--color-border-strong);
-          font-size: 0.875rem;
-        }
-
-        /* ── Diagnostics Grid ── */
-        .console-diagnostics-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--space-3);
-        }
-
-        .diagnostic-card {
-          background: var(--color-bg-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          padding: var(--space-3) var(--space-4);
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .diagnostic-tag {
+        .diagnostic-badge {
+          font-family: var(--font-mono);
           font-size: 0.625rem;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.08em;
+          color: #71717A;
         }
 
-        .diagnostic-text {
+        .diagnostic-sep {
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          color: #3F3F46;
+        }
+
+        .diagnostic-subject {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          color: #FFFFFF;
+        }
+
+        .diagnostic-desc {
           font-family: var(--font-ui);
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
           line-height: 1.45;
           color: var(--color-text-secondary);
           margin: 0;
         }
 
-        /* ── Tradeoff Matrix Table ── */
-        .console-tradeoff-block {
+        .diagnostic-mitigation-row {
           display: flex;
-          flex-direction: column;
-          gap: var(--space-2);
+          align-items: baseline;
+          gap: 8px;
+          padding-top: 6px;
+          border-top: 1px solid var(--color-border-subtle);
         }
 
-        .tradeoff-header-row {
+        .mitigation-label {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: #A1A1AA;
+          flex-shrink: 0;
+        }
+
+        .mitigation-text {
+          font-family: var(--font-ui);
+          font-size: 0.8125rem;
+          line-height: 1.4;
+          color: #D4D4D8;
+        }
+
+        /* ── Collapsible Tradeoff Drawer ── */
+        .console-tradeoff-drawer {
           display: flex;
-          justify-content: space-between;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .tradeoff-toggle-btn {
+          align-self: flex-start;
+          display: inline-flex;
           align-items: center;
+          gap: 8px;
+          background: transparent;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          padding: 6px 12px;
+          color: #A1A1AA;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .tradeoff-toggle-btn:hover {
+          border-color: var(--color-border-strong);
+          color: #FFFFFF;
+        }
+
+        .tradeoff-toggle-count {
+          color: #71717A;
+          font-size: 0.625rem;
         }
 
         .tradeoff-table-wrap {
@@ -774,53 +799,76 @@ export function EveryRequestSection() {
           border-bottom: none;
         }
 
-        /* ── Footer Bar ── */
+        /* ── Single Primary CTA Footer ── */
         .console-footer-bar {
           display: flex;
-          justify-content: space-between;
+          justify-content: flex-end;
           align-items: center;
-          padding-top: var(--space-3);
+          padding-top: 14px;
           border-top: 1px solid var(--color-border);
-          gap: var(--space-4);
-          flex-wrap: wrap;
         }
 
         /* ── Responsive ── */
         @media (max-width: 960px) {
           .request-system {
             grid-template-columns: 1fr;
+            gap: 20px;
+          }
+
+          .request-system__chain-col {
+            padding: 18px 16px;
           }
 
           .request-system__chain {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-2);
+            gap: 8px;
           }
 
-          .request-system__connector {
-            display: none;
+          .request-system__node {
+            height: auto;
+            min-height: 84px;
+            padding: 10px 12px;
+          }
+
+          .console-metrics-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        @media (max-width: 640px) {
+          .request-system__chain {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+          }
+
+          .request-system__node {
+            min-height: 72px;
+            padding: 8px 10px;
+          }
+
+          .node-title {
+            font-size: 0.75rem;
           }
 
           .console-metrics-grid {
             grid-template-columns: 1fr;
+            gap: 8px;
           }
 
-          .console-diagnostics-grid {
-            grid-template-columns: 1fr;
+          .diagnostic-mitigation-row {
+            flex-direction: column;
+            gap: 2px;
           }
 
-          .signal-flow-row {
-            grid-template-columns: 1fr;
+          .console-footer-bar {
+            justify-content: stretch;
           }
 
-          .signal-arrow {
-            display: none;
-          }
-        }
-
-        @media (max-width: 600px) {
-          .request-system__chain {
-            grid-template-columns: 1fr;
+          .console-footer-bar :global(.btn) {
+            width: 100%;
+            justify-content: center;
           }
         }
       `}</style>
