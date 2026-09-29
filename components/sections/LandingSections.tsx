@@ -42,191 +42,787 @@ function Section({ children, className = '', id = '' }: {
 // SECTION: "EVERY AI REQUEST IS A SYSTEM"
 // ──────────────────────────────────────────────
 
-const SYSTEM_NODES = [
-  { id: 'api', label: 'API Ingress', tag: 'INGRESS' },
-  { id: 'cache', label: 'Semantic Cache', tag: 'CACHE' },
-  { id: 'router', label: 'Complexity Router', tag: 'ROUTER' },
-  { id: 'vector', label: 'Vector Database', tag: 'RETRIEVAL' },
-  { id: 'fast', label: 'Fast Reasoning', tag: 'FAST LLM' },
-  { id: 'frontier', label: 'Frontier Reasoning', tag: 'FRONTIER' },
+interface SubsystemDetail {
+  id: string;
+  tag: string;
+  label: string;
+  subsystemIndex: string;
+  role: string;
+  unitCost: string;
+  unitCostSub: string;
+  baselineLatency: string;
+  latencySub: string;
+  systemImpact: string;
+  impactPercent: number;
+  inputSignal: string;
+  outputSignal: string;
+  failureMode: string;
+  mitigation: string;
+  tradeoffLabel: string;
+  tradeoffRows: { condition: string; cost: string; latency: string; impact: string }[];
+}
+
+const SYSTEM_NODES: SubsystemDetail[] = [
+  {
+    id: 'api',
+    tag: 'INGRESS',
+    label: 'API Ingress Gateway',
+    subsystemIndex: 'SUBSYSTEM // 01_INGRESS',
+    role: 'First operational boundary for inbound requests. Enforces TLS termination, client credential validation, rate-limiting token buckets, DDoS shedding, and distributed trace ID injection before dispatching downstream.',
+    unitCost: '$1.00 / 1M REQ',
+    unitCostSub: 'AWS HTTP API Gateway / Cloudflare Workers tier',
+    baselineLatency: '+12 MS',
+    latencySub: 'P95 TLS handshake & edge routing dispatch',
+    systemImpact: '5.6% OF SYSTEM SPEND',
+    impactPercent: 6,
+    inputSignal: 'Client HTTPS POST /v1/chat/completions (JSON Payload)',
+    outputSignal: 'Authenticated Internal RPC Context + Trace ID',
+    failureMode: 'Edge rate-limit saturation (HTTP 429), regional routing DNS delays, client retry storms under load.',
+    mitigation: 'Adaptive client backoff with full jitter, token bucket rate limits, edge DNS anycast failover.',
+    tradeoffLabel: 'INGRESS PROTOCOL COMPARISON',
+    tradeoffRows: [
+      { condition: 'Standard REST Request / Response', cost: '$1.00 / 1M req', latency: '12 ms', impact: 'Low overhead' },
+      { condition: 'Server-Sent Events (SSE) Streaming', cost: '$1.50 / 1M req', latency: '18 ms', impact: 'High connection concurrency' },
+    ],
+  },
+  {
+    id: 'cache',
+    tag: 'CACHE',
+    label: 'Semantic Response & Prompt Cache',
+    subsystemIndex: 'SUBSYSTEM // 02_CACHE',
+    role: 'Evaluates prompt text and high-dimensional semantic embeddings against recent query completions. Exact and cosine-similarity matches (>0.92) return cached responses in single-digit milliseconds, entirely bypassing frontier LLM costs.',
+    unitCost: '$65.00 / MO',
+    unitCostSub: 'Redis Cloud High-Availability tier + RAM scale',
+    baselineLatency: '+5 MS',
+    latencySub: 'In-memory KV / HNSW vector index lookup',
+    systemImpact: 'SAVES UP TO 78% INFERENCE COST',
+    impactPercent: 78,
+    inputSignal: 'Normalized Prompt String + Query Vector Key',
+    outputSignal: 'Instant Cached Completion OR Cache-Miss Bypass',
+    failureMode: 'Cache stampede during cold boots, memory exhaustion from long context histories, stale retrieval answers.',
+    mitigation: 'Probabilistic early expiration (XFetch algorithm), TTL boundaries, strict cosine similarity thresholds.',
+    tradeoffLabel: 'CACHE HIT RATE SENSITIVITY',
+    tradeoffRows: [
+      { condition: 'Semantic Cache Hit (70–80% Rate)', cost: '$0.00 / req', latency: '5 ms', impact: '98% latency reduction' },
+      { condition: 'Semantic Cache Miss (Forward to LLM)', cost: '$0.0035 / req', latency: '382 ms', impact: 'Full LLM inference charge' },
+    ],
+  },
+  {
+    id: 'router',
+    tag: 'ROUTER',
+    label: 'Complexity Classifier & Router',
+    subsystemIndex: 'SUBSYSTEM // 03_ROUTER',
+    role: 'Analyzes prompt reasoning requirements, multi-step dependencies, and token length using lightweight heuristic classifiers. Dynamically routes routine extraction to fast models and reserves frontier models for complex multi-hop synthesis.',
+    unitCost: '$0.50 / 1M REQ',
+    unitCostSub: 'Edge rule engine / Sub-10M parameter classifier',
+    baselineLatency: '+8 MS',
+    latencySub: 'Regex parser + classifier inference pass',
+    systemImpact: '4.2× ECONOMIC MULTIPLIER',
+    impactPercent: 65,
+    inputSignal: 'Uncached User Query + System Prompt Instructions',
+    outputSignal: 'Deterministic Model Route Dispatch Tag',
+    failureMode: 'Misclassification routing complex reasoning queries to small models, leading to user hallucinations and re-prompts.',
+    mitigation: 'Classifier confidence scoring with automatic escalation thresholds and user feedback loop triggers.',
+    tradeoffLabel: 'ROUTING TRAFFIC DISTRIBUTION',
+    tradeoffRows: [
+      { condition: '80% Fast Model / 20% Frontier', cost: '$1,189 / mo', latency: '142 ms', impact: 'Optimal cost-performance frontier' },
+      { condition: '100% Frontier Model (Direct Path)', cost: '$6,453 / mo', latency: '394 ms', impact: 'Highest quality, maximum spend' },
+    ],
+  },
+  {
+    id: 'vector',
+    tag: 'RETRIEVAL',
+    label: 'Vector Database & RAG Retrieval',
+    subsystemIndex: 'SUBSYSTEM // 04_RETRIEVAL',
+    role: 'Performs approximate nearest-neighbor (ANN) vector search over document chunk embeddings. Retrieves top-k relevant grounding chunks and injects them into the model prompt preamble to eliminate hallucinations and provide domain context.',
+    unitCost: '$120.00 / MO',
+    unitCostSub: 'Managed serverless index + $0.20/1M queries',
+    baselineLatency: '+45 MS',
+    latencySub: 'Hierarchical Navigable Small World (HNSW) scan',
+    systemImpact: '9.2% OF TOTAL ARCHITECTURE SPEND',
+    impactPercent: 15,
+    inputSignal: 'Query Embedding Vector (1536 / 3072 Dimensions)',
+    outputSignal: 'Top-3 Grounded Document Chunks (Token Payload)',
+    failureMode: 'Context window bloat driving up token input charges, index fragmentation, high tail latency on large corpora (>10M vectors).',
+    mitigation: 'Hybrid lexical + dense search, semantic chunk deduplication, cross-encoder reranker score filtering.',
+    tradeoffLabel: 'RETRIEVAL DEPTH TRADEOFF',
+    tradeoffRows: [
+      { condition: 'Top-3 Chunks (1.2K Tokens Context)', cost: '+$0.0003 / req', latency: '45 ms', impact: 'Lean, low latency context' },
+      { condition: 'Top-10 Chunks (4.0K Tokens Context)', cost: '+$0.0011 / req', latency: '82 ms', impact: 'Rich context, 3.7× input token cost' },
+    ],
+  },
+  {
+    id: 'fast',
+    tag: 'FAST LLM',
+    label: 'Fast Reasoning Model Tier',
+    subsystemIndex: 'SUBSYSTEM // 05_FAST_LLM',
+    role: 'Engineered for sub-150ms execution, high concurrency, and massive request throughput. Ideal for classification, JSON data extraction, dialogue formatting, filtering, and initial triage before escalating to heavy reasoning tiers.',
+    unitCost: '$0.15 / 1M TOKENS',
+    unitCostSub: 'GPT-4o Mini / Gemini 2.0 Flash / Claude 3.5 Haiku',
+    baselineLatency: '~120 MS',
+    latencySub: 'TTFT ~80ms, 45 tokens/sec completion stream',
+    systemImpact: '14.2% OF INFERENCE SPEND',
+    impactPercent: 25,
+    inputSignal: 'Hydrated Prompt + RAG Context Chunks',
+    outputSignal: 'Structured Completion Stream (Fast Return)',
+    failureMode: 'Degraded accuracy on symbolic logic, complex mathematical proofs, or multi-step tool calling orchestration.',
+    mitigation: 'Strict system prompt constraints, schema validation guards, automated retry with frontier tier escalation.',
+    tradeoffLabel: 'SCALE TRAFFIC ECONOMICS',
+    tradeoffRows: [
+      { condition: '1.0 Million Monthly Requests', cost: '$180.00 / mo', latency: '120 ms', impact: 'Predictable high-scale operations' },
+      { condition: '10.0 Million Monthly Requests', cost: '$1,800.00 / mo', latency: '124 ms', impact: 'Linear, manageable infra growth' },
+    ],
+  },
+  {
+    id: 'frontier',
+    tag: 'FRONTIER',
+    label: 'Frontier Reasoning & Synthesis Model',
+    subsystemIndex: 'SUBSYSTEM // 06_FRONTIER',
+    role: 'State-of-the-art multi-step reasoning, mathematical proof, architecture generation, and nuanced code synthesis. Forms the core intelligence engine, but represents the single largest cost bottleneck (up to 84%) and latency center in the pipeline.',
+    unitCost: '$2.50 / 1M TOKENS',
+    unitCostSub: 'GPT-4o / Claude 3.5 Sonnet / Gemini 1.5 Pro',
+    baselineLatency: '~382 MS',
+    latencySub: 'TTFT ~240ms, 30 tokens/sec completion stream',
+    systemImpact: '78.4% OF TOTAL SYSTEM COST (PRIMARY BOTTLENECK)',
+    impactPercent: 84,
+    inputSignal: 'Complex Synthesized Prompt + Tool Definitions',
+    outputSignal: 'High-Fidelity Multi-Step Reasoning Completion',
+    failureMode: 'Runaway token expenditures during unconstrained recursive agent loops, severe P99 latency spikes, provider rate limits.',
+    mitigation: 'Aggressive upstream semantic caching, max_tokens output clamps, offloading 70%+ volume to Complexity Router.',
+    tradeoffLabel: 'SYSTEM BOTTLENECK MITIGATION',
+    tradeoffRows: [
+      { condition: 'Un-architected (Direct Frontier LLM)', cost: '$6,097 / mo', latency: '382 ms', impact: 'Primary cost and latency bottleneck' },
+      { condition: 'Architected (Ingress + Cache + Router)', cost: '$1,308 / mo', latency: '105 ms', impact: '78% spend savings, 3.6× faster P95' },
+    ],
+  },
 ];
 
-const NODE_DETAILS: Record<string, { role: string; cost: string; latency: string }> = {
-  api: { role: 'Request ingestion, TLS termination, and rate limits', cost: '$1.00 / 1M requests', latency: '~12ms' },
-  cache: { role: 'Prompt and semantic response cache tier', cost: '$65/mo base + memory footprint', latency: '~5ms' },
-  router: { role: 'Traffic steering between fast and frontier models', cost: '$0.50 / 1M requests', latency: '~8ms' },
-  vector: { role: 'Document embeddings & nearest-neighbor search for RAG', cost: '$120/mo + $0.20/1M queries', latency: '~45ms' },
-  fast: { role: 'Sub-150ms reasoning tier (GPT-4o Mini / Gemini Flash)', cost: '$0.10–0.15 / 1M tokens', latency: '~90–140ms' },
-  frontier: { role: 'High-intelligence reasoning & synthesis (GPT-4o / Claude Sonnet)', cost: '$2.50–3.00 / 1M tokens', latency: '~380–420ms' },
-};
-
 export function EveryRequestSection() {
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const detail = selectedNode ? NODE_DETAILS[selectedNode] : null;
+  // Default to 'router' so the inspection console is NEVER empty on initial page load
+  const [selectedId, setSelectedId] = useState<string>('router');
+  const activeSubsystem = SYSTEM_NODES.find(n => n.id === selectedId) || SYSTEM_NODES[0];
 
   return (
     <Section id="every-request">
       <div className="container">
-        <div style={{ maxWidth: 640, marginBottom: 'var(--space-12)' }}>
+        <div style={{ maxWidth: 720, marginBottom: 'var(--space-8)' }}>
           <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
             [ARCHITECTURAL_DECOMPOSITION]
           </p>
           <h2 className="text-heading-xl">Every AI request is a system.</h2>
           <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
-            What appears to be a single API call hides an entire multi-tier pipeline. Every layer introduces token spend, latency penalty, and operational failure modes.
+            What appears to be a single API call hides an entire multi-tier pipeline. Every layer introduces token spend, latency penalty, and operational failure modes. Select any subsystem to inspect its telemetry and economics.
           </p>
         </div>
 
         <div className="request-system">
-          <div className="request-system__chain">
-            {SYSTEM_NODES.map((node, i) => (
-              <div key={node.id} className="request-system__node-wrapper">
-                <button
-                  className={`request-system__node ${selectedNode === node.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)}
-                  aria-label={`Inspect ${node.label}`}
-                >
-                  <span className="node-tag text-mono">{node.tag}</span>
-                  <span className="node-title">{node.label}</span>
-                </button>
-                {i < SYSTEM_NODES.length - 1 && (
-                  <div className="request-system__connector">
-                    <svg width="2" height="20" viewBox="0 0 2 20">
-                      <line x1="1" y1="0" x2="1" y2="20" stroke="var(--color-border-strong)" strokeWidth="1" strokeDasharray="3 3" />
-                    </svg>
+          {/* Left Column: Chain of 6 Architectural Modules */}
+          <div className="request-system__chain-col">
+            <div className="chain-header">
+              <span className="text-technical-label">REQUEST PIPELINE CHAIN</span>
+              <span className="text-mono" style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
+                6 V1 COMPONENTS
+              </span>
+            </div>
+
+            <div className="request-system__chain">
+              {SYSTEM_NODES.map((node, i) => {
+                const isSelected = selectedId === node.id;
+                return (
+                  <div key={node.id} className="request-system__node-wrapper">
+                    <button
+                      className={`request-system__node ${isSelected ? 'selected' : ''}`}
+                      onClick={() => setSelectedId(node.id)}
+                      aria-label={`Inspect ${node.label}`}
+                    >
+                      <div className="node-top-row">
+                        <span className="node-tag text-mono">{node.tag}</span>
+                        <span className="node-latency text-mono">{node.baselineLatency.replace('+', '')}</span>
+                      </div>
+                      <div className="node-main-row">
+                        <span className="node-title">{node.label}</span>
+                        {isSelected && <span className="node-active-arrow text-mono">&rarr;</span>}
+                      </div>
+                      <div className="node-meta-row text-mono">
+                        <span>{node.unitCost.split('/')[0].trim()}</span>
+                        <span style={{ opacity: 0.6 }}>&bull;</span>
+                        <span style={{ color: node.impactPercent >= 70 ? 'var(--color-warning)' : 'var(--color-text-muted)' }}>
+                          {node.impactPercent >= 70 ? `${node.impactPercent}% LOAD` : `${node.impactPercent}%`}
+                        </span>
+                      </div>
+                    </button>
+
+                    {i < SYSTEM_NODES.length - 1 && (
+                      <div className="request-system__connector">
+                        <svg width="2" height="18" viewBox="0 0 2 18">
+                          <line x1="1" y1="0" x2="1" y2="18" stroke="var(--color-border-strong)" strokeWidth="1" strokeDasharray="3 3" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
 
-          {detail && selectedNode && (
-            <motion.div
-              className="request-system__detail"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              key={selectedNode}
-            >
-              <div className="detail-header-row">
-                <span className="text-technical-label">COMPONENT SPECIFICATION</span>
-                <span className="text-mono" style={{ fontSize: '0.6875rem', color: '#FFFFFF' }}>
-                  {SYSTEM_NODES.find(n => n.id === selectedNode)?.label}
+          {/* Right Column: High-Density Architectural Inspection Console */}
+          <motion.div
+            key={activeSubsystem.id}
+            className="request-system__console"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
+            {/* Console Header Bar */}
+            <div className="console-top-bar">
+              <div className="console-top-left">
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                  {activeSubsystem.subsystemIndex}
+                </span>
+                <span className="text-technical-label" style={{ color: 'var(--color-text-secondary)' }}>
+                  INSPECTION TELEMETRY
                 </span>
               </div>
-              <div className="request-system__detail-row">
-                <span className="text-caption">Role</span>
-                <span className="text-body-sm" style={{ color: 'var(--color-text)' }}>{detail.role}</span>
+              <div className="console-top-right">
+                <span className="status-dot-pulse" />
+                <span className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+                  DETERMINISTIC V1 SPEC
+                </span>
               </div>
-              <div className="request-system__detail-row">
-                <span className="text-caption">Cost Impact</span>
-                <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text)' }}>{detail.cost}</span>
+            </div>
+
+            {/* Subsystem Name & Primary Role */}
+            <div className="console-heading-block">
+              <h3 className="subsystem-title">{activeSubsystem.label}</h3>
+              <p className="subsystem-role">{activeSubsystem.role}</p>
+            </div>
+
+            {/* Telemetry Metric Cards Strip (3-column instrument display) */}
+            <div className="console-metrics-grid">
+              <div className="console-metric-cell">
+                <span className="metric-cell-tag text-mono">UNIT COST RATE</span>
+                <span className="metric-cell-val text-mono">{activeSubsystem.unitCost}</span>
+                <span className="metric-cell-sub text-mono">{activeSubsystem.unitCostSub}</span>
               </div>
-              <div className="request-system__detail-row">
-                <span className="text-caption">Latency Added</span>
-                <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text)' }}>{detail.latency}</span>
+
+              <div className="console-metric-cell">
+                <span className="metric-cell-tag text-mono">BASELINE LATENCY PENALTY</span>
+                <span className="metric-cell-val text-mono">{activeSubsystem.baselineLatency}</span>
+                <span className="metric-cell-sub text-mono">{activeSubsystem.latencySub}</span>
               </div>
-            </motion.div>
-          )}
+
+              <div className="console-metric-cell">
+                <span className="metric-cell-tag text-mono">SYSTEM SPEND CONTRIBUTION</span>
+                <span className="metric-cell-val text-mono" style={{ color: activeSubsystem.impactPercent >= 70 ? 'var(--color-warning)' : 'var(--color-text)' }}>
+                  {activeSubsystem.impactPercent}%
+                </span>
+                <div className="console-meter-track">
+                  <div
+                    className="console-meter-fill"
+                    style={{
+                      width: `${Math.min(100, activeSubsystem.impactPercent)}%`,
+                      backgroundColor: activeSubsystem.impactPercent >= 70 ? 'var(--color-warning)' : 'var(--color-text)',
+                    }}
+                  />
+                </div>
+                <span className="metric-cell-sub text-mono">{activeSubsystem.systemImpact}</span>
+              </div>
+            </div>
+
+            {/* Signal Flow Trace */}
+            <div className="console-signal-trace">
+              <div className="signal-trace-header">
+                <span className="text-technical-label">SIGNAL FLOW STAGE</span>
+                <span className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+                  INBOUND &rarr; SUBSYSTEM &rarr; OUTBOUND
+                </span>
+              </div>
+
+              <div className="signal-flow-row">
+                <div className="signal-hop">
+                  <span className="signal-hop-label text-mono">INPUT SIGNAL</span>
+                  <span className="signal-hop-text text-mono">{activeSubsystem.inputSignal}</span>
+                </div>
+                <div className="signal-arrow text-mono">&rarr;</div>
+                <div className="signal-hop active-hop">
+                  <span className="signal-hop-label text-mono">PROCESSING</span>
+                  <span className="signal-hop-text">{activeSubsystem.tag} EXECUTION</span>
+                </div>
+                <div className="signal-arrow text-mono">&rarr;</div>
+                <div className="signal-hop">
+                  <span className="signal-hop-label text-mono">OUTPUT SIGNAL</span>
+                  <span className="signal-hop-text text-mono">{activeSubsystem.outputSignal}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Failure Modes & Defense Grid */}
+            <div className="console-diagnostics-grid">
+              <div className="diagnostic-card">
+                <span className="diagnostic-tag text-mono" style={{ color: 'var(--color-warning)' }}>
+                  FAILURE MODES &amp; BOTTLENECKS
+                </span>
+                <p className="diagnostic-text">{activeSubsystem.failureMode}</p>
+              </div>
+
+              <div className="diagnostic-card">
+                <span className="diagnostic-tag text-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                  ARCHITECTURAL MITIGATION
+                </span>
+                <p className="diagnostic-text">{activeSubsystem.mitigation}</p>
+              </div>
+            </div>
+
+            {/* Tradeoff Empirical Matrix Table */}
+            <div className="console-tradeoff-block">
+              <div className="tradeoff-header-row">
+                <span className="text-technical-label">{activeSubsystem.tradeoffLabel}</span>
+                <span className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+                  EMPIRICAL TRADE-OFF DELTAS
+                </span>
+              </div>
+
+              <div className="tradeoff-table-wrap">
+                <table className="tradeoff-table text-mono">
+                  <thead>
+                    <tr>
+                      <th>Operating State</th>
+                      <th>Modeled Cost</th>
+                      <th>Latency Impact</th>
+                      <th>Architectural Consequence</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeSubsystem.tradeoffRows.map((row, idx) => (
+                      <tr key={idx}>
+                        <td style={{ color: 'var(--color-text)', fontWeight: 500 }}>{row.condition}</td>
+                        <td style={{ color: '#FFFFFF' }}>{row.cost}</td>
+                        <td style={{ color: '#D4D4D8' }}>{row.latency}</td>
+                        <td style={{ color: 'var(--color-text-secondary)' }}>{row.impact}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Footer Action Bar */}
+            <div className="console-footer-bar">
+              <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                Simulate this layer with custom tokens &amp; latency formulas:
+              </span>
+              <Link href="/simulator" className="btn btn-primary btn-sm">
+                Open in Workstation &rarr;
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
 
       <style jsx>{`
         .request-system {
           display: grid;
-          grid-template-columns: auto 1fr;
-          gap: var(--space-8);
+          grid-template-columns: 240px 1fr;
+          gap: var(--space-6);
           align-items: start;
         }
+
+        /* ── Left Column: Chain ── */
+        .request-system__chain-col {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
+        .chain-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: var(--space-2);
+          border-bottom: 1px solid var(--color-border);
+          margin-bottom: var(--space-1);
+        }
+
         .request-system__chain {
           display: flex;
           flex-direction: column;
-          align-items: center;
+          align-items: stretch;
         }
+
         .request-system__node-wrapper {
           display: flex;
           flex-direction: column;
-          align-items: center;
+          align-items: stretch;
         }
+
         .request-system__node {
           display: flex;
           flex-direction: column;
-          align-items: flex-start;
-          gap: 2px;
-          padding: 8px 14px;
+          align-items: stretch;
+          gap: 3px;
+          padding: 10px 12px;
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
           cursor: pointer;
           transition: all var(--duration-fast) var(--ease-out);
-          min-width: 170px;
           text-align: left;
+          width: 100%;
         }
+
+        .node-top-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
         .node-tag {
-          font-size: 0.625rem;
+          font-size: 0.5625rem;
           color: var(--color-text-muted);
           letter-spacing: 0.08em;
           text-transform: uppercase;
         }
+
+        .node-latency {
+          font-size: 0.625rem;
+          color: var(--color-text-muted);
+        }
+
+        .node-main-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 6px;
+        }
+
         .node-title {
           font-family: var(--font-ui);
           font-size: 0.8125rem;
           font-weight: 500;
           color: var(--color-text);
         }
+
+        .node-active-arrow {
+          font-size: 0.75rem;
+          color: var(--color-text);
+        }
+
+        .node-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.6875rem;
+          color: var(--color-text-secondary);
+        }
+
         .request-system__node:hover {
           border-color: var(--color-border-strong);
           background: var(--color-bg-elevated);
         }
+
         .request-system__node.selected {
-          border-color: var(--color-accent);
-          background: #141417;
+          border-color: var(--color-border-focus);
+          background: var(--color-bg-elevated);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         }
+
         .request-system__connector {
+          display: flex;
+          justify-content: center;
           padding: 2px 0;
         }
-        .request-system__detail {
-          padding: var(--space-6);
+
+        /* ── Right Column: Architectural Inspection Console ── */
+        .request-system__console {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
-          position: sticky;
-          top: 120px;
+          padding: var(--space-6);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-5);
         }
-        .detail-header-row {
+
+        .console-top-bar {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding-bottom: var(--space-3);
           border-bottom: 1px solid var(--color-border);
-          margin-bottom: var(--space-2);
         }
-        .request-system__detail-row {
+
+        .console-top-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .console-top-right {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .status-dot-pulse {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #FFFFFF;
+          display: inline-block;
+        }
+
+        .console-heading-block {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .subsystem-title {
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: var(--color-text);
+          margin: 0;
+        }
+
+        .subsystem-role {
+          font-family: var(--font-ui);
+          font-size: 0.875rem;
+          line-height: 1.55;
+          color: var(--color-text-secondary);
+          margin: 0;
+        }
+
+        /* ── Telemetry 3-Column Strip ── */
+        .console-metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: var(--space-3);
+        }
+
+        .console-metric-cell {
+          background: var(--color-bg-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          padding: var(--space-3) var(--space-4);
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .metric-cell-tag {
+          font-size: 0.625rem;
+          color: var(--color-text-muted);
+          letter-spacing: 0.04em;
+        }
+
+        .metric-cell-val {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: var(--color-text);
+        }
+
+        .metric-cell-sub {
+          font-size: 0.6875rem;
+          color: var(--color-text-secondary);
+          line-height: 1.3;
+        }
+
+        .console-meter-track {
+          height: 3px;
+          background: var(--color-border);
+          border-radius: 1px;
+          overflow: hidden;
+          margin-top: 2px;
+        }
+
+        .console-meter-fill {
+          height: 100%;
+          transition: width 0.25s ease;
+        }
+
+        /* ── Signal Flow ── */
+        .console-signal-trace {
+          background: var(--color-bg-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          padding: var(--space-4);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
+        .signal-trace-header {
           display: flex;
           justify-content: space-between;
-          padding: var(--space-2) 0;
-          font-size: 0.8125rem;
+          align-items: center;
+          margin-bottom: 2px;
+        }
+
+        .signal-flow-row {
+          display: grid;
+          grid-template-columns: 1fr auto 1fr auto 1fr;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .signal-hop {
+          background: var(--color-bg);
+          border: 1px solid var(--color-border-subtle);
+          border-radius: var(--radius-sm);
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .signal-hop.active-hop {
+          border-color: var(--color-border-strong);
+          background: #111115;
+        }
+
+        .signal-hop-label {
+          font-size: 0.5625rem;
+          color: var(--color-text-muted);
+          letter-spacing: 0.05em;
+        }
+
+        .signal-hop-text {
+          font-size: 0.6875rem;
+          color: var(--color-text);
+          line-height: 1.3;
+          word-break: break-word;
+        }
+
+        .signal-arrow {
+          color: var(--color-border-strong);
+          font-size: 0.875rem;
+        }
+
+        /* ── Diagnostics Grid ── */
+        .console-diagnostics-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--space-3);
+        }
+
+        .diagnostic-card {
+          background: var(--color-bg-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          padding: var(--space-3) var(--space-4);
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .diagnostic-tag {
+          font-size: 0.625rem;
+          letter-spacing: 0.05em;
+        }
+
+        .diagnostic-text {
+          font-family: var(--font-ui);
+          font-size: 0.75rem;
+          line-height: 1.45;
+          color: var(--color-text-secondary);
+          margin: 0;
+        }
+
+        /* ── Tradeoff Matrix Table ── */
+        .console-tradeoff-block {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
+        .tradeoff-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .tradeoff-table-wrap {
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          overflow: hidden;
+          background: var(--color-bg-surface);
+        }
+
+        .tradeoff-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.75rem;
+        }
+
+        .tradeoff-table th,
+        .tradeoff-table td {
+          padding: 8px 12px;
+          text-align: left;
           border-bottom: 1px solid var(--color-border-subtle);
         }
-        .request-system__detail-row:last-child {
+
+        .tradeoff-table th {
+          background: var(--color-bg);
+          color: var(--color-text-muted);
+          font-size: 0.625rem;
+          font-weight: 500;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+
+        .tradeoff-table tr:last-child td {
           border-bottom: none;
         }
-        @media (max-width: 768px) {
+
+        /* ── Footer Bar ── */
+        .console-footer-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-top: var(--space-3);
+          border-top: 1px solid var(--color-border);
+          gap: var(--space-4);
+          flex-wrap: wrap;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 960px) {
           .request-system {
             grid-template-columns: 1fr;
           }
+
           .request-system__chain {
-            overflow-x: auto;
-            flex-direction: row;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: var(--space-2);
-            justify-content: center;
           }
+
           .request-system__connector {
             display: none;
           }
-          .request-system__node {
-            min-width: auto;
-            padding: var(--space-1) var(--space-3);
+
+          .console-metrics-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .console-diagnostics-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .signal-flow-row {
+            grid-template-columns: 1fr;
+          }
+
+          .signal-arrow {
+            display: none;
+          }
+        }
+
+        @media (max-width: 600px) {
+          .request-system__chain {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
