@@ -89,23 +89,23 @@ export default function HeroInteractive() {
               <span className="meta-label text-mono">PRE-DEPLOYMENT ARCHITECTURE ECONOMICS</span>
             </div>
 
-            <h1 className="text-display-xl tech-hero__title">
-              Design AI Systems.<br />
-              <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>See the economics before you build.</span>
+            <h1 className="tech-hero__title">
+              <span className="hero-title-main">DESIGN AI SYSTEMS.</span>
+              <span className="hero-title-sub">See the economics before you build.</span>
             </h1>
 
-            <p className="text-body-lg tech-hero__lead">
+            <p className="tech-hero__lead">
               Model your architecture, adjust workload assumptions, and understand how infrastructure decisions affect cost and latency before writing deployment code.
             </p>
 
             <div className="tech-hero__cta-group">
-              <Link href="/simulator" className="btn btn-primary btn-lg">
+              <Link href="/simulator" className="btn btn-primary tech-hero__btn-main">
                 OPEN SIMULATOR &rarr;
               </Link>
-              <Link href="/templates" className="btn btn-secondary btn-lg">
+              <Link href="/templates" className="btn btn-secondary tech-hero__btn-sec">
                 EXPLORE TEMPLATES
               </Link>
-              <Link href="/assumptions" className="btn btn-ghost btn-lg text-mono" style={{ fontSize: '0.75rem' }}>
+              <Link href="/assumptions" className="tech-hero__link-assumptions">
                 PRICING ASSUMPTIONS &rarr;
               </Link>
             </div>
@@ -310,34 +310,36 @@ export default function HeroInteractive() {
 
       <style jsx>{`
         .tech-hero {
-          min-height: calc(100vh - 52px);
-          padding-top: 84px;
-          padding-bottom: 64px;
+          min-height: calc(100vh - var(--nav-height));
+          padding-top: calc(var(--nav-height) + 48px);
+          padding-bottom: var(--space-8);
           background: #09090B;
           border-bottom: 1px solid var(--color-border);
           display: flex;
-          align-items: center;
+          align-items: flex-start;
         }
         .tech-hero__grid {
           display: grid;
-          grid-template-columns: 1fr 1.08fr;
-          gap: 48px;
-          align-items: center;
+          grid-template-columns: 1fr 1.18fr;
+          gap: 56px;
+          align-items: flex-start;
         }
         .tech-hero__left {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 24px;
         }
         .tech-hero__meta-strip {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
         }
         .coordinate-tag {
+          font-family: var(--font-mono);
           font-size: 0.6875rem;
           color: #A1A1AA;
           letter-spacing: 0.08em;
+          font-weight: 500;
         }
         .dot-divider {
           width: 3px;
@@ -346,33 +348,96 @@ export default function HeroInteractive() {
           border-radius: 50%;
         }
         .meta-label {
+          font-family: var(--font-mono);
           font-size: 0.6875rem;
           color: #71717A;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.08em;
         }
         .tech-hero__title {
-          margin-top: 4px;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .hero-title-main {
+          display: block;
+          font-family: var(--font-display);
+          font-size: clamp(40px, 4.4vw, 68px);
+          font-weight: 600;
+          line-height: 1.0;
+          letter-spacing: -0.03em;
+          color: #FFFFFF;
+        }
+        .hero-title-sub {
+          display: block;
+          font-family: var(--font-display);
+          font-size: clamp(26px, 2.8vw, 44px);
+          font-weight: 500;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+          color: #A1A1AA;
         }
         .tech-hero__lead {
           font-family: var(--font-sans);
           font-size: 1.0625rem;
-          color: var(--color-text-secondary);
+          color: #A1A1AA;
           line-height: 1.6;
-          max-width: 540px;
+          max-width: 600px;
+          margin: 0;
         }
         .tech-hero__cta-group {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 16px;
           flex-wrap: wrap;
-          margin-top: 8px;
+          margin-top: 4px;
+        }
+        .tech-hero__btn-main {
+          height: 44px;
+          padding: 0 20px;
+          border-radius: 3px;
+          font-family: var(--font-sans);
+          font-size: 0.875rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .tech-hero__btn-sec {
+          height: 44px;
+          padding: 0 18px;
+          border-radius: 3px;
+          font-family: var(--font-sans);
+          font-size: 0.875rem;
+          font-weight: 500;
+          letter-spacing: 0.02em;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .tech-hero__link-assumptions {
+          font-family: var(--font-sans);
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #A1A1AA;
+          text-decoration: none;
+          letter-spacing: 0.02em;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 4px;
+          transition: color 150ms ease;
+        }
+        .tech-hero__link-assumptions:hover {
+          color: #FFFFFF;
         }
         .tech-hero__specs-footer {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
+          gap: 20px;
           padding-top: 24px;
-          margin-top: 8px;
+          margin-top: 12px;
           border-top: 1px solid var(--color-border);
         }
         .spec-item {
@@ -381,50 +446,54 @@ export default function HeroInteractive() {
           gap: 4px;
         }
         .spec-label {
+          font-family: var(--font-mono);
           font-size: 0.625rem;
           color: #71717A;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.08em;
         }
         .spec-val {
-          font-size: 0.75rem;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
           color: #D4D4D8;
           font-weight: 500;
         }
 
         /* ── Right Column: Instrument Shell ── */
         .instrument-shell {
-          background: #111114;
+          background: #101012;
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: 4px;
           overflow: hidden;
         }
         .instrument-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 10px 16px;
-          background: #18181B;
+          padding: 14px 20px;
+          background: #141418;
           border-bottom: 1px solid var(--color-border);
         }
         .instrument-title-row {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
         }
         .instrument-live-tag {
-          font-size: 0.6875rem;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
           color: #FFFFFF;
-          letter-spacing: 0.08em;
-          font-weight: 700;
+          letter-spacing: 0.06em;
+          font-weight: 600;
         }
         .instrument-model-tag {
-          font-size: 0.625rem;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
           color: #71717A;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.06em;
         }
         .instrument-svg-wrap {
           background: #09090B;
-          padding: 12px;
+          padding: 16px 20px;
           border-bottom: 1px solid var(--color-border);
         }
         .instrument-svg {
@@ -433,17 +502,17 @@ export default function HeroInteractive() {
           display: block;
         }
         .instrument-controls-strip {
-          padding: 16px;
+          padding: 20px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          background: #111114;
+          gap: 16px;
+          background: #101012;
           border-bottom: 1px solid var(--color-border);
         }
         .instrument-control-block {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 8px;
         }
         .control-label-row {
           display: flex;
@@ -451,21 +520,24 @@ export default function HeroInteractive() {
           align-items: center;
         }
         .control-title {
+          font-family: var(--font-mono);
           font-size: 0.6875rem;
           color: #A1A1AA;
           letter-spacing: 0.08em;
         }
         .control-value {
+          font-family: var(--font-mono);
           font-size: 0.75rem;
           color: #FFFFFF;
-          font-weight: 600;
+          font-weight: 500;
+          font-variant-numeric: tabular-nums;
         }
         .tech-slider {
           -webkit-appearance: none;
           appearance: none;
           width: 100%;
           height: 3px;
-          background: #27272A;
+          background: #242428;
           outline: none;
           border-radius: 1px;
         }
@@ -488,34 +560,37 @@ export default function HeroInteractive() {
           border: 1px solid #09090B;
         }
         .instrument-readouts-table {
-          padding: 16px;
+          padding: 20px;
           background: #09090B;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 16px;
         }
         .readout-row--primary {
           display: flex;
           justify-content: space-between;
           align-items: baseline;
-          padding-bottom: 10px;
-          border-bottom: 1px solid var(--color-border-subtle);
+          padding-bottom: 14px;
+          border-bottom: 1px solid var(--color-border);
         }
         .readout-label {
+          font-family: var(--font-mono);
           font-size: 0.6875rem;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.08em;
           color: #A1A1AA;
         }
         .readout-num {
-          font-size: 1.75rem;
-          font-weight: 700;
+          font-family: var(--font-mono);
+          font-size: 1.875rem;
+          font-weight: 500;
           color: #FFFFFF;
-          letter-spacing: -0.03em;
+          letter-spacing: -0.02em;
+          font-variant-numeric: tabular-nums;
         }
         .readout-grid-3 {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 12px;
+          gap: 16px;
         }
         .readout-col {
           display: flex;
@@ -523,27 +598,45 @@ export default function HeroInteractive() {
           gap: 4px;
         }
         .readout-col-label {
+          font-family: var(--font-mono);
           font-size: 0.625rem;
           letter-spacing: 0.08em;
           color: #71717A;
         }
         .readout-col-val {
+          font-family: var(--font-mono);
           font-size: 0.9375rem;
-          font-weight: 600;
-          color: #D4D4D8;
+          font-weight: 500;
+          color: #F4F4F5;
+          font-variant-numeric: tabular-nums;
         }
         .readout-footnote {
-          padding-top: 8px;
-          border-top: 1px solid var(--color-border-subtle);
+          padding-top: 10px;
+          border-top: 1px solid var(--color-border);
+          font-family: var(--font-mono);
           font-size: 0.625rem;
-          color: #A1A1AA;
+          color: #71717A;
           letter-spacing: 0.06em;
         }
 
-        @media (max-width: 960px) {
+        @media (max-width: 1080px) {
           .tech-hero__grid {
             grid-template-columns: 1fr;
-            gap: 40px;
+            gap: 48px;
+          }
+        }
+        @media (max-width: 640px) {
+          .tech-hero {
+            padding-top: calc(var(--nav-height) + 24px);
+            padding-bottom: var(--space-6);
+          }
+          .tech-hero__specs-footer {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          .readout-grid-3 {
+            grid-template-columns: 1fr;
+            gap: 12px;
           }
         }
       `}</style>

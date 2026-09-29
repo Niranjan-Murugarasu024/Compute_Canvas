@@ -13,13 +13,11 @@ export default function TemplatesClient() {
   const filtered = category === 'All' ? TEMPLATES : TEMPLATES.filter(t => t.category === category);
 
   return (
-    <div className="container" style={{ paddingTop: 'var(--space-12)', paddingBottom: 'var(--space-16)' }}>
-      <div style={{ maxWidth: 640, marginBottom: 'var(--space-12)' }}>
-        <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
-          [CANONICAL_BLUEPRINTS]
-        </p>
-        <h1 className="text-heading-xl">Start from proven architectures.</h1>
-        <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+    <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + 32px)', paddingBottom: 'var(--space-16)' }}>
+      <div className="section-header-block">
+        <span className="section-label">[CANONICAL_BLUEPRINTS]</span>
+        <h1 className="section-heading">Start from proven architectures.</h1>
+        <p className="section-lead">
           Each template is a functional architectural topology with deterministic simulation outputs. Open in the simulator to adjust workload assumptions.
         </p>
       </div>

@@ -9,19 +9,19 @@ export default function DocsPage() {
     <>
       <Navigation />
       <main className="docs-page">
-        <div className="container" style={{ maxWidth: '960px' }}>
+        <div className="container">
           {/* Header */}
-          <div className="docs-header">
-            <span className="badge badge--primary text-mono">DOCUMENTATION &bull; V1</span>
-            <h1 className="text-display" style={{ fontSize: '2.5rem', marginTop: 'var(--space-2)' }}>
-              ComputeCanvas Architecture &amp; Simulation Guide
+          <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
+            <span className="section-label">[SYSTEM_DOCUMENTATION]</span>
+            <h1 className="section-heading">
+              Architecture &amp; Simulation Guide
             </h1>
-            <p className="docs-subtitle">
+            <p className="section-lead">
               Learn how ComputeCanvas calculates token economics, composite P95 latencies, bottleneck thresholds, and calibration factors without stochastic hallucinations.
             </p>
           </div>
 
-          <div className="docs-body">
+          <div className="docs-body" style={{ maxWidth: '960px' }}>
             {/* Section 1: Overview */}
             <section className="docs-section">
               <h2 className="docs-title">1. What is ComputeCanvas?</h2>
@@ -38,32 +38,32 @@ export default function DocsPage() {
               </p>
               <div className="docs-components-grid">
                 <div className="doc-component-card">
-                  <span className="doc-pill text-mono" style={{ borderColor: '#38bdf8', color: '#38bdf8' }}>INGRESS</span>
+                  <span className="doc-pill text-mono">INGRESS</span>
                   <h3>API Ingress Gateway</h3>
                   <p>Handles incoming client traffic, TLS termination, and rate gating ($1.00 / 1M requests, ~12ms latency).</p>
                 </div>
                 <div className="doc-component-card">
-                  <span className="doc-pill text-mono" style={{ borderColor: '#34d399', color: '#34d399' }}>CACHE</span>
+                  <span className="doc-pill text-mono">CACHE</span>
                   <h3>Semantic Cache</h3>
                   <p>Intercepts incoming prompts and serves exact/semantic cache hits, skipping model inference entirely ($65/mo base + memory, ~5ms).</p>
                 </div>
                 <div className="doc-component-card">
-                  <span className="doc-pill text-mono" style={{ borderColor: '#a78bfa', color: '#a78bfa' }}>ROUTER</span>
+                  <span className="doc-pill text-mono">ROUTER</span>
                   <h3>Complexity Router</h3>
                   <p>Analyzes prompt intent and dynamically steers queries between fast low-cost models and high-depth frontier models ($0.50 / 1M requests, ~8ms).</p>
                 </div>
                 <div className="doc-component-card">
-                  <span className="doc-pill text-mono" style={{ borderColor: '#fbbf24', color: '#fbbf24' }}>RETRIEVAL</span>
+                  <span className="doc-pill text-mono">RETRIEVAL</span>
                   <h3>Vector Database</h3>
                   <p>Stores document chunk embeddings and executes approximate nearest-neighbor search for RAG ($120/mo cluster base + $0.20/1M queries, ~45ms).</p>
                 </div>
                 <div className="doc-component-card">
-                  <span className="doc-pill text-mono" style={{ borderColor: '#06b6d4', color: '#06b6d4' }}>FAST MODEL</span>
+                  <span className="doc-pill text-mono">FAST MODEL</span>
                   <h3>Fast Reasoning Model</h3>
                   <p>Sub-150ms models (e.g. GPT-4o Mini, Gemini 2.0 Flash) priced at $0.10–0.15 / 1M input tokens and $0.40–0.60 / 1M output tokens.</p>
                 </div>
                 <div className="doc-component-card">
-                  <span className="doc-pill text-mono" style={{ borderColor: '#ec4899', color: '#ec4899' }}>FRONTIER</span>
+                  <span className="doc-pill text-mono">FRONTIER</span>
                   <h3>Frontier Reasoning Model</h3>
                   <p>High-intelligence tier (e.g. GPT-4o, Claude 3.5 Sonnet) priced at $2.50–3.00 / 1M input tokens and $10.00–15.00 / 1M output tokens (~380–420ms).</p>
                 </div>
@@ -208,28 +208,32 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
           margin: 0;
         }
         .doc-pill {
-          font-size: 0.5625rem;
-          font-weight: 700;
-          border: 1px solid;
-          border-radius: 3px;
-          padding: 1px 5px;
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          font-weight: 500;
+          border: 1px solid var(--color-border);
+          background: #141418;
+          color: #A1A1AA;
+          border-radius: 2px;
+          padding: 2px 6px;
           display: inline-block;
+          letter-spacing: 0.06em;
         }
         .docs-code-block {
-          background: var(--color-surface, #0d0d11);
-          border: 1px solid var(--color-border-strong);
-          border-radius: var(--radius-md);
+          background: #09090B;
+          border: 1px solid var(--color-border);
+          border-radius: 3px;
           padding: var(--space-4);
           font-family: var(--font-mono);
           font-size: 0.8125rem;
-          color: var(--color-cost);
+          color: #F4F4F5;
           overflow-x: auto;
           line-height: 1.6;
         }
         .docs-cta-card {
-          background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12) 0%, transparent 60%), var(--color-bg-elevated);
-          border: 1px solid var(--color-border-strong);
-          border-radius: var(--radius-lg);
+          background: #101012;
+          border: 1px solid var(--color-border);
+          border-radius: 4px;
           padding: var(--space-8);
         }
         @media (max-width: 768px) {

@@ -205,12 +205,10 @@ export function EveryRequestSection() {
   return (
     <Section id="every-request">
       <div className="container">
-        <div style={{ maxWidth: 720, marginBottom: 'var(--space-8)' }}>
-          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
-            [ARCHITECTURAL_DECOMPOSITION]
-          </p>
-          <h2 className="text-heading-xl">Every AI request is a system.</h2>
-          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+        <div className="section-header-block">
+          <span className="section-label">[ARCHITECTURAL_DECOMPOSITION]</span>
+          <h2 className="section-heading">Every AI request is a system.</h2>
+          <p className="section-lead">
             What appears to be a single API call hides an entire multi-tier pipeline. Every layer introduces token spend, latency penalty, and operational failure modes. Select any subsystem to inspect its telemetry and economics.
           </p>
         </div>
@@ -893,13 +891,11 @@ export function CostDecompositionSection() {
   return (
     <Section id="cost-decomposition">
       <div className="container">
-        <div style={{ maxWidth: 640, marginBottom: 'var(--space-10)' }}>
-          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
-            [ECONOMIC_DECOMPOSITION]
-          </p>
-          <h2 className="text-heading-xl">Cost is not just model pricing.</h2>
-          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
-            Every layer of your architecture contributes to the total monthly spend. Adjust the workload parameters to see how traffic scale and cache hit rate reshape the economic profile.
+        <div className="section-header-block">
+          <span className="section-label">[ECONOMIC_DECOMPOSITION]</span>
+          <h2 className="section-heading">Cost is not just model pricing.</h2>
+          <p className="section-lead">
+            Every layer of your architecture contributes to total monthly spend. Adjust workload parameters to see how traffic scale and cache hit rate reshape the economic profile.
           </p>
         </div>
 
@@ -1063,24 +1059,24 @@ export function CostDecompositionSection() {
       <style jsx>{`
         .cost-instrument {
           display: grid;
-          grid-template-columns: 320px 1fr;
-          gap: var(--space-8);
-          background: var(--color-bg-elevated);
+          grid-template-columns: 340px 1fr;
+          gap: 32px;
+          background: #101012;
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          padding: var(--space-8);
+          border-radius: 4px;
+          padding: 28px;
         }
         .cost-instrument__controls {
           display: flex;
           flex-direction: column;
-          gap: var(--space-4);
-          padding-right: var(--space-6);
+          gap: 20px;
+          padding-right: 28px;
           border-right: 1px solid var(--color-border);
         }
         .control-group {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 6px;
         }
         .control-header {
           display: flex;
@@ -1090,49 +1086,59 @@ export function CostDecompositionSection() {
         .slider-markers {
           display: flex;
           justify-content: space-between;
+          font-family: var(--font-mono);
           font-size: 0.625rem;
-          color: var(--color-text-muted);
+          color: #71717A;
+          letter-spacing: 0.04em;
         }
         .select-input {
           padding: 8px 10px;
-          background: var(--color-bg-surface);
+          background: #141418;
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          color: var(--color-text);
+          border-radius: 3px;
+          color: #FFFFFF;
           font-family: var(--font-mono);
           font-size: 0.75rem;
+          outline: none;
+        }
+        .select-input:focus {
+          border-color: #A1A1AA;
         }
         .cost-instrument__bars {
           display: flex;
           flex-direction: column;
-          gap: var(--space-6);
+          gap: 24px;
         }
         .cost-summary-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          padding-bottom: var(--space-4);
+          padding-bottom: 18px;
           border-bottom: 1px solid var(--color-border);
         }
         .cost-total-number {
-          font-size: 2rem;
-          font-weight: 600;
-          line-height: 1.1;
-          margin-top: 4px;
+          font-family: var(--font-mono);
+          font-size: 2.25rem;
+          font-weight: 500;
+          line-height: 1.05;
+          margin-top: 6px;
+          letter-spacing: -0.02em;
+          font-variant-numeric: tabular-nums;
         }
         .savings-badge {
-          background: var(--color-bg-surface);
-          border: 1px solid var(--color-border-strong);
-          border-radius: var(--radius-sm);
-          padding: 6px 12px;
+          background: #141418;
+          border: 1px solid var(--color-border);
+          border-radius: 3px;
+          padding: 8px 14px;
           display: flex;
           flex-direction: column;
           align-items: flex-end;
+          gap: 2px;
         }
         .breakdown-track-list {
           display: flex;
           flex-direction: column;
-          gap: var(--space-4);
+          gap: 16px;
         }
         .breakdown-track-item {
           display: flex;
@@ -1145,35 +1151,39 @@ export function CostDecompositionSection() {
           align-items: center;
         }
         .track-dot {
-          width: 6px;
-          height: 6px;
+          width: 5px;
+          height: 5px;
           border-radius: 1px;
         }
         .bar-track {
-          height: 6px;
-          background: var(--color-bg-surface);
-          border-radius: var(--radius-xs);
+          height: 4px;
+          background: #18181B;
+          border-radius: 1px;
           overflow: hidden;
         }
         .bar-fill {
           height: 100%;
-          border-radius: var(--radius-xs);
+          border-radius: 1px;
         }
         .cost-causality-callout {
-          background: var(--color-bg-surface);
-          border: 1px solid var(--color-border-subtle);
-          padding: var(--space-3) var(--space-4);
-          border-radius: var(--radius-md);
+          background: #141418;
+          border: 1px solid var(--color-border);
+          padding: 12px 16px;
+          border-radius: 3px;
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
         }
         @media (max-width: 900px) {
           .cost-instrument {
             grid-template-columns: 1fr;
+            padding: 20px;
           }
           .cost-instrument__controls {
             padding-right: 0;
             border-right: none;
             border-bottom: 1px solid var(--color-border);
-            padding-bottom: var(--space-6);
+            padding-bottom: 24px;
           }
         }
       `}</style>
@@ -1336,12 +1346,10 @@ export function ScaleSection() {
   return (
     <Section id="scale">
       <div className="container">
-        <div style={{ maxWidth: 640, marginBottom: 'var(--space-10)' }}>
-          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
-            [SCALE_TRANSITIONS]
-          </p>
-          <h2 className="text-heading-xl">Scale changes the architecture.</h2>
-          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+        <div className="section-header-block">
+          <span className="section-label">[SCALE_TRANSITIONS]</span>
+          <h2 className="section-heading">Scale changes the architecture.</h2>
+          <p className="section-lead">
             What functions at 100K requests breaks at 10M. Watch components emerge, routing bifurcate, and economics shift across four orders of magnitude.
           </p>
         </div>
@@ -1357,11 +1365,11 @@ export function ScaleSection() {
                 role="tab"
                 aria-selected={activeStep === idx}
               >
-                <span className="text-mono" style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                <span className="scale-tab-value text-mono">
                   {t.trafficLabel}
                 </span>
-                <span className="text-technical-label" style={{ color: activeStep === idx ? '#FFFFFF' : 'var(--color-text-muted)' }}>
-                  {t.label}
+                <span className="scale-tab-label">
+                  {t.label.toUpperCase()}
                 </span>
               </button>
             ))}
@@ -1504,9 +1512,9 @@ export function ScaleSection() {
 
       <style jsx>{`
         .scale-living {
-          background: var(--color-bg-elevated);
+          background: #101012;
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: 4px;
           overflow: hidden;
         }
         .scale-living__tabs {
@@ -1519,25 +1527,39 @@ export function ScaleSection() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 2px;
-          padding: var(--space-4) var(--space-2);
-          background: var(--color-bg-elevated);
+          justify-content: center;
+          gap: 6px;
+          padding: 18px 12px;
+          background: #141418;
           border: none;
           cursor: pointer;
-          transition: all var(--duration-fast);
+          transition: all 150ms ease;
         }
         .scale-living__tab:hover {
-          background: var(--color-bg-surface);
+          background: #18181D;
         }
         .scale-living__tab.active {
-          background: var(--color-bg-surface);
-          box-shadow: inset 0 -3px 0 var(--color-accent);
+          background: #101012;
+          box-shadow: inset 0 -2px 0 #FFFFFF;
+        }
+        .scale-tab-value {
+          font-family: var(--font-mono);
+          font-size: 1.5rem;
+          font-weight: 500;
+          color: #FFFFFF;
+          font-variant-numeric: tabular-nums;
+        }
+        .scale-tab-label {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          letter-spacing: 0.08em;
+          color: #A1A1AA;
         }
         .scale-living__content {
           display: grid;
-          grid-template-columns: 1fr 280px;
-          gap: var(--space-6);
-          padding: var(--space-6);
+          grid-template-columns: 1fr 300px;
+          gap: 28px;
+          padding: 24px;
         }
         .scale-living__topology {
           display: flex;
@@ -1547,47 +1569,59 @@ export function ScaleSection() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: var(--space-3);
+          margin-bottom: 14px;
         }
         .topology-svg-wrap {
-          background: var(--color-bg);
-          border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-md);
+          background: #09090B;
+          border: 1px solid var(--color-border);
+          border-radius: 3px;
           overflow: hidden;
         }
         .bottleneck-strip {
           display: flex;
           align-items: center;
-          gap: var(--space-2);
-          background: rgba(245, 158, 11, 0.08);
-          border: 1px solid rgba(245, 158, 11, 0.25);
-          padding: 8px 12px;
-          border-radius: var(--radius-sm);
-          margin-top: var(--space-4);
+          gap: 10px;
+          background: #141418;
+          border: 1px solid var(--color-border);
+          padding: 10px 14px;
+          border-radius: 3px;
+          margin-top: 16px;
         }
         .scale-living__metrics {
           display: flex;
           flex-direction: column;
-          gap: var(--space-3);
+          gap: 14px;
           border-left: 1px solid var(--color-border);
-          padding-left: var(--space-6);
+          padding-left: 24px;
         }
         .scale-metric-box {
-          background: var(--color-bg);
-          border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-sm);
-          padding: var(--space-3);
+          background: #09090B;
+          border: 1px solid var(--color-border);
+          border-radius: 3px;
+          padding: 14px;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
         }
         .scale-metric-val {
-          font-size: 1.25rem;
-          font-weight: 700;
+          font-family: var(--font-mono);
+          font-size: 1.375rem;
+          font-weight: 500;
+          font-variant-numeric: tabular-nums;
         }
         @media (max-width: 860px) {
           .scale-living__content {
             grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 18px;
+          }
+          .scale-living__metrics {
+            border-left: none;
+            border-top: 1px solid var(--color-border);
+            padding-left: 0;
+            padding-top: 18px;
+          }
+        }
           }
           .scale-living__metrics {
             border-left: none;
@@ -1754,12 +1788,10 @@ export function WhatWouldYouBuildSection() {
   return (
     <Section id="what-would-you-build">
       <div className="container">
-        <div style={{ maxWidth: 640, marginBottom: 'var(--space-10)' }}>
-          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
-            [ARCHITECTURAL_TRADEOFFS]
-          </p>
-          <h2 className="text-heading-xl">What would you optimize for?</h2>
-          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+        <div className="section-header-block">
+          <span className="section-label">[ARCHITECTURAL_TRADEOFFS]</span>
+          <h2 className="section-heading">What would you optimize for?</h2>
+          <p className="section-lead">
             Every AI architecture decision is an explicit engineering tradeoff. Select an objective to inspect how component topologies alter cost, latency, and capability.
           </p>
         </div>
@@ -1848,80 +1880,85 @@ export function WhatWouldYouBuildSection() {
         .objectives-wrap {
           display: flex;
           flex-direction: column;
-          gap: var(--space-4);
+          gap: 20px;
         }
         .objectives-choices {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
-          gap: var(--space-2);
+          gap: 8px;
         }
         .obj-btn {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 6px;
-          padding: var(--space-4) var(--space-2);
-          background: var(--color-bg-elevated);
+          justify-content: center;
+          gap: 8px;
+          padding: 16px 10px;
+          background: #141418;
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
+          border-radius: 3px;
           cursor: pointer;
-          color: var(--color-text-secondary);
-          transition: all var(--duration-fast);
+          color: #A1A1AA;
+          transition: all 150ms ease;
         }
         .obj-btn:hover {
-          border-color: var(--color-border-strong);
-          color: var(--color-text);
+          border-color: #3F3F46;
+          color: #FFFFFF;
+          background: #18181D;
         }
         .obj-btn.active {
-          border-color: var(--color-accent);
-          background: var(--color-bg-surface);
-          color: var(--color-text);
+          border-color: #FFFFFF;
+          background: #101012;
+          color: #FFFFFF;
           box-shadow: none;
         }
         .obj-icon {
           font-size: 1.125rem;
-          color: var(--color-text);
+          color: #FFFFFF;
         }
         .obj-card {
-          background: var(--color-bg-elevated);
+          background: #101012;
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          padding: var(--space-6);
+          border-radius: 4px;
+          padding: 24px;
           display: flex;
           flex-direction: column;
-          gap: var(--space-6);
+          gap: 24px;
         }
         .obj-card-top {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          gap: var(--space-4);
-          padding-bottom: var(--space-4);
-          border-bottom: 1px solid var(--color-border-subtle);
+          gap: 20px;
+          padding-bottom: 18px;
+          border-bottom: 1px solid var(--color-border);
         }
         .obj-metrics-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: var(--space-4);
+          gap: 16px;
         }
         .obj-metric-item {
-          background: var(--color-bg);
-          border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-xs);
-          padding: var(--space-3);
+          background: #09090B;
+          border: 1px solid var(--color-border);
+          border-radius: 3px;
+          padding: 14px;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
         }
         .obj-metric-num {
+          font-family: var(--font-mono);
           font-size: 1.25rem;
           font-weight: 500;
+          color: #FFFFFF;
+          font-variant-numeric: tabular-nums;
         }
         .obj-tradeoff-note {
-          background: var(--color-bg-surface);
-          border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-xs);
-          padding: var(--space-3) var(--space-4);
+          background: #141418;
+          border: 1px solid var(--color-border);
+          border-radius: 3px;
+          padding: 12px 16px;
         }
         @media (max-width: 860px) {
           .objectives-choices {
@@ -1959,12 +1996,13 @@ function StoryLine({ text, muted }: { text: string; muted: boolean }) {
       ref={ref}
       className="story-flow__line"
       style={{
-        color: muted ? 'var(--color-text-secondary)' : 'var(--color-text)',
+        color: muted ? '#A1A1AA' : '#FFFFFF',
         fontFamily: 'var(--font-display)',
         fontSize: 'clamp(1.75rem, 3.2vw, 2.5rem)',
-        fontWeight: 600,
+        fontWeight: muted ? 500 : 600,
         lineHeight: 1.2,
         letterSpacing: '-0.02em',
+        margin: 0,
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -1978,44 +2016,91 @@ function StoryLine({ text, muted }: { text: string; muted: boolean }) {
 export function StoryFlowSection() {
   return (
     <Section id="story-flow">
-      <div className="container" style={{ maxWidth: 720, textAlign: 'center' }}>
-        <div className="story-flow">
-          {STORY_LINES.map((line, i) => (
-            <StoryLine key={i} text={line.text} muted={line.muted} />
-          ))}
-        </div>
-
-        <motion.div
-          className="story-flow__ctas"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-        >
-          <p className="text-display-lg" style={{ marginBottom: 'var(--space-8)' }}>
-            Build. <span style={{ color: 'var(--color-text-secondary)' }}>Simulate.</span><br />
-            <span style={{ color: 'var(--color-text-muted)' }}>Compare. Optimize.</span>
-          </p>
-          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/simulator" className="btn btn-primary" style={{ padding: '12px 24px' }}>
-              OPEN SIMULATOR &rarr;
-            </Link>
-            <Link href="/templates" className="btn btn-secondary" style={{ padding: '12px 24px' }}>
-              EXPLORE TEMPLATES &rarr;
-            </Link>
+      <div className="container">
+        <div className="story-flow-block">
+          <span className="section-label">[SYSTEM_THESIS]</span>
+          <div className="story-flow">
+            {STORY_LINES.map((line, i) => (
+              <StoryLine key={i} text={line.text} muted={line.muted} />
+            ))}
           </div>
-        </motion.div>
+
+          <motion.div
+            className="story-flow__ctas"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            <p className="story-flow__statement">
+              Build. <span style={{ color: '#A1A1AA' }}>Simulate.</span>{' '}
+              <span style={{ color: '#71717A' }}>Compare. Optimize.</span>
+            </p>
+            <div className="story-flow__btn-group">
+              <Link href="/simulator" className="btn btn-primary story-btn-main">
+                OPEN SIMULATOR &rarr;
+              </Link>
+              <Link href="/templates" className="btn btn-secondary story-btn-sec">
+                EXPLORE TEMPLATES
+              </Link>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       <style jsx>{`
+        .story-flow-block {
+          max-width: 840px;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
         .story-flow {
           display: flex;
           flex-direction: column;
-          gap: var(--space-8);
-          padding: var(--space-16) 0;
+          gap: 28px;
+          padding: 32px 0;
+          border-bottom: 1px solid var(--color-border);
+        }
+        .story-flow__statement {
+          font-family: var(--font-display);
+          font-size: clamp(2rem, 3.4vw, 3rem);
+          font-weight: 600;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+          color: #FFFFFF;
+          margin: 0 0 24px 0;
         }
         .story-flow__ctas {
-          padding-top: var(--space-12);
+          padding-top: 16px;
+        }
+        .story-flow__btn-group {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .story-btn-main {
+          height: 44px;
+          padding: 0 22px;
+          border-radius: 3px;
+          font-family: var(--font-sans);
+          font-size: 0.875rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          display: inline-flex;
+          align-items: center;
+        }
+        .story-btn-sec {
+          height: 44px;
+          padding: 0 20px;
+          border-radius: 3px;
+          font-family: var(--font-sans);
+          font-size: 0.875rem;
+          font-weight: 500;
+          letter-spacing: 0.02em;
+          display: inline-flex;
+          align-items: center;
         }
       `}</style>
     </Section>
@@ -2030,48 +2115,50 @@ export function TemplatesPreviewSection() {
   return (
     <Section id="templates-preview">
       <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--space-8)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-          <div style={{ maxWidth: 480 }}>
-            <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
-              [CANONICAL_BLUEPRINTS]
-            </p>
-            <h2 className="text-heading-xl">Start from proven architectures.</h2>
+        <div className="section-header-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px' }}>
+          <div>
+            <span className="section-label">[CANONICAL_BLUEPRINTS]</span>
+            <h2 className="section-heading">Start from proven architectures.</h2>
+            <p className="section-lead">Pre-modeled topologies with verified cost functions and empirical latency baselines.</p>
           </div>
-          <Link href="/templates" className="btn btn-secondary">
+          <Link href="/templates" className="btn btn-secondary" style={{ height: '42px', padding: '0 18px', borderRadius: '3px', fontFamily: 'var(--font-sans)', fontSize: '0.875rem', fontWeight: 500 }}>
             VIEW ALL TEMPLATES &rarr;
           </Link>
         </div>
 
         <div className="templates-grid">
-          {TEMPLATES.slice(0, 3).map(template => {
+          {TEMPLATES.slice(0, 3).map((template, idx) => {
             const result = simulate(template.defaultWorkload, template.architecture);
+            const indexLabel = `0${idx + 1} / ${template.category.toUpperCase()}`;
             return (
               <Link href={`/simulator?template=${template.id}`} key={template.id} className="template-card">
                 <div className="template-card__header">
-                  <span className="text-technical-label">{template.category}</span>
+                  <span className="text-mono" style={{ fontSize: '0.6875rem', letterSpacing: '0.08em', color: '#71717A' }}>
+                    {indexLabel}
+                  </span>
                 </div>
-                <h3 style={{ fontSize: '1.125rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
+                <h3 style={{ fontSize: '1.125rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: '8px', color: '#FFFFFF' }}>
                   {template.name}
                 </h3>
-                <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-sans)', color: '#A1A1AA', marginBottom: '16px', lineHeight: 1.55 }}>
                   {template.description}
                 </p>
                 <div className="template-card__metrics">
                   <div>
-                    <span className="text-technical-label">EST. SPEND</span>
-                    <span className="text-mono" style={{ color: 'var(--color-text)', fontSize: '0.8125rem', fontWeight: 500 }}>
-                      {formatCurrency(result.monthlyCost, true)}/mo
+                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>EST. SPEND</span>
+                    <span className="text-mono" style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
+                      {formatCurrency(result.monthlyCost, true)}/MO
                     </span>
                   </div>
                   <div>
-                    <span className="text-technical-label">P95 LATENCY</span>
-                    <span className="text-mono" style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>
+                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>P95 LATENCY</span>
+                    <span className="text-mono" style={{ color: '#D4D4D8', fontSize: '0.875rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
                       {formatLatency(result.p95Latency)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-technical-label">NODES</span>
-                    <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>NODES</span>
+                    <span className="text-mono" style={{ fontSize: '0.875rem', color: '#A1A1AA', fontVariantNumeric: 'tabular-nums' }}>
                       {template.architecture.nodes.length}
                     </span>
                   </div>
@@ -2089,7 +2176,7 @@ export function TemplatesPreviewSection() {
           gap: 1px;
           background: var(--color-border);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
+          border-radius: 4px;
           overflow: hidden;
         }
         @media (max-width: 820px) {
@@ -2102,24 +2189,24 @@ export function TemplatesPreviewSection() {
         .template-card {
           display: flex;
           flex-direction: column;
-          padding: var(--space-6);
-          background: var(--color-bg-elevated);
+          padding: 24px;
+          background: #101012;
           text-decoration: none;
           color: var(--color-text);
-          transition: background var(--duration-fast) var(--ease-out);
+          transition: background 150ms ease;
         }
         .template-card:hover {
-          background: var(--color-bg-surface);
+          background: #141418;
         }
         .template-card__header {
-          margin-bottom: var(--space-3);
+          margin-bottom: 12px;
         }
         .template-card__metrics {
           display: flex;
-          gap: var(--space-6);
+          gap: 20px;
           margin-top: auto;
-          padding-top: var(--space-4);
-          border-top: 1px solid var(--color-border-subtle);
+          padding-top: 16px;
+          border-top: 1px solid var(--color-border);
         }
         .template-card__metrics > div {
           display: flex;
@@ -2141,86 +2228,121 @@ export function Footer() {
       <div className="container">
         <div className="footer__inner">
           <div className="footer__brand">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
+            <div className="footer__wordmark">
               <span style={{ fontSize: '10px', color: '#FFFFFF' }}>■</span>
-              <span style={{ fontWeight: 600, fontSize: '0.9375rem', letterSpacing: '0.06em', fontFamily: 'var(--font-display)' }}>COMPUTECANVAS</span>
-              <span style={{ color: 'var(--color-border-strong)', fontSize: '0.875rem' }}>/</span>
-              <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>V1</span>
+              <span className="footer__brand-text">COMPUTECANVAS</span>
+              <span className="footer__version text-mono">/ V1.2</span>
             </div>
-            <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-muted)', maxWidth: 280, lineHeight: 1.5 }}>
+            <p className="footer__desc">
               Deterministic interactive AI architecture and economics simulator.
             </p>
           </div>
 
-          <div className="footer__links">
-            <div>
-              <p className="text-technical-label" style={{ marginBottom: 'var(--space-3)' }}>PRODUCT</p>
-              <Link href="/simulator">Simulator Workbench</Link>
-              <Link href="/templates">Canonical Templates</Link>
-              <Link href="/assumptions">Pricing Assumptions</Link>
-              <Link href="/pricing">Free Community V1</Link>
-            </div>
-            <div>
-              <p className="text-technical-label" style={{ marginBottom: 'var(--space-3)' }}>SYSTEM</p>
-              <Link href="/docs">Documentation</Link>
-              <Link href="/company">Principles &amp; Design</Link>
-              <Link href="/assumptions">Latency Benchmarks</Link>
-            </div>
-            <div>
-              <p className="text-technical-label" style={{ marginBottom: 'var(--space-3)' }}>LEGAL</p>
-              <Link href="/privacy">Privacy Policy</Link>
-              <Link href="/terms">Terms &amp; Disclaimers</Link>
-            </div>
+          <div className="footer__col">
+            <p className="footer__col-label text-mono">PRODUCT</p>
+            <Link href="/simulator" className="footer__link">Simulator Workbench</Link>
+            <Link href="/templates" className="footer__link">Canonical Templates</Link>
+            <Link href="/assumptions" className="footer__link">Pricing Assumptions</Link>
+            <Link href="/pricing" className="footer__link">Free Community V1</Link>
+          </div>
+
+          <div className="footer__col">
+            <p className="footer__col-label text-mono">SYSTEM</p>
+            <Link href="/docs" className="footer__link">Documentation</Link>
+            <Link href="/company" className="footer__link">Principles &amp; Design</Link>
+            <Link href="/assumptions" className="footer__link">Latency Benchmarks</Link>
+          </div>
+
+          <div className="footer__col">
+            <p className="footer__col-label text-mono">LEGAL</p>
+            <Link href="/privacy" className="footer__link">Privacy Policy</Link>
+            <Link href="/terms" className="footer__link">Terms &amp; Disclaimers</Link>
           </div>
         </div>
 
         <div className="footer__bottom">
-          <span className="text-mono" style={{ fontSize: '0.6875rem' }}>© {new Date().getFullYear()} COMPUTECANVAS // DETERMINISTIC SIMULATION SYSTEM</span>
+          <span className="text-mono" style={{ fontSize: '0.6875rem', color: '#71717A' }}>
+            © {new Date().getFullYear()} COMPUTECANVAS // DETERMINISTIC SIMULATION SYSTEM
+          </span>
         </div>
       </div>
 
       <style jsx global>{`
         .footer {
           border-top: 1px solid var(--color-border);
-          padding: var(--space-12) 0 var(--space-8);
-          margin-top: var(--space-16);
+          padding: 64px 0 36px;
+          margin-top: 120px;
         }
         .footer__inner {
           display: grid;
-          grid-template-columns: 1fr 2fr;
-          gap: var(--space-12);
-          margin-bottom: var(--space-8);
+          grid-template-columns: 1.4fr 1fr 1fr 1fr;
+          gap: 32px;
+          margin-bottom: 48px;
+          align-items: flex-start;
         }
-        .footer__links {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: var(--space-8);
+        .footer__wordmark {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
         }
-        .footer__links a {
-          display: block;
-          font-family: var(--font-ui);
-          color: var(--color-text-secondary);
+        .footer__brand-text {
+          font-family: var(--font-display);
+          font-size: 0.9375rem;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          color: #FFFFFF;
+        }
+        .footer__version {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: #71717A;
+        }
+        .footer__desc {
+          font-family: var(--font-sans);
+          font-size: 0.875rem;
+          color: #A0A0A8;
+          max-width: 280px;
+          line-height: 1.5;
+          margin: 0;
+        }
+        .footer__col {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .footer__col-label {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: #71717A;
+          letter-spacing: 0.08em;
+          margin: 0 0 4px 0;
+        }
+        .footer__link {
+          font-family: var(--font-sans);
+          color: #A0A0A8;
           text-decoration: none;
-          font-size: 0.8125rem;
-          padding: 3px 0;
-          transition: color var(--duration-fast);
+          font-size: 0.875rem;
+          padding: 2px 0;
+          transition: color 150ms ease;
         }
-        .footer__links a:hover {
-          color: var(--color-text);
+        .footer__link:hover {
+          color: #FFFFFF;
         }
         .footer__bottom {
-          padding-top: var(--space-6);
-          border-top: 1px solid var(--color-border-subtle);
-          font-size: 0.75rem;
-          color: var(--color-text-muted);
+          padding-top: 24px;
+          border-top: 1px solid var(--color-border);
         }
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
+          .footer__inner {
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+          }
+        }
+        @media (max-width: 540px) {
           .footer__inner {
             grid-template-columns: 1fr;
-            gap: var(--space-8);
-          }
-          .footer__links {
-            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
           }
         }
       `}</style>

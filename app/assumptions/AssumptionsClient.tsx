@@ -13,17 +13,14 @@ export default function AssumptionsClient() {
     <>
       <Navigation />
       <main className="assumptions-page">
-        <div className="container" style={{ maxWidth: '960px' }}>
-          {/* Header */}
-          <div className="assumptions-header">
-            <span className="badge badge--neutral text-mono">TRANSPARENCY SPECIFICATION</span>
-            <h1 className="text-heading-xl" style={{ marginTop: 'var(--space-2)' }}>
-              Pricing &amp; Simulation Assumptions
-            </h1>
-            <p className="assumptions-subtitle text-body-lg">
+        <div className="container">
+          <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
+            <span className="section-label">[TRANSPARENCY_SPECIFICATION]</span>
+            <h1 className="section-heading">Pricing &amp; Simulation Assumptions</h1>
+            <p className="section-lead">
               Every formula, unit price, latency expectation, and calibration curve used by ComputeCanvas is deterministic and publicly verifiable.
             </p>
-            <div className="trust-disclaimer-box" role="note">
+            <div className="trust-disclaimer-box" role="note" style={{ marginTop: '20px' }}>
               <span className="trust-icon text-mono">[NOTE]</span>
               <p>
                 <strong>Operational Scope: </strong>

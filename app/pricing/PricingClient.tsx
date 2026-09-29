@@ -73,13 +73,11 @@ export default function PricingClient() {
     <>
       <Navigation />
       <main className="pricing-page">
-        <div className="container" style={{ maxWidth: '1040px' }}>
-          <div className="pricing-header">
-            <span className="badge badge--success text-mono">100% FREE DURING V1</span>
-            <h1 className="pricing-title">
-              Simple, Honest Economics
-            </h1>
-            <p className="pricing-subtitle">
+        <div className="container">
+          <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
+            <span className="section-label">[COMMUNITY_ACCESS]</span>
+            <h1 className="section-heading">Simple, Honest Economics</h1>
+            <p className="section-lead">
               ComputeCanvas is completely free while we validate the simulation engine with AI engineers, systems architects, and FinOps practitioners.
             </p>
           </div>

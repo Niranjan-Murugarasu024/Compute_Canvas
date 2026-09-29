@@ -162,21 +162,20 @@ export default function Navigation() {
           left: 0;
           right: 0;
           z-index: 100;
-          height: 52px;
+          height: var(--nav-height, 58px);
           background: #09090B;
           border-bottom: 1px solid var(--color-border);
           transition: background 0.2s ease, border-color 0.2s ease;
         }
         .tech-nav--scrolled {
-          background: rgba(9, 9, 11, 0.95);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
+          background: #09090B;
         }
         .tech-nav__inner {
-          display: flex;
+          display: grid;
+          grid-template-columns: auto 1fr auto;
           align-items: center;
-          justify-content: space-between;
           height: 100%;
+          gap: var(--space-6);
         }
         .tech-nav__brand {
           display: flex;
@@ -189,58 +188,70 @@ export default function Navigation() {
         .tech-nav__symbol {
           font-size: 10px;
           color: var(--color-text);
+          line-height: 1;
         }
         .tech-nav__title {
           font-family: var(--font-display);
           font-size: 0.9375rem; /* 15px */
           font-weight: 600;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.05em;
           color: var(--color-text);
+          line-height: 1;
         }
         .tech-nav__slash {
           color: var(--color-border-strong);
-          font-size: 0.875rem;
+          font-size: 0.8125rem;
           font-weight: 400;
+          line-height: 1;
         }
         .tech-nav__version {
-          font-size: 0.6875rem;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem; /* 11px */
+          font-weight: 400;
           color: var(--color-text-muted);
           letter-spacing: 0.08em;
+          line-height: 1;
         }
         .tech-nav__links {
           display: flex;
           align-items: center;
-          gap: 4px;
+          justify-content: center;
+          gap: 22px;
           height: 100%;
         }
         .tech-nav__link {
           display: inline-flex;
           align-items: center;
           height: 100%;
-          padding: 0 12px;
+          padding: 0 2px;
           font-family: var(--font-ui);
           font-size: 0.8125rem; /* 13px */
           font-weight: 500;
-          letter-spacing: 0.02em;
+          letter-spacing: 0.03em;
           color: var(--color-text-secondary);
           text-decoration: none;
-          border-top: 2px solid transparent;
           border-bottom: 2px solid transparent;
-          transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+          transition: color 0.15s ease, border-color 0.15s ease;
         }
         .tech-nav__link:hover {
           color: var(--color-text);
-          background: rgba(255, 255, 255, 0.03);
         }
         .tech-nav__link.active {
           color: var(--color-text);
           border-bottom-color: var(--color-text);
-          background: rgba(255, 255, 255, 0.04);
         }
         .tech-nav__actions {
           display: flex;
           align-items: center;
+          justify-content: flex-end;
           gap: 12px;
+        }
+        .tech-nav__cta {
+          height: 38px;
+          padding: 0 16px;
+          font-size: 0.8125rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
         }
         .tech-nav__status-pill {
           display: flex;
@@ -259,7 +270,6 @@ export default function Navigation() {
           height: 5px;
           border-radius: 50%;
           background: #FFFFFF;
-          box-shadow: 0 0 6px #FFFFFF;
         }
         .tech-nav__toggle {
           display: none;
@@ -292,7 +302,7 @@ export default function Navigation() {
         .tech-nav__mobile-drawer {
           display: none;
           position: fixed;
-          top: 52px;
+          top: var(--nav-height, 58px);
           left: 0;
           right: 0;
           z-index: 99;
