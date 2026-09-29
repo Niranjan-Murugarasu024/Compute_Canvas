@@ -61,8 +61,8 @@ export default function VersionHistoryModal({ onClose }: { onClose: () => void }
         <div className="version-header">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: 'var(--color-accent)' }}>⧉</span>
-              <span className="text-label" style={{ color: 'var(--color-accent)' }}>VERSION TIMELINE &amp; VISUAL ARCHITECTURE DIFF</span>
+              <span className="text-mono" style={{ color: '#FFFFFF', fontSize: '0.875rem' }}>⧉</span>
+              <span className="text-technical-label" style={{ color: '#A1A1AA' }}>VERSION TIMELINE &amp; VISUAL ARCHITECTURE DIFF</span>
             </div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginTop: '2px' }}>
               Track evolution, inspect component additions/deletions, and review metric drift across iterations.
@@ -349,13 +349,13 @@ export default function VersionHistoryModal({ onClose }: { onClose: () => void }
           border-color: var(--color-border-strong);
         }
         .version-card.active {
-          border-color: var(--color-accent);
+          border-color: #FFFFFF;
           background: var(--color-bg);
-          box-shadow: 0 0 10px rgba(234, 88, 12, 0.1);
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
         }
         .version-badge {
           font-size: 0.6875rem;
-          color: var(--color-accent);
+          color: #FFFFFF;
           font-weight: 700;
         }
         .version-label {

@@ -143,34 +143,16 @@ export default function PricingClient() {
       <style jsx>{`
         .pricing-page {
           min-height: 100vh;
-          padding-top: 100px;
+          padding-top: calc(var(--nav-height) + 40px);
           padding-bottom: var(--space-16);
           background: var(--color-bg);
-        }
-        .pricing-header {
-          text-align: center;
-          max-width: 680px;
-          margin: 0 auto var(--space-12) auto;
-        }
-        .pricing-title {
-          font-family: var(--font-display);
-          font-size: clamp(2rem, 3.5vw, 2.75rem);
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          margin-top: var(--space-2);
-          color: var(--color-text);
-        }
-        .pricing-subtitle {
-          color: var(--color-text-secondary);
-          font-size: 1.0625rem;
-          margin-top: var(--space-3);
-          line-height: 1.5;
         }
         .pricing-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: var(--space-6);
-          margin-bottom: var(--space-12);
+          margin-bottom: var(--space-8);
+          max-width: 1200px;
         }
         .pricing-card {
           background: var(--color-bg-elevated);
@@ -254,9 +236,9 @@ export default function PricingClient() {
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
           padding: var(--space-6);
-          max-width: 780px;
-          margin: 0 auto;
-          text-align: center;
+          max-width: 1200px;
+          margin: 0;
+          text-align: left;
         }
         @media (max-width: 900px) {
           .pricing-grid {

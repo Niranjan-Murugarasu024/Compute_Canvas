@@ -13,8 +13,8 @@ export default function TemplatesClient() {
   const filtered = category === 'All' ? TEMPLATES : TEMPLATES.filter(t => t.category === category);
 
   return (
-    <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + 32px)', paddingBottom: 'var(--space-16)' }}>
-      <div className="section-header-block">
+    <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + 40px)', paddingBottom: 'var(--space-16)' }}>
+      <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
         <span className="section-label">[CANONICAL_BLUEPRINTS]</span>
         <h1 className="section-heading">Start from proven architectures.</h1>
         <p className="section-lead">
@@ -36,7 +36,7 @@ export default function TemplatesClient() {
       </div>
 
       {/* Templates grid */}
-      <div className="templates-page-grid">
+      <div className="templates-page-grid" style={{ maxWidth: '1240px', margin: 0 }}>
         {filtered.map((template, i) => {
           const result = simulate(template.defaultWorkload, template.architecture);
           return (

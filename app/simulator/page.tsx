@@ -1081,6 +1081,7 @@ function SimulatorContent() {
           color: var(--color-text);
           display: flex;
           flex-direction: column;
+          padding-top: var(--nav-height, 58px);
         }
 
         .simulator-header-bar {
@@ -1174,7 +1175,7 @@ function SimulatorContent() {
           display: grid;
           grid-template-columns: 310px 1fr 340px;
           flex: 1;
-          min-height: calc(100vh - 120px);
+          min-height: calc(100vh - var(--nav-height, 58px) - 48px);
           overflow: hidden;
         }
 
@@ -1187,7 +1188,7 @@ function SimulatorContent() {
           display: flex;
           flex-direction: column;
           gap: var(--space-3);
-          max-height: calc(100vh - 120px);
+          max-height: calc(100vh - var(--nav-height, 58px) - 48px);
         }
 
         .left-sidebar-tabs {
@@ -1228,7 +1229,7 @@ function SimulatorContent() {
           display: flex;
           flex-direction: column;
           gap: var(--space-3);
-          max-height: calc(100vh - 120px);
+          max-height: calc(100vh - var(--nav-height, 58px) - 48px);
         }
 
         .sidebar-card {

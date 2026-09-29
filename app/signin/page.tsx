@@ -195,12 +195,12 @@ export default function SignInPage() {
       <style jsx>{`
         .signin-page {
           min-height: 100vh;
-          padding-top: 100px;
+          padding-top: calc(var(--nav-height) + 40px);
           padding-bottom: var(--space-16);
           display: flex;
           align-items: center;
           justify-content: center;
-          background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+          background: #09090B;
         }
         .signin-container {
           max-width: 980px;
@@ -215,7 +215,7 @@ export default function SignInPage() {
         .signin-preview-card {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-8);
           position: relative;
         }
@@ -228,7 +228,7 @@ export default function SignInPage() {
           gap: var(--space-4);
           background: var(--color-surface);
           border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-4);
           margin-bottom: var(--space-6);
         }
@@ -244,7 +244,7 @@ export default function SignInPage() {
         .signin-form-box {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border-strong);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-8);
         }
         .signin-tabs {

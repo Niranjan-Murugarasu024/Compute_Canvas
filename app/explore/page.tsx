@@ -12,7 +12,7 @@ export default function ExplorePage() {
   return (
     <>
       <Navigation />
-      <main style={{ paddingTop: 100 }}>
+      <main>
         <ExploreClient />
       </main>
       <Footer />

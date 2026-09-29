@@ -54,18 +54,16 @@ export default function ExploreClient() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
-    <div className="container">
-      <div style={{ maxWidth: 640, marginBottom: 'var(--space-12)' }}>
-        <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-accent)' }}>
-          EXPLORE
-        </p>
-        <h1 className="text-headline">Architecture stories.</h1>
-        <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-3)', fontSize: '1.0625rem' }}>
+    <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + 40px)', paddingBottom: 'var(--space-16)' }}>
+      <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
+        <span className="section-label">[SYSTEM_STORIES]</span>
+        <h1 className="section-heading">Architecture stories.</h1>
+        <p className="section-lead">
           Each architecture tells a story about tradeoffs. Explore how different systems balance cost, speed, and quality.
         </p>
       </div>
 
-      <div className="explore-grid">
+      <div className="explore-grid" style={{ maxWidth: '1240px', margin: 0 }}>
         {STORIES.map((story, i) => {
           const template = TEMPLATES.find(t => t.id === story.templateId);
           if (!template) return null;
@@ -156,7 +154,7 @@ export default function ExploreClient() {
           padding: var(--space-8);
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           text-decoration: none;
           color: var(--color-text);
           transition: all var(--duration-normal) var(--ease-out);

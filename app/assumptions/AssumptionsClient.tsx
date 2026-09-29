@@ -201,21 +201,9 @@ export default function AssumptionsClient() {
       <style jsx>{`
         .assumptions-page {
           min-height: 100vh;
-          padding-top: 100px;
+          padding-top: calc(var(--nav-height) + 40px);
           padding-bottom: var(--space-16);
           background: var(--color-bg);
-        }
-        .assumptions-header {
-          padding-bottom: var(--space-8);
-          border-bottom: 1px solid var(--color-border);
-          margin-bottom: var(--space-8);
-        }
-        .assumptions-subtitle {
-          color: var(--color-text-secondary);
-          font-size: 1.0625rem;
-          margin-top: var(--space-3);
-          max-width: 680px;
-          line-height: 1.5;
         }
         .trust-disclaimer-box {
           display: flex;
@@ -226,6 +214,7 @@ export default function AssumptionsClient() {
           border-radius: var(--radius-sm);
           padding: 12px 16px;
           margin-top: var(--space-6);
+          max-width: 1120px;
         }
         .trust-icon {
           font-size: 0.8125rem;
@@ -243,6 +232,7 @@ export default function AssumptionsClient() {
           display: flex;
           flex-direction: column;
           gap: var(--space-8);
+          max-width: 1120px;
         }
         .assumption-card {
           background: var(--color-bg-elevated);

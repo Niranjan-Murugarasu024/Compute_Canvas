@@ -152,35 +152,27 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
       <style jsx>{`
         .docs-page {
           min-height: 100vh;
-          padding-top: 100px;
+          padding-top: calc(var(--nav-height) + 40px);
           padding-bottom: var(--space-16);
           background: var(--color-bg);
-        }
-        .docs-header {
-          padding-bottom: var(--space-8);
-          border-bottom: 1px solid var(--color-border);
-          margin-bottom: var(--space-8);
-        }
-        .docs-subtitle {
-          color: var(--color-text-secondary);
-          font-size: 1.0625rem;
-          margin-top: var(--space-3);
-          line-height: 1.5;
         }
         .docs-body {
           display: flex;
           flex-direction: column;
           gap: var(--space-8);
+          max-width: 960px;
+          margin: 0;
         }
         .docs-section {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-6);
         }
         .docs-title {
+          font-family: var(--font-display);
           font-size: 1.25rem;
-          font-weight: 700;
+          font-weight: 600;
           color: var(--color-text);
           margin-bottom: var(--space-3);
         }

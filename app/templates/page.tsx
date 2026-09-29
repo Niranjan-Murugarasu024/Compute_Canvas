@@ -12,7 +12,7 @@ export default function TemplatesPage() {
   return (
     <>
       <Navigation />
-      <main style={{ paddingTop: 100 }}>
+      <main>
         <TemplatesClient />
       </main>
       <Footer />

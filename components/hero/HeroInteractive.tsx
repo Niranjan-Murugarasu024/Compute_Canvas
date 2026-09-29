@@ -310,13 +310,11 @@ export default function HeroInteractive() {
 
       <style jsx>{`
         .tech-hero {
-          min-height: calc(100vh - var(--nav-height));
+          width: 100%;
           padding-top: calc(var(--nav-height) + 48px);
           padding-bottom: var(--space-8);
           background: #09090B;
           border-bottom: 1px solid var(--color-border);
-          display: flex;
-          align-items: flex-start;
         }
         .tech-hero__grid {
           display: grid;

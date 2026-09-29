@@ -391,7 +391,7 @@ export default function DashboardPage() {
 
       <style jsx>{`
         .dashboard-page {
-          padding-top: calc(60px + var(--space-8));
+          padding-top: calc(var(--nav-height) + 40px);
           padding-bottom: var(--space-16);
           min-height: 100vh;
           background: var(--color-bg);

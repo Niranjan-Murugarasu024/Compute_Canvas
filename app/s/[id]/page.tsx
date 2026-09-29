@@ -72,16 +72,17 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
     <>
       <Navigation />
       <main className="share-page">
-        <div className="container" style={{ maxWidth: '1040px' }}>
-          {/* Top banner: Public shared artifact */}
-          <div className="share-header">
-            <div className="share-header-left">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-                <span className="badge badge--neutral">SHARED ARTIFACT</span>
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                  computecanvas.io/s/{id}
-                </span>
-              </div>
+        <div className="container">
+          <div style={{ maxWidth: '1120px', margin: 0 }}>
+            {/* Top banner: Public shared artifact */}
+            <div className="share-header">
+              <div className="share-header-left">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                  <span className="badge badge--neutral">SHARED ARTIFACT</span>
+                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
+                    computecanvas.io/s/{id}
+                  </span>
+                </div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.25rem', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-text)' }}>
                 {resolved.name}
               </h1>
@@ -234,13 +235,14 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
               Fork &amp; Edit Architecture
             </button>
           </div>
+          </div>
         </div>
       </main>
 
       <style jsx>{`
         .share-page {
           min-height: 100vh;
-          padding-top: 100px;
+          padding-top: calc(var(--nav-height) + 40px);
           padding-bottom: var(--space-16);
           background: var(--color-bg);
         }
