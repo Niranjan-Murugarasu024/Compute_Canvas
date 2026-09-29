@@ -2272,125 +2272,354 @@ export function TemplatesPreviewSection() {
 
 export function Footer() {
   return (
-    <footer className="footer">
+    <footer className="footer" role="contentinfo">
       <div className="container">
-        <div className="footer__inner">
-          <div className="footer__brand">
-            <div className="footer__wordmark">
-              <span style={{ fontSize: '10px', color: '#FFFFFF' }}>■</span>
-              <span className="footer__brand-text">COMPUTECANVAS</span>
+        {/* Top: 4-Column Navigation & Brand Zone */}
+        <div className="footer__grid">
+          {/* Brand Column */}
+          <div className="footer__brand-col">
+            <div className="footer__brand-identity">
+              <span className="footer__brand-mark" aria-hidden="true">■</span>
+              <span className="footer__brand-name">COMPUTECANVAS</span>
               <span className="footer__version text-mono">/ V1.2</span>
             </div>
             <p className="footer__desc">
               Deterministic interactive AI architecture and economics simulator.
             </p>
+            <div className="footer__signature text-mono">
+              ARCHITECTURE // ECONOMICS // LATENCY
+            </div>
           </div>
 
-          <div className="footer__col">
-            <p className="footer__col-label text-mono">PRODUCT</p>
-            <Link href="/simulator" className="footer__link">Simulator Workbench</Link>
-            <Link href="/templates" className="footer__link">Canonical Templates</Link>
-            <Link href="/assumptions" className="footer__link">Pricing Assumptions</Link>
-            <Link href="/pricing" className="footer__link">Free Community V1</Link>
+          {/* Product Nav Column */}
+          <nav className="footer__nav-col" aria-label="Product navigation">
+            <h4 className="footer__col-label text-mono">PRODUCT</h4>
+            <ul className="footer__nav-list">
+              <li>
+                <Link href="/simulator" className="footer__link">Simulator</Link>
+              </li>
+              <li>
+                <Link href="/templates" className="footer__link">Templates</Link>
+              </li>
+              <li>
+                <Link href="/assumptions" className="footer__link">Assumptions</Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="footer__link">Pricing</Link>
+              </li>
+            </ul>
+          </nav>
+
+          {/* System Nav Column */}
+          <nav className="footer__nav-col" aria-label="System navigation">
+            <h4 className="footer__col-label text-mono">SYSTEM</h4>
+            <ul className="footer__nav-list">
+              <li>
+                <Link href="/docs" className="footer__link">Documentation</Link>
+              </li>
+              <li>
+                <Link href="/company" className="footer__link">Design Principles</Link>
+              </li>
+              <li>
+                <Link href="/assumptions" className="footer__link">Latency Benchmarks</Link>
+              </li>
+              <li>
+                <Link href="/explore" className="footer__link">Explore</Link>
+              </li>
+            </ul>
+          </nav>
+
+          {/* Legal Nav Column */}
+          <nav className="footer__nav-col" aria-label="Legal navigation">
+            <h4 className="footer__col-label text-mono">LEGAL</h4>
+            <ul className="footer__nav-list">
+              <li>
+                <Link href="/privacy" className="footer__link">Privacy Policy</Link>
+              </li>
+              <li>
+                <Link href="/terms" className="footer__link">Terms &amp; Disclaimers</Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        {/* Mid: System Status & Brand Statement Panel */}
+        <div className="footer__termination-panel">
+          {/* Subtle Technical Status Strip */}
+          <div className="footer__status-strip">
+            <div className="footer__status-item">
+              <span className="status-label text-mono">ENGINE</span>
+              <span className="status-sep text-mono">/</span>
+              <span className="status-val text-mono">PURE DETERMINISTIC</span>
+            </div>
+            <div className="footer__status-item">
+              <span className="status-label text-mono">SPEC</span>
+              <span className="status-sep text-mono">/</span>
+              <span className="status-val text-mono">V1.2 SPEC</span>
+            </div>
+            <div className="footer__status-item">
+              <span className="status-label text-mono">PERSISTENCE</span>
+              <span className="status-sep text-mono">/</span>
+              <span className="status-val text-mono">URL STATE (NO DB)</span>
+            </div>
+            <div className="footer__status-item">
+              <span className="status-label text-mono">TELEMETRY</span>
+              <span className="status-sep text-mono">/</span>
+              <span className="status-val text-mono">ZERO TRACKING</span>
+            </div>
           </div>
 
-          <div className="footer__col">
-            <p className="footer__col-label text-mono">SYSTEM</p>
-            <Link href="/docs" className="footer__link">Documentation</Link>
-            <Link href="/company" className="footer__link">Principles &amp; Design</Link>
-            <Link href="/assumptions" className="footer__link">Latency Benchmarks</Link>
-          </div>
-
-          <div className="footer__col">
-            <p className="footer__col-label text-mono">LEGAL</p>
-            <Link href="/privacy" className="footer__link">Privacy Policy</Link>
-            <Link href="/terms" className="footer__link">Terms &amp; Disclaimers</Link>
+          {/* Footer Brand Statement */}
+          <div className="footer__statement-row">
+            <p className="footer__statement">
+              DESIGN THE ARCHITECTURE. SEE THE ECONOMICS.
+            </p>
           </div>
         </div>
 
-        <div className="footer__bottom">
-          <span className="text-mono" style={{ fontSize: '0.6875rem', color: '#71717A' }}>
-            © {new Date().getFullYear()} COMPUTECANVAS // DETERMINISTIC SIMULATION SYSTEM
+        {/* Bottom: Technical Signature & Copyright Row */}
+        <div className="footer__bottom-row">
+          <span className="footer__copyright text-mono">
+            &copy; {new Date().getFullYear()} COMPUTECANVAS
+          </span>
+          <span className="footer__meta text-mono">
+            DETERMINISTIC SIMULATION SYSTEM // V1.2
           </span>
         </div>
       </div>
 
       <style jsx global>{`
         .footer {
-          border-top: 1px solid var(--color-border);
-          padding: 64px 0 36px;
+          border-top: 1px solid #242428;
+          padding: 72px 0 40px;
           margin-top: 120px;
+          background: var(--color-bg);
+          position: relative;
         }
-        .footer__inner {
+
+        .footer__grid {
           display: grid;
-          grid-template-columns: 1.4fr 1fr 1fr 1fr;
-          gap: 32px;
-          margin-bottom: 48px;
+          grid-template-columns: 2fr 1.1fr 1.1fr 0.9fr;
+          gap: 48px;
+          padding-bottom: 44px;
+          border-bottom: 1px solid #242428;
           align-items: flex-start;
         }
-        .footer__wordmark {
+
+        .footer__brand-col {
           display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 12px;
+          flex-direction: column;
+          gap: 12px;
         }
-        .footer__brand-text {
+
+        .footer__brand-identity {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+        }
+
+        .footer__brand-mark {
+          font-size: 11px;
+          color: #FFFFFF;
+          line-height: 1;
+        }
+
+        .footer__brand-name {
           font-family: var(--font-display);
-          font-size: 0.9375rem;
+          font-size: 1.0625rem;
           font-weight: 600;
           letter-spacing: 0.04em;
           color: #FFFFFF;
         }
+
         .footer__version {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
           color: #71717A;
         }
+
         .footer__desc {
-          font-family: var(--font-sans);
+          font-family: var(--font-ui);
           font-size: 0.875rem;
+          line-height: 1.55;
           color: #A0A0A8;
-          max-width: 280px;
-          line-height: 1.5;
+          max-width: 320px;
           margin: 0;
         }
-        .footer__col {
+
+        .footer__signature {
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          letter-spacing: 0.08em;
+          color: #71717A;
+          margin-top: 4px;
+        }
+
+        .footer__nav-col {
           display: flex;
           flex-direction: column;
-          gap: 8px;
         }
+
         .footer__col-label {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
+          letter-spacing: 0.10em;
           color: #71717A;
-          letter-spacing: 0.08em;
-          margin: 0 0 4px 0;
+          text-transform: uppercase;
+          margin: 0 0 16px 0;
         }
+
+        .footer__nav-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
         .footer__link {
-          font-family: var(--font-sans);
+          font-family: var(--font-ui);
+          font-size: 0.875rem;
           color: #A0A0A8;
           text-decoration: none;
-          font-size: 0.875rem;
-          padding: 2px 0;
-          transition: color 150ms ease;
+          transition: color 150ms ease, opacity 150ms ease;
+          display: inline-block;
+          line-height: 1.4;
         }
+
         .footer__link:hover {
           color: #FFFFFF;
         }
-        .footer__bottom {
-          padding-top: 24px;
-          border-top: 1px solid var(--color-border);
+
+        .footer__link:focus-visible {
+          outline: 1px solid var(--color-border-strong);
+          outline-offset: 2px;
         }
-        @media (max-width: 900px) {
-          .footer__inner {
+
+        /* ── Termination Panel (Status + Statement) ── */
+        .footer__termination-panel {
+          padding: 32px 0;
+          border-bottom: 1px solid #242428;
+          display: flex;
+          flex-direction: column;
+          gap: 22px;
+        }
+
+        .footer__status-strip {
+          display: flex;
+          align-items: center;
+          gap: 32px;
+          flex-wrap: wrap;
+        }
+
+        .footer__status-item {
+          display: flex;
+          align-items: baseline;
+          gap: 6px;
+        }
+
+        .status-label {
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          letter-spacing: 0.08em;
+          color: #71717A;
+        }
+
+        .status-sep {
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          color: #3F3F46;
+        }
+
+        .status-val {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-weight: 500;
+          letter-spacing: 0.04em;
+          color: #D4D4D8;
+        }
+
+        .footer__statement-row {
+          display: flex;
+          align-items: center;
+        }
+
+        .footer__statement {
+          font-family: var(--font-display);
+          font-size: clamp(1.1875rem, 1.8vw, 1.4375rem);
+          font-weight: 500;
+          letter-spacing: -0.01em;
+          color: #F5F5F5;
+          margin: 0;
+          line-height: 1.25;
+        }
+
+        /* ── Bottom Row (Copyright + Specs) ── */
+        .footer__bottom-row {
+          padding-top: 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .footer__copyright {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: #71717A;
+          letter-spacing: 0.04em;
+        }
+
+        .footer__meta {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: #71717A;
+          letter-spacing: 0.04em;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 960px) {
+          .footer__grid {
             grid-template-columns: 1fr 1fr;
-            gap: 32px;
+            gap: 36px;
+          }
+
+          .footer__status-strip {
+            gap: 16px 24px;
           }
         }
-        @media (max-width: 540px) {
-          .footer__inner {
+
+        @media (max-width: 640px) {
+          .footer {
+            padding: 48px 0 28px;
+            margin-top: 80px;
+          }
+
+          .footer__grid {
             grid-template-columns: 1fr;
-            gap: 28px;
+            gap: 32px;
+            padding-bottom: 32px;
+          }
+
+          .footer__link {
+            padding: 4px 0;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+          }
+
+          .footer__status-strip {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+
+          .footer__bottom-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
           }
         }
       `}</style>
