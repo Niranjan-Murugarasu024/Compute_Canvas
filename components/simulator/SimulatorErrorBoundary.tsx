@@ -22,9 +22,7 @@ export default class SimulatorErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('SimulatorErrorBoundary caught an error:', error, errorInfo);
-    }
+    console.error('SimulatorErrorBoundary caught an error:', error, errorInfo);
   }
 
   handleRetry = () => {
@@ -34,7 +32,11 @@ export default class SimulatorErrorBoundary extends Component<Props, State> {
   handleReset = () => {
     try {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('computecanvas_architecture_store_v2');
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith('computecanvas')) {
+            localStorage.removeItem(k);
+          }
+        });
       }
     } catch {
       // Ignore localStorage errors

@@ -104,12 +104,17 @@ function SimulatorQuerySync({
   onError: (msg: string) => void;
 }) {
   const searchParams = useSearchParams();
+  const processedParamRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!searchParams) return;
 
     const queryData = searchParams.get('data');
     if (queryData) {
+      const key = `data:${queryData}`;
+      if (processedParamRef.current === key) return;
+      processedParamRef.current = key;
+
       const decoded = decodeArchitectureState(queryData);
       if (decoded.success && decoded.data) {
         onLoadShare(decoded.data);
@@ -121,6 +126,10 @@ function SimulatorQuerySync({
 
     const templateParam = searchParams.get('template');
     if (templateParam) {
+      const key = `template:${templateParam}`;
+      if (processedParamRef.current === key) return;
+      processedParamRef.current = key;
+
       onLoadTemplate(templateParam);
     }
   }, [searchParams, onLoadShare, onLoadTemplate, onError]);
@@ -268,6 +277,24 @@ function SimulatorContent() {
     showToast('Calibrated baseline applied.');
   };
 
+  const handleLoadShare = useCallback((data: V1ShareState) => {
+    loadArchitecture(data.architecture, data.workload, data.calibration);
+    showToast('Shared architecture restored.');
+  }, [loadArchitecture, showToast]);
+
+  const handleLoadTemplate = useCallback((id: string) => {
+    const match = TEMPLATES.find(t => t.id === id || t.id.includes(id));
+    if (match) {
+      loadArchitecture(match.architecture, match.defaultWorkload);
+      setSelectedTemplateId(match.id);
+      showToast(`Template loaded: ${match.name}`);
+    }
+  }, [loadArchitecture, showToast]);
+
+  const handleSyncError = useCallback((msg: string) => {
+    showToast(msg);
+  }, [showToast]);
+
   const selectedNode = architecture.nodes.find(n => n.id === selectedNodeId);
   const selectedEdge = selectedEdgeIndex !== null ? architecture.edges[selectedEdgeIndex] : null;
 
@@ -279,21 +306,9 @@ function SimulatorContent() {
       {/* Query Sync for URL-based architecture sharing */}
       <Suspense fallback={null}>
         <SimulatorQuerySync
-          onLoadShare={(data) => {
-            loadArchitecture(data.architecture, data.workload, data.calibration);
-            showToast('Shared architecture restored.');
-          }}
-          onLoadTemplate={(id) => {
-            const match = TEMPLATES.find(t => t.id === id || t.id.includes(id));
-            if (match) {
-              loadArchitecture(match.architecture, match.defaultWorkload);
-              setSelectedTemplateId(match.id);
-              showToast(`Template loaded: ${match.name}`);
-            }
-          }}
-          onError={(msg) => {
-            showToast(msg);
-          }}
+          onLoadShare={handleLoadShare}
+          onLoadTemplate={handleLoadTemplate}
+          onError={handleSyncError}
         />
       </Suspense>
 
