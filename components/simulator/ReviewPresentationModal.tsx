@@ -3,13 +3,20 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useArchitectureStore } from '@/lib/state/architectureStore';
-import { simulate, formatCurrency, formatLatency, formatNumber } from '@/lib/simulation/engine';
+import {
+  simulate,
+  formatCurrency,
+  formatLatency,
+  formatNumber,
+  calculateCalibratedEconomics,
+} from '@/lib/simulation/engine';
 
 export default function ReviewPresentationModal({ onClose }: { onClose: () => void }) {
-  const { architecture, workload, comments } = useArchitectureStore();
+  const { architecture, workload, calibration, comments } = useArchitectureStore();
   const [currentStep, setCurrentStep] = useState(0);
 
   const sim = simulate(workload, architecture);
+  const calibrated = calculateCalibratedEconomics(sim, workload, calibration);
 
   const steps = [
     { id: 'arch', title: '1. Architecture Topology' },
@@ -102,7 +109,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
                     <span className="kpi-val" style={{ color: 'var(--color-cost)' }}>{formatCurrency(sim.monthlyCost)}/mo</span>
                   </div>
                   <div className="kpi-item">
-                    <span className="kpi-label">P95 LATENCY TARGET</span>
+                    <span className="kpi-label">EST. P95 LATENCY</span>
                     <span className="kpi-val" style={{ color: 'var(--color-performance)' }}>{formatLatency(sim.p95Latency)}</span>
                   </div>
                   <div className="kpi-item">
@@ -188,13 +195,41 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
                 <div className="cost-review-wrap">
                   <div className="cost-total-banner">
                     <div>
-                      <span className="text-label">ESTIMATED MONTHLY COMPUTE RUN-RATE</span>
-                      <p className="text-mono cost-banner-val">{formatCurrency(sim.monthlyCost)}</p>
+                      <span className="text-label">
+                        {calibrated.isCalibrated ? 'CALIBRATED MONTHLY SPEND' : 'ESTIMATED MONTHLY COMPUTE RUN-RATE'}
+                      </span>
+                      <p className="text-mono cost-banner-val">
+                        {calibrated.isCalibrated
+                          ? formatCurrency(calibrated.calibratedMonthlyCost)
+                          : formatCurrency(sim.monthlyCost)}
+                      </p>
                       <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                        ${(sim.costPerRequest * 1000).toFixed(3)} per 1,000 inquiries
+                        {calibrated.isCalibrated
+                          ? `$${(calibrated.calibratedCostPerRequest * 1000).toFixed(3)} per 1,000 inquiries (empirical)`
+                          : `$${(sim.costPerRequest * 1000).toFixed(3)} per 1,000 inquiries`}
                       </span>
                     </div>
+                    {calibrated.isCalibrated && (
+                      <div style={{ textAlign: 'right' }}>
+                        <span className="badge badge--success text-mono" style={{ marginBottom: '6px', display: 'inline-block' }}>
+                          ANCHORED TO REAL BILL
+                        </span>
+                        <div className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+                          Theoretical Base: {formatCurrency(calibrated.simulatedBaselineCost)}/mo
+                        </div>
+                        <div className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-warning)' }}>
+                          Variance: +{calibrated.variancePercentage}% (Factor {calibrated.calibrationFactor}×)
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  {calibrated.isCalibrated && (
+                    <div style={{ padding: '12px 16px', background: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '0.8125rem', lineHeight: 1.5, color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
+                      <strong style={{ color: 'var(--color-text)' }}>Calibration Note: </strong>
+                      {calibrated.limitationsNote}
+                    </div>
+                  )}
 
                   <div className="cost-breakdown-table">
                     {Object.entries(sim.costBreakdown)
@@ -224,32 +259,61 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
               >
                 <div className="slide-hero">
                   <span className="text-label" style={{ color: 'var(--color-performance)' }}>SECTION 4 &bull; LATENCY BUDGET</span>
-                  <h3 className="slide-title">P95 &amp; P50 Latency Distribution</h3>
+                  <h3 className="slide-title">Percentile-Oriented Latency Modeling</h3>
                 </div>
 
-                <div className="latency-review-grid">
+                <div className="latency-review-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
                   <div className="latency-card">
-                    <span className="text-caption">P50 MEDIAN LATENCY</span>
+                    <span className="text-caption">P50 MEDIAN</span>
                     <span className="latency-num" style={{ color: 'var(--color-performance)' }}>
-                      {Math.round(sim.p95Latency * 0.65)}ms
+                      {formatLatency(sim.latencies.p50)}
                     </span>
-                    <span className="text-caption">Standard nominal response</span>
+                    <span className="text-caption">Nominal response</span>
                   </div>
 
                   <div className="latency-card">
-                    <span className="text-caption">P95 TAIL LATENCY</span>
+                    <span className="text-caption">P90 LATENCY</span>
                     <span className="latency-num" style={{ color: 'var(--color-performance)' }}>
-                      {formatLatency(sim.p95Latency)}
+                      {formatLatency(sim.latencies.p90)}
                     </span>
-                    <span className="text-caption">95th percentile under peak queuing</span>
+                    <span className="text-caption">High-load path</span>
                   </div>
 
                   <div className="latency-card">
-                    <span className="text-caption">MAX THROUGHPUT</span>
-                    <span className="latency-num">
+                    <span className="text-caption">ESTIMATED P95</span>
+                    <span className="latency-num" style={{ color: 'var(--color-performance)' }}>
+                      {formatLatency(sim.latencies.p95)}
+                    </span>
+                    <span className="text-caption">95th percentile SLA</span>
+                  </div>
+
+                  <div className="latency-card">
+                    <span className="text-caption">P99 TAIL</span>
+                    <span className="latency-num" style={{ color: 'var(--color-warning)' }}>
+                      {formatLatency(sim.latencies.p99)}
+                    </span>
+                    <span className="text-caption">Extreme tail &amp; queue</span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div style={{ padding: '12px 14px', background: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
+                    <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>TIME TO FIRST TOKEN (TTFT)</span>
+                    <div className="text-mono" style={{ fontSize: '1.125rem', fontWeight: 600, marginTop: '4px' }}>
+                      {formatLatency(sim.latencies.ttftMs)}
+                    </div>
+                  </div>
+                  <div style={{ padding: '12px 14px', background: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
+                    <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>TOKEN GENERATION TIME</span>
+                    <div className="text-mono" style={{ fontSize: '1.125rem', fontWeight: 600, marginTop: '4px' }}>
+                      {formatLatency(sim.latencies.generationMs)}
+                    </div>
+                  </div>
+                  <div style={{ padding: '12px 14px', background: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
+                    <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>THROUGHPUT CAPACITY</span>
+                    <div className="text-mono" style={{ fontSize: '1.125rem', fontWeight: 600, marginTop: '4px' }}>
                       {sim.throughputRPS} RPS
-                    </span>
-                    <span className="text-caption">Sustained system capacity</span>
+                    </div>
                   </div>
                 </div>
               </motion.div>

@@ -5,6 +5,9 @@
 
 // ── 1. Centralized Model & Infrastructure Pricing ──
 
+export const PRICING_VERSION = '2026.03.1';
+export const PRICING_ASSUMPTION_DATE = 'March 2026';
+
 export interface PricingRecord {
   provider: string;
   product: string;
@@ -14,6 +17,8 @@ export interface PricingRecord {
   baselineLatencyMs: number;
   qualityScore: number;
   source: string;
+  unit: string;
+  notes: string;
 }
 
 export const MODEL_PRICING: Record<string, PricingRecord> = {
@@ -27,6 +32,8 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 140,
     qualityScore: 82,
     source: 'openai.com/pricing',
+    unit: 'USD / 1M tokens',
+    notes: 'High-speed, low-cost utility reasoning tier',
   },
   'gemini-2.0-flash': {
     provider: 'Google',
@@ -37,6 +44,8 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 90,
     qualityScore: 80,
     source: 'cloud.google.com/vertex-ai/pricing',
+    unit: 'USD / 1M tokens',
+    notes: 'Sub-100ms ultra-low latency utility model',
   },
   'claude-3-haiku': {
     provider: 'Anthropic',
@@ -47,6 +56,8 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 120,
     qualityScore: 78,
     source: 'anthropic.com/pricing',
+    unit: 'USD / 1M tokens',
+    notes: 'Lightweight, rapid reasoning tier',
   },
 
   // Frontier Models
@@ -59,6 +70,8 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 380,
     qualityScore: 95,
     source: 'openai.com/pricing',
+    unit: 'USD / 1M tokens',
+    notes: 'Omni-modal flagship frontier model',
   },
   'claude-3.5-sonnet': {
     provider: 'Anthropic',
@@ -69,6 +82,8 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 420,
     qualityScore: 96,
     source: 'anthropic.com/pricing',
+    unit: 'USD / 1M tokens',
+    notes: 'High-precision technical reasoning and synthesis',
   },
   'gemini-2.5-pro': {
     provider: 'Google',
@@ -79,6 +94,8 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 350,
     qualityScore: 94,
     source: 'cloud.google.com/vertex-ai/pricing',
+    unit: 'USD / 1M tokens',
+    notes: 'Deep context reasoning and analysis',
   },
 };
 
@@ -89,24 +106,41 @@ export const INFRA_PRICING = {
     perGBStorage: 0.25,
     lookupLatencyMs: 45,
     provider: 'Pinecone / Qdrant',
+    unit: 'USD / cluster-month',
+    notes: 'Base indexing pod + query volume + index storage',
   },
   cache: {
     baseMonthlyCost: 65,
     perGBHour: 0.012,
     lookupLatencyMs: 5,
     provider: 'Redis Cloud',
+    unit: 'USD / instance-month',
+    notes: 'In-memory key-value cache + RAM capacity allocation',
   },
   apiGateway: {
     perMillionRequests: 1.00,
     latencyMs: 12,
     provider: 'API Gateway',
+    unit: 'USD / 1M requests',
+    notes: 'TLS termination, rate limiting, and traffic ingress',
   },
   router: {
     perMillionRequests: 0.50,
     latencyMs: 8,
     provider: 'AI Complexity Router',
+    unit: 'USD / 1M requests',
+    notes: 'Classification and heuristic model dispatch',
   },
 };
+
+/**
+ * Dedicated Hardware / Instance Cost Formula (Section 6)
+ * Hardware Cost = ceil(Required Instances) * Hourly Rate * 730 hours/month
+ */
+export function calculateHardwareCost(requiredInstances: number, hourlyRate: number): number {
+  if (requiredInstances <= 0 || hourlyRate <= 0) return 0;
+  return Math.ceil(requiredInstances) * hourlyRate * 730;
+}
 
 // ── 2. Core Types ──
 
@@ -195,6 +229,18 @@ export interface CostBreakdown {
   observability: number;
 }
 
+export interface LatencyBreakdown {
+  p50: number;
+  p90: number;
+  p95: number;
+  p99: number;
+  ttftMs: number;
+  generationMs: number;
+  queueingMs: number;
+  networkMs: number;
+  cachePathMs: number;
+}
+
 export interface BottleneckInfo {
   nodeId: string;
   componentName: string;
@@ -202,12 +248,15 @@ export interface BottleneckInfo {
   metricType: 'cost' | 'latency';
   impactPercentage: number;
   explanation: string;
+  costSharePercentage?: number;
+  latencySharePercentage?: number;
 }
 
 export interface SimulationResult {
   monthlyCost: number;
   costPerRequest: number;
   p95Latency: number;
+  latencies: LatencyBreakdown;
   capacityUtilization: number;
   qualityEstimate: number;
   throughputRPS: number;
@@ -226,6 +275,8 @@ export interface CalibratedEconomics {
   calibratedMonthlyCost: number;
   calibratedCostPerRequest: number;
   isCalibrated: boolean;
+  calibrationFactor: number;
+  limitationsNote: string;
 }
 
 // ── 3. Helper Formatters ──
@@ -268,19 +319,30 @@ export function validateArchitecture(arch: Architecture): ArchitectureValidation
     errors.push('Architecture requires an API Ingress component to receive incoming requests.');
   }
 
-  // 2. Check for missing edge endpoints
+  // 2. Check for missing edge endpoints & self-loops
+  const seenEdges = new Set<string>();
   for (const edge of arch.edges) {
     if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
       errors.push('Architecture contains broken connections pointing to missing components.');
       break;
     }
+    if (edge.source === edge.target) {
+      const node = arch.nodes.find(n => n.id === edge.source);
+      errors.push(`Architecture contains a self-loop on "${node?.label || edge.source}". Self-referential connections are not permitted.`);
+      break;
+    }
+    const edgeKey = `${edge.source}->${edge.target}`;
+    if (seenEdges.has(edgeKey)) {
+      warnings.push(`Duplicate connection from "${edge.source}" to "${edge.target}" detected. Redundant connection ignored.`);
+    }
+    seenEdges.add(edgeKey);
   }
 
   // 3. Cycle Detection (DFS)
   const adjacency = new Map<string, string[]>();
   arch.nodes.forEach(n => adjacency.set(n.id, []));
   arch.edges.forEach(e => {
-    if (adjacency.has(e.source)) {
+    if (adjacency.has(e.source) && e.source !== e.target) {
       adjacency.get(e.source)!.push(e.target);
     }
   });
@@ -356,8 +418,10 @@ export function validateArchitecture(arch: Architecture): ArchitectureValidation
     const outbound = arch.edges.filter(e => e.source === r.id);
     if (outbound.length > 1) {
       const sum = outbound.reduce((acc, e) => acc + (e.trafficShare !== undefined ? e.trafficShare : 1 / outbound.length), 0);
-      if (Math.abs(sum - 1.0) > 0.05) {
-        warnings.push(`Router "${r.label}" outbound allocations total ${(sum * 100).toFixed(0)}% (must equal 100%).`);
+      if (sum > 1.02) {
+        warnings.push(`Router "${r.label}" outbound allocations total ${Math.round(sum * 100)}% (exceeds 100% capacity; clamped in simulation).`);
+      } else if (sum < 0.98) {
+        warnings.push(`Router "${r.label}" outbound allocations total ${Math.round(sum * 100)}% (remaining ${Math.round((1 - sum) * 100)}% traffic is unallocated/dropped).`);
       }
     }
   }
@@ -395,6 +459,17 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
       monthlyCost: 0,
       costPerRequest: 0,
       p95Latency: 0,
+      latencies: {
+        p50: 0,
+        p90: 0,
+        p95: 0,
+        p99: 0,
+        ttftMs: 0,
+        generationMs: 0,
+        queueingMs: 0,
+        networkMs: 0,
+        cachePathMs: 0,
+      },
       capacityUtilization: 0,
       qualityEstimate: 0,
       throughputRPS: 0,
@@ -521,6 +596,7 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
 
   let totalModelCost = 0;
   let weightedModelLatency = 0;
+  const warnings: { type: string; message: string; severity: 'info' | 'warning' | 'critical' }[] = [];
 
   if (modelNodes.length === 1) {
     const node = modelNodes[0];
@@ -554,20 +630,28 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
       return { node: m, share };
     });
 
+    // Traffic conservation:
+    // If sum > 1.0, scale down to prevent manufacturing requests beyond 100%.
+    // If sum < 1.0, allocate exact configured shares; unallocated requests are explicitly treated as dropped.
+    const isOverAllocated = shareSum > 1.001;
+    const isUnderAllocated = shareSum < 0.999;
+    const scaleFactor = isOverAllocated ? 1 / shareSum : 1.0;
+
     for (const alloc of allocations) {
-      const normalizedShare = shareSum > 0 ? alloc.share / shareSum : 1 / modelNodes.length;
+      const effectiveShare = alloc.share * scaleFactor;
       const node = alloc.node;
       const defaultModelId = node.type === 'fast-model' ? 'gpt-4o-mini' : 'gpt-4o';
       const modelId = node.modelId || defaultModelId;
       const pricing = MODEL_PRICING[modelId] || MODEL_PRICING['gpt-4o-mini'];
 
-      const nodeRequests = uncachedRequests * normalizedShare;
+      const nodeRequests = uncachedRequests * effectiveShare;
       const inputCost = (nodeRequests * avgInputTokens / 1_000_000) * pricing.inputPricePer1M;
       const outputCost = (nodeRequests * avgOutputTokens / 1_000_000) * pricing.outputPricePer1M;
       const nodeCost = inputCost + outputCost;
 
       totalModelCost += nodeCost;
-      weightedModelLatency += pricing.baselineLatencyMs * normalizedShare;
+      const latencyShare = shareSum > 0 ? (alloc.share / shareSum) : (1 / modelNodes.length);
+      weightedModelLatency += pricing.baselineLatencyMs * latencyShare;
 
       nodeMetrics.set(node.id, {
         nodeId: node.id,
@@ -575,6 +659,15 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
         costPercentage: 0,
         latencyMs: pricing.baselineLatencyMs,
         isBottleneck: false,
+      });
+    }
+
+    if (isUnderAllocated) {
+      const droppedPct = Math.round((1 - shareSum) * 100);
+      warnings.push({
+        type: 'unallocated-traffic',
+        message: `Unallocated router traffic: ${droppedPct}% of requests are dropped without reaching any model tier.`,
+        severity: 'warning',
       });
     }
   }
@@ -589,6 +682,24 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
   const cacheHitLatency = ingressLatency + cacheLookupLatency;
   const cacheMissLatency = ingressLatency + cacheLookupLatency + routerLatency + vectorLookupLatency + weightedModelLatency;
   const p95Latency = Math.round(effectiveCacheRate * cacheHitLatency + (1 - effectiveCacheRate) * cacheMissLatency);
+
+  // Percentile Latency Decomposition:
+  const ttftMs = Math.round(ingressLatency + cacheLookupLatency + (hasRouter ? routerLatency : 0) + (hasVectorDb ? vectorLookupLatency : 0) + weightedModelLatency * 0.35);
+  const generationMs = Math.round(weightedModelLatency * 0.65);
+  const queueingMs = Math.round(Math.max(4, p95Latency * 0.12));
+  const networkMs = ingressLatency;
+
+  const latencies: LatencyBreakdown = {
+    p50: Math.round(p95Latency * 0.72),
+    p90: Math.round(p95Latency * 0.92),
+    p95: p95Latency,
+    p99: Math.round(p95Latency * 1.35 + queueingMs),
+    ttftMs,
+    generationMs,
+    queueingMs,
+    networkMs,
+    cachePathMs: cacheHitLatency,
+  };
 
   // Compute node cost percentages & find bottleneck
   let maxCost = -1;
@@ -623,6 +734,8 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
     componentType: bottleneckNode?.type || 'frontier-model',
     metricType: 'cost',
     impactPercentage: bottleneckMetrics?.costPercentage || 0,
+    costSharePercentage: bottleneckMetrics?.costPercentage || 0,
+    latencySharePercentage: p95Latency > 0 && bottleneckMetrics ? Math.min(100, Math.round((bottleneckMetrics.latencyMs / p95Latency) * 100)) : 0,
     explanation: bottleneckMetrics
       ? `${bottleneckNode?.label || 'Component'} accounts for ${bottleneckMetrics.costPercentage}% of total monthly spend (${formatCurrency(bottleneckMetrics.monthlyCost)}/mo).`
       : 'Frontier model token consumption represents the primary architectural cost driver.',
@@ -642,9 +755,8 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
 
   const capacityUtilization = Math.min(100, Math.round((workload.requestsPerMonth / 5_000_000) * 100));
   const qualityEstimate = architecture.nodes.some(n => n.type === 'frontier-model' || n.modelId === 'gpt-4o' || n.modelId === 'claude-3.5-sonnet') ? 95 : 82;
-  const throughputRPS = Math.max(1, Math.round(workload.requestsPerMonth / (30 * 24 * 3600)));
+  const throughputRPS = requestsPerMonth > 0 ? Math.max(1, Math.round(requestsPerMonth / (30 * 24 * 3600))) : 0;
 
-  const warnings: { type: string; message: string; severity: 'info' | 'warning' | 'critical' }[] = [];
   if (bottleneckMetrics && bottleneckMetrics.costPercentage > 50) {
     warnings.push({
       type: 'cost-bottleneck',
@@ -664,6 +776,7 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
     monthlyCost: totalCost,
     costPerRequest,
     p95Latency,
+    latencies,
     capacityUtilization,
     qualityEstimate,
     throughputRPS,
@@ -691,6 +804,8 @@ export function calculateCalibratedEconomics(
       calibratedMonthlyCost: simulation.monthlyCost,
       calibratedCostPerRequest: simulation.costPerRequest,
       isCalibrated: false,
+      calibrationFactor: 1.0,
+      limitationsNote: 'Uncalibrated theoretical baseline. Actual cloud bills may include unmodeled overhead such as egress networking, retries, and idle infrastructure.',
     };
   }
 
@@ -710,6 +825,8 @@ export function calculateCalibratedEconomics(
     ? calibratedMonthlyCost / workload.requestsPerMonth
     : 0;
 
+  const limitationsNote = `Empirical calibration factor (${calibrationFactor.toFixed(4)}×) reconciles theoretical token calculations with your invoice ($${formatNumber(calibration.actualBill)}/mo across ${formatNumber(calibration.actualRequests)} requests). The +${(Math.round(variancePercentage * 10) / 10)}% variance accounts for real-world cloud factors not in the pure LLM token model: egress network bandwidth, retry storms, tool executions, vector index storage, observability logging, and idle provisioned capacity.`;
+
   return {
     actualCostPerRequest,
     simulatedBaselineCost: baselineSimulated,
@@ -717,7 +834,71 @@ export function calculateCalibratedEconomics(
     calibratedMonthlyCost,
     calibratedCostPerRequest,
     isCalibrated: true,
+    calibrationFactor: Math.round(calibrationFactor * 10000) / 10000,
+    limitationsNote,
   };
+}
+
+// ── 7. Sensitivity Analysis Engine (Deterministic Curves) ──
+
+export interface SensitivityPoint {
+  parameterValue: number;
+  label: string;
+  monthlyCost: number;
+  costDelta: number;
+  p95Latency: number;
+}
+
+export function calculateSensitivity(
+  workload: Workload,
+  architecture: Architecture,
+  parameter: 'cacheHitRate' | 'requests' | 'tokens'
+): SensitivityPoint[] {
+  const points: SensitivityPoint[] = [];
+  const baseSim = simulate(workload, architecture);
+
+  if (parameter === 'cacheHitRate') {
+    const rates = [0.0, 0.2, 0.4, 0.6, 0.8, 0.95];
+    for (const r of rates) {
+      const sim = simulate({ ...workload, cacheHitRate: r }, architecture);
+      points.push({
+        parameterValue: r,
+        label: `${Math.round(r * 100)}% Hit Rate`,
+        monthlyCost: sim.monthlyCost,
+        costDelta: Math.round((sim.monthlyCost - baseSim.monthlyCost) * 100) / 100,
+        p95Latency: sim.p95Latency,
+      });
+    }
+  } else if (parameter === 'requests') {
+    const scales = [0.2, 0.5, 1.0, 2.0, 5.0, 10.0];
+    for (const s of scales) {
+      const reqs = Math.round(workload.requestsPerMonth * s);
+      const sim = simulate({ ...workload, requestsPerMonth: reqs }, architecture);
+      points.push({
+        parameterValue: reqs,
+        label: `${formatNumber(reqs)} reqs`,
+        monthlyCost: sim.monthlyCost,
+        costDelta: Math.round((sim.monthlyCost - baseSim.monthlyCost) * 100) / 100,
+        p95Latency: sim.p95Latency,
+      });
+    }
+  } else if (parameter === 'tokens') {
+    const scales = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0];
+    for (const s of scales) {
+      const inTok = Math.round(workload.avgInputTokens * s);
+      const outTok = Math.round(workload.avgOutputTokens * s);
+      const sim = simulate({ ...workload, avgInputTokens: inTok, avgOutputTokens: outTok }, architecture);
+      points.push({
+        parameterValue: inTok + outTok,
+        label: `${formatNumber(inTok + outTok)} tokens`,
+        monthlyCost: sim.monthlyCost,
+        costDelta: Math.round((sim.monthlyCost - baseSim.monthlyCost) * 100) / 100,
+        p95Latency: sim.p95Latency,
+      });
+    }
+  }
+
+  return points;
 }
 
 // ── 7. Causal Explanation Generator ("Why Did This Change?") ──

@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npx tsx scripts/test-v1-scenarios.ts && npx tsx scripts/test-workbench-interaction.ts && npx tsx scripts/test-regression-suite.ts",
+    "test:scenarios": "npx tsx scripts/test-v1-scenarios.ts",
+    "test:workbench": "npx tsx scripts/test-workbench-interaction.ts",
+    "test:regression": "npx tsx scripts/test-regression-suite.ts"
   },
   "dependencies": {
     "framer-motion": "^13.4.3",

@@ -192,6 +192,41 @@ function SimulatorContent() {
     );
   }, [previousState, workload, architecture, result]);
 
+  // Selected node inspection calculations (Section 42)
+  const selectedNode = useMemo(
+    () => (selectedNodeId ? architecture.nodes.find(n => n.id === selectedNodeId) || null : null),
+    [architecture.nodes, selectedNodeId]
+  );
+
+  const selectedNodeMetrics = useMemo(
+    () => (selectedNodeId ? result.nodeMetrics.get(selectedNodeId) || null : null),
+    [result.nodeMetrics, selectedNodeId]
+  );
+
+  const selectedNodeTrafficInfo = useMemo(() => {
+    if (!selectedNode) return null;
+    const hasCache = architecture.nodes.some(n => n.type === 'cache');
+    const effectiveCacheRate = hasCache ? workload.cacheHitRate : 0;
+    const uncachedRequests = workload.requestsPerMonth * (1 - effectiveCacheRate);
+
+    if (selectedNode.type === 'api' || selectedNode.type === 'cache') {
+      return { shareText: '100% Ingress', routedReqs: workload.requestsPerMonth, isModel: false };
+    }
+    if (selectedNode.type === 'vectordb' || selectedNode.type === 'router') {
+      return { shareText: `${Math.round((1 - effectiveCacheRate) * 100)}% Miss`, routedReqs: uncachedRequests, isModel: false };
+    }
+    // Model nodes
+    const incomingEdge = architecture.edges.find(e => e.target === selectedNode.id);
+    const modelNodes = architecture.nodes.filter(n => n.type === 'fast-model' || n.type === 'frontier-model' || n.type === 'model');
+    const share = incomingEdge?.trafficShare !== undefined ? incomingEdge.trafficShare : 1 / Math.max(1, modelNodes.length);
+    const routedReqs = uncachedRequests * share;
+    return {
+      shareText: `${Math.round(share * 100)}% Route`,
+      routedReqs,
+      isModel: true,
+    };
+  }, [selectedNode, architecture, workload]);
+
   // Share architecture action: Base64URL encode and copy to clipboard
   const handleShare = useCallback(async () => {
     try {
@@ -664,6 +699,74 @@ function SimulatorContent() {
 
         {/* ── RIGHT COLUMN: Live Economics Panel ── */}
         <aside className="simulator-sidebar-right">
+          {/* Subsystem Inspection Card (Section 42) */}
+          {selectedNode && selectedNodeTrafficInfo && (
+            <div className="sidebar-card" style={{ borderColor: '#FFFFFF', background: '#0D0D10' }}>
+              <div className="sidebar-card-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h2 className="sidebar-section-title">SUBSYSTEM INSPECTION</h2>
+                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                    {selectedNode.type.toUpperCase()}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSelectedNode(null)}
+                  className="btn btn-ghost btn-sm text-mono"
+                  style={{ fontSize: '0.6875rem', padding: '2px 6px', height: 'auto', minHeight: 'unset' }}
+                  title="Close inspection"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ padding: '4px 0 2px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#FFFFFF' }}>{selectedNode.label}</span>
+                  {selectedNodeMetrics?.isBottleneck && (
+                    <span className="badge badge--warning text-mono" style={{ fontSize: '0.625rem' }}>
+                      BOTTLENECK
+                    </span>
+                  )}
+                </div>
+
+                <div className="inspection-matrix-grid text-mono">
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">TRAFFIC</span>
+                    <span className="insp-val">{selectedNodeTrafficInfo.shareText}</span>
+                  </div>
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">MONTHLY REQS</span>
+                    <span className="insp-val">{formatNumber(selectedNodeTrafficInfo.routedReqs)}</span>
+                  </div>
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">INPUT TOKENS</span>
+                    <span className="insp-val">{selectedNodeTrafficInfo.isModel ? formatNumber(workload.avgInputTokens) : '—'}</span>
+                  </div>
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">OUTPUT TOKENS</span>
+                    <span className="insp-val">{selectedNodeTrafficInfo.isModel ? formatNumber(workload.avgOutputTokens) : '—'}</span>
+                  </div>
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">MONTHLY COST</span>
+                    <span className="insp-val" style={{ color: '#FFFFFF' }}>{formatCurrency(selectedNodeMetrics?.monthlyCost ?? 0)}</span>
+                  </div>
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">SHARE OF SPEND</span>
+                    <span className="insp-val">{selectedNodeMetrics?.costPercentage ?? 0}%</span>
+                  </div>
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">P95 LATENCY</span>
+                    <span className="insp-val" style={{ color: 'var(--color-performance)' }}>{formatLatency(selectedNodeMetrics?.latencyMs ?? 0)}</span>
+                  </div>
+                  <div className="inspection-matrix-item">
+                    <span className="insp-lbl">CAPACITY</span>
+                    <span className="insp-val">{result.capacityUtilization}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Card 1: Key Economics Metrics */}
           <div className="sidebar-card">
             <div className="sidebar-card-header">
@@ -698,7 +801,7 @@ function SimulatorContent() {
                 )}
               </div>
 
-              {/* Cost Per Request */}
+              {/* Cost Per Request & P95 Latency */}
               <div className="metric-dual-row">
                 <div className="metric-sub-box">
                   <span className="metric-label">COST / REQUEST</span>
@@ -716,6 +819,13 @@ function SimulatorContent() {
                     {formatLatency(result.p95Latency)}
                   </div>
                 </div>
+              </div>
+
+              {/* Latency Percentiles Strip (Section 8) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 8px', background: 'var(--color-bg-surface)', borderRadius: 'var(--radius-xs)', fontSize: '0.6875rem', border: '1px solid var(--color-border)' }} className="text-mono">
+                <span style={{ color: 'var(--color-text-muted)' }}>P50: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p50)}</strong></span>
+                <span style={{ color: 'var(--color-text-muted)' }}>P90: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p90)}</strong></span>
+                <span style={{ color: 'var(--color-text-muted)' }}>P99: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p99)}</strong></span>
               </div>
             </div>
           </div>
@@ -735,9 +845,14 @@ function SimulatorContent() {
                   {result.bottleneck.componentName}
                 </span>
                 <span className="bottleneck-impact-badge text-mono">
-                  {result.bottleneck.impactPercentage}% {result.bottleneck.metricType === 'cost' ? 'of spend' : 'of latency'}
+                  {result.bottleneck.impactPercentage}% of spend
                 </span>
               </div>
+              {result.bottleneck.latencySharePercentage !== undefined && result.bottleneck.latencySharePercentage > 0 && (
+                <div className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                  Critical-path latency contribution: {result.bottleneck.latencySharePercentage}%
+                </div>
+              )}
               <p className="bottleneck-explanation-text">
                 {result.bottleneck.explanation}
               </p>
@@ -1399,6 +1514,36 @@ function SimulatorContent() {
           width: 100%;
           height: 100%;
           overflow: hidden;
+        }
+
+        /* Subsystem Inspection Grid */
+        .inspection-matrix-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px;
+        }
+
+        .inspection-matrix-item {
+          background: #18181B;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xs);
+          padding: 6px 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .insp-lbl {
+          font-size: 0.625rem;
+          color: var(--color-text-muted);
+          letter-spacing: 0.04em;
+        }
+
+        .insp-val {
+          font-size: 0.8125rem;
+          font-weight: 600;
+          color: var(--color-text);
+          font-variant-numeric: tabular-nums;
         }
 
         /* Right Column Metrics */
