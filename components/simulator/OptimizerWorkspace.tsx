@@ -35,8 +35,7 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
       <div className="optimizer-header">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--color-quality)', fontSize: '1rem' }}>✦</span>
-            <span className="text-label" style={{ color: 'var(--color-quality)' }}>PARETO TRADEOFF FRONTIER OPTIMIZER</span>
+            <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>PARETO TRADEOFF FRONTIER</span>
           </div>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginTop: '2px' }}>
             Deterministic architectural optimization. Never a single opaque answer — choose your optimal point along the Pareto frontier.
@@ -218,7 +217,7 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
           padding: var(--space-3) var(--space-4);
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           text-align: left;
           cursor: pointer;
           transition: all var(--duration-fast);
@@ -227,11 +226,12 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
           border-color: var(--color-border-strong);
         }
         .candidate-tab-card.active {
-          border-color: var(--color-accent);
+          border-color: var(--color-border-strong);
           background: var(--color-bg);
-          box-shadow: 0 0 12px rgba(234, 88, 12, 0.12);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
         }
         .candidate-title {
+          font-family: var(--font-ui);
           font-size: 0.875rem;
           font-weight: 600;
           color: var(--color-text);
@@ -247,7 +247,7 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
         .candidate-detail-box {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-6);
           display: flex;
           flex-direction: column;

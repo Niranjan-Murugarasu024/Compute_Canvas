@@ -192,15 +192,15 @@ export default function Navigation() {
         }
         .tech-nav__title {
           font-family: var(--font-display);
-          font-size: 0.8125rem;
-          font-weight: 700;
-          letter-spacing: 0.12em;
+          font-size: 0.9375rem; /* 15px */
+          font-weight: 600;
+          letter-spacing: 0.06em;
           color: var(--color-text);
         }
         .tech-nav__slash {
           color: var(--color-border-strong);
-          font-size: 0.8125rem;
-          font-weight: 300;
+          font-size: 0.875rem;
+          font-weight: 400;
         }
         .tech-nav__version {
           font-size: 0.6875rem;
@@ -210,18 +210,18 @@ export default function Navigation() {
         .tech-nav__links {
           display: flex;
           align-items: center;
-          gap: 2px;
+          gap: 4px;
           height: 100%;
         }
         .tech-nav__link {
           display: inline-flex;
           align-items: center;
           height: 100%;
-          padding: 0 14px;
-          font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          padding: 0 12px;
+          font-family: var(--font-ui);
+          font-size: 0.8125rem; /* 13px */
           font-weight: 500;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.02em;
           color: var(--color-text-secondary);
           text-decoration: none;
           border-top: 2px solid transparent;
@@ -310,14 +310,15 @@ export default function Navigation() {
           padding: 10px 0;
           color: var(--color-text-secondary);
           text-decoration: none;
-          font-family: var(--font-mono);
-          font-size: 0.8125rem;
-          letter-spacing: 0.06em;
+          font-family: var(--font-ui);
+          font-size: 0.875rem;
+          font-weight: 500;
+          letter-spacing: 0.02em;
           border-bottom: 1px solid var(--color-border-subtle);
         }
         .mobile-drawer-link.active {
           color: var(--color-text);
-          font-weight: 700;
+          font-weight: 600;
         }
         .mobile-drawer-footer {
           padding-top: 16px;

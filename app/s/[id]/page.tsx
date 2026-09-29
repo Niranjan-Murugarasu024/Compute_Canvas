@@ -82,7 +82,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
                   computecanvas.io/s/{id}
                 </span>
               </div>
-              <h1 className="text-headline" style={{ fontSize: '2.25rem' }}>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.25rem', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--color-text)' }}>
                 {resolved.name}
               </h1>
               <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-2)', fontSize: '1rem', maxWidth: '640px' }}>
@@ -268,7 +268,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         .share-metric-card {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-5);
           display: flex;
           flex-direction: column;
@@ -281,6 +281,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           letter-spacing: 0.04em;
         }
         .metric-number {
+          font-family: var(--font-mono);
           font-size: 1.5rem;
           font-weight: 600;
         }
@@ -291,7 +292,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         .share-canvas-box {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-6);
           margin-bottom: var(--space-8);
         }
@@ -320,17 +321,19 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         .share-node-card {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-3) var(--space-4);
           min-width: 140px;
         }
         .share-node-type {
           font-size: 0.625rem;
-          color: var(--color-accent);
-          font-weight: 600;
+          font-family: var(--font-mono);
+          color: var(--color-text-secondary);
+          font-weight: 500;
           letter-spacing: 0.05em;
         }
         .share-node-label {
+          font-family: var(--font-ui);
           font-size: 0.875rem;
           font-weight: 500;
           margin: 2px 0;
@@ -338,6 +341,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         }
         .share-node-provider {
           font-size: 0.6875rem;
+          font-family: var(--font-mono);
           color: var(--color-text-muted);
         }
         .share-node-arrow {
@@ -366,9 +370,9 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           border-bottom: 1px solid var(--color-border-subtle);
         }
         .share-cta-banner {
-          background: linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(20, 20, 20, 0.8) 100%);
-          border: 1px solid var(--color-accent);
-          border-radius: var(--radius-lg);
+          background: var(--color-bg-elevated);
+          border: 1px solid var(--color-border-strong);
+          border-radius: var(--radius-sm);
           padding: var(--space-8);
           display: flex;
           justify-content: space-between;

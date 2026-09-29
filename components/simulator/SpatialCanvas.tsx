@@ -400,11 +400,6 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
           <marker id="edge-arrow-selected" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
             <polygon points="0 0, 6 3, 0 6" fill="var(--color-accent)" />
           </marker>
-
-          {/* Amber glow filter for bottleneck highlighting */}
-          <filter id="bottleneck-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f59e0b" floodOpacity="0.6" />
-          </filter>
         </defs>
 
         {/* Background Grid */}
@@ -583,8 +578,8 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                   y="38"
                   fill="#F4F4F5"
                   fontSize="12"
-                  fontFamily="var(--font-mono)"
-                  fontWeight="600"
+                  fontFamily="var(--font-ui)"
+                  fontWeight="500"
                 >
                   {node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label}
                 </text>
@@ -596,7 +591,7 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                   fill="#FFFFFF"
                   fontSize="11"
                   fontFamily="var(--font-mono)"
-                  fontWeight="700"
+                  fontWeight="500"
                 >
                   {costText}
                 </text>
@@ -608,7 +603,7 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                   fill="#A1A1AA"
                   fontSize="10"
                   fontFamily="var(--font-mono)"
-                  fontWeight="500"
+                  fontWeight="400"
                 >
                   {latencyText}{costPctText ? ` · ${costPctText}` : ''}
                 </text>

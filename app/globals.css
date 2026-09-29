@@ -79,10 +79,11 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ── Technical Typography ── */
-  --font-display: var(--font-display), 'Space Grotesk', var(--font-geist-sans), sans-serif;
-  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: var(--font-geist-mono), 'SF Mono', 'IBM Plex Mono', monospace;
+  /* ── Technical Typography (Three-Font System) ── */
+  --font-display: var(--font-display), 'Space Grotesk', -apple-system, sans-serif;
+  --font-ui: var(--font-sans), 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: var(--font-sans), 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: var(--font-mono), 'IBM Plex Mono', 'SF Mono', monospace;
 
   /* ── Grid ── */
   --grid-max-width: 1440px;
@@ -119,16 +120,16 @@ html {
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   background-color: var(--color-bg);
   color: var(--color-text);
-  line-height: 1.6;
+  line-height: 1.55;
   overflow-x: hidden;
 }
 
 ::selection {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-text-inverse);
 }
 
 /* ──────────────────────────────────────────────
@@ -147,59 +148,126 @@ body {
 }
 
 /* ──────────────────────────────────────────────
-   TYPOGRAPHY UTILITIES
+   TYPOGRAPHY UTILITIES (CENTRALIZED SEMANTIC SCALE)
    ────────────────────────────────────────────── */
 
+/* Level 1: Brand & Major Display (Space Grotesk) */
+.text-display-xl {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5.2vw, 4.25rem); /* 40-48px mobile, 56-68px desktop */
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+}
+
+.text-display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+}
+
+.text-heading-xl {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.text-heading-lg {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+}
+
+.text-heading-md {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+/* Legacy Display aliases mapped to new restrained scale */
 .text-display {
   font-family: var(--font-display);
-  font-size: clamp(2.25rem, 5.5vw, 4.5rem);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
+  font-size: clamp(2.5rem, 5.2vw, 4.25rem);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
   color: var(--color-text);
 }
 
 .text-headline {
   font-family: var(--font-display);
-  font-size: clamp(1.625rem, 3.5vw, 2.75rem);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
   color: var(--color-text);
 }
 
 .text-title {
   font-family: var(--font-display);
-  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  font-size: clamp(1.125rem, 1.8vw, 1.375rem);
   font-weight: 600;
   line-height: 1.25;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   color: var(--color-text);
 }
 
-.text-body {
-  font-family: var(--font-sans);
-  font-size: 0.9375rem;
+/* Level 2: UI & Body Copy (IBM Plex Sans) */
+.text-body-lg {
+  font-family: var(--font-ui);
+  font-size: 1.0625rem; /* 17px */
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
-.text-caption {
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
+.text-body-md,
+.text-body {
+  font-family: var(--font-ui);
+  font-size: 0.9375rem; /* 15px */
   font-weight: 400;
   line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.text-body-sm,
+.text-caption {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 400;
+  line-height: 1.45;
   color: var(--color-text-muted);
 }
 
 .text-label {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+}
+
+/* Level 3: System Data & Metrics (IBM Plex Mono) */
+.text-technical-label {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 600;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
@@ -209,24 +277,48 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.text-metric-xl,
 .text-metric {
   font-family: var(--font-mono);
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
-  font-weight: 600;
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 500;
   line-height: 1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
 }
 
+.text-metric-lg {
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.text-metric-md,
 .text-metric-sm {
   font-family: var(--font-mono);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1;
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.1;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
+}
+
+.text-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-mono-xs {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ──────────────────────────────────────────────
@@ -328,13 +420,12 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: 10px 18px;
-  font-family: var(--font-mono);
+  padding: 8px 16px;
+  font-family: var(--font-ui);
   font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
@@ -353,6 +444,7 @@ body {
   background: var(--color-text);
   color: var(--color-text-inverse);
   border-color: var(--color-text);
+  font-weight: 600;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -391,13 +483,13 @@ body {
 }
 
 .btn-sm {
-  padding: 6px 12px;
-  font-size: 0.6875rem;
-  letter-spacing: 0.05em;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
 }
 
 .btn-lg {
-  padding: 14px 28px;
+  padding: 10px 20px;
   font-size: 0.875rem;
 }
 

@@ -13,14 +13,14 @@ export default function TemplatesClient() {
   const filtered = category === 'All' ? TEMPLATES : TEMPLATES.filter(t => t.category === category);
 
   return (
-    <div className="container">
+    <div className="container" style={{ paddingTop: 'var(--space-12)', paddingBottom: 'var(--space-16)' }}>
       <div style={{ maxWidth: 640, marginBottom: 'var(--space-12)' }}>
-        <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-accent)' }}>
-          TEMPLATES
+        <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
+          [CANONICAL_BLUEPRINTS]
         </p>
-        <h1 className="text-headline">Start from proven architectures.</h1>
-        <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-3)', fontSize: '1.0625rem' }}>
-          Each template is a working architecture with real simulation outputs. Click to open in the simulator.
+        <h1 className="text-heading-xl">Start from proven architectures.</h1>
+        <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+          Each template is a functional architectural topology with deterministic simulation outputs. Open in the simulator to adjust workload assumptions.
         </p>
       </div>
 
@@ -29,8 +29,7 @@ export default function TemplatesClient() {
         {CATEGORIES.map(cat => (
           <button
             key={cat}
-            className={`btn ${category === cat ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
+            className={`btn ${category === cat ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setCategory(cat)}
           >
             {cat}
@@ -45,52 +44,52 @@ export default function TemplatesClient() {
           return (
             <motion.div
               key={template.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.05 }}
+              transition={{ duration: 0.35, delay: i * 0.04 }}
             >
               <Link href={`/simulator?template=${template.id}`} className="template-page-card">
-                <div style={{ marginBottom: 'var(--space-3)' }}>
-                  <span className="text-label" style={{ color: 'var(--color-accent)' }}>
-                    {template.category.toUpperCase()}
+                <div style={{ marginBottom: 'var(--space-2)' }}>
+                  <span className="text-technical-label">
+                    {template.category}
                   </span>
                 </div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
+                <h2 style={{ fontSize: '1.125rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
                   {template.name}
-                </h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)', lineHeight: 1.6 }}>
+                </h2>
+                <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)', lineHeight: 1.55 }}>
                   {template.description}
                 </p>
 
                 {/* Mini architecture preview */}
                 <div className="template-page-card__nodes">
                   {template.architecture.nodes.map(node => (
-                    <span key={node.id} className="template-page-card__node">
-                      {node.label.toUpperCase()}
+                    <span key={node.id} className="template-page-card__node text-mono">
+                      {node.label}
                     </span>
                   ))}
                 </div>
 
                 <div className="template-page-card__metrics">
                   <div>
-                    <span className="text-label">EST. COST</span>
-                    <span className="text-mono" style={{ color: 'var(--color-cost)' }}>
-                      {formatCurrency(result.monthlyCost, true)}/mo
+                    <span className="text-technical-label">EST. SPEND</span>
+                    <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 500 }}>
+                      {formatCurrency(result.monthlyCost, true)}/MO
                     </span>
                   </div>
                   <div>
-                    <span className="text-label">P95 LATENCY</span>
-                    <span className="text-mono" style={{ color: 'var(--color-performance)' }}>
+                    <span className="text-technical-label">P95 LATENCY</span>
+                    <span className="text-mono" style={{ color: '#D4D4D8', fontWeight: 500 }}>
                       {formatLatency(result.p95Latency)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-label">COMPONENTS</span>
-                    <span className="text-mono">{template.architecture.nodes.length}</span>
+                    <span className="text-technical-label">COMPONENTS</span>
+                    <span className="text-mono" style={{ color: '#A1A1AA' }}>{template.architecture.nodes.length} NODES</span>
                   </div>
                   <div>
-                    <span className="text-label">QUALITY</span>
-                    <span className="text-mono" style={{ color: 'var(--color-quality)' }}>
+                    <span className="text-technical-label">QUALITY</span>
+                    <span className="text-mono" style={{ color: '#E4E4E7' }}>
                       {result.qualityEstimate}%
                     </span>
                   </div>
@@ -113,16 +112,16 @@ export default function TemplatesClient() {
           padding: var(--space-6);
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           text-decoration: none;
           color: var(--color-text);
           transition: all var(--duration-fast) var(--ease-out);
           height: 100%;
         }
         .template-page-card:hover {
-          border-color: var(--color-accent);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-glow);
+          border-color: var(--color-border-strong);
+          background: var(--color-bg-surface);
+          transform: translateY(-1px);
         }
         .template-page-card__nodes {
           display: flex;
@@ -131,15 +130,12 @@ export default function TemplatesClient() {
           margin-bottom: var(--space-4);
         }
         .template-page-card__node {
-          padding: 3px 8px;
+          padding: 2px 6px;
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-sm);
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 500;
-          letter-spacing: 0.04em;
-          color: var(--color-text-muted);
+          border-radius: 2px;
+          font-size: 0.625rem;
+          color: var(--color-text-secondary);
         }
         .template-page-card__metrics {
           display: grid;

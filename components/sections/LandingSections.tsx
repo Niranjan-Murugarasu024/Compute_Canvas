@@ -43,12 +43,12 @@ function Section({ children, className = '', id = '' }: {
 // ──────────────────────────────────────────────
 
 const SYSTEM_NODES = [
-  { id: 'api', label: 'API INGRESS', color: '#38bdf8' },
-  { id: 'cache', label: 'SEMANTIC CACHE', color: '#34d399' },
-  { id: 'router', label: 'COMPLEXITY ROUTER', color: '#a78bfa' },
-  { id: 'vector', label: 'VECTOR DATABASE', color: '#fbbf24' },
-  { id: 'fast', label: 'FAST REASONING', color: '#06b6d4' },
-  { id: 'frontier', label: 'FRONTIER REASONING', color: '#ec4899' },
+  { id: 'api', label: 'API Ingress', tag: 'INGRESS' },
+  { id: 'cache', label: 'Semantic Cache', tag: 'CACHE' },
+  { id: 'router', label: 'Complexity Router', tag: 'ROUTER' },
+  { id: 'vector', label: 'Vector Database', tag: 'RETRIEVAL' },
+  { id: 'fast', label: 'Fast Reasoning', tag: 'FAST LLM' },
+  { id: 'frontier', label: 'Frontier Reasoning', tag: 'FRONTIER' },
 ];
 
 const NODE_DETAILS: Record<string, { role: string; cost: string; latency: string }> = {
@@ -68,12 +68,12 @@ export function EveryRequestSection() {
     <Section id="every-request">
       <div className="container">
         <div style={{ maxWidth: 640, marginBottom: 'var(--space-12)' }}>
-          <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-accent)' }}>
-            THE HIDDEN COMPLEXITY
+          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
+            [ARCHITECTURAL_DECOMPOSITION]
           </p>
-          <h2 className="text-headline">Every AI request is a system.</h2>
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-3)', fontSize: '1.0625rem' }}>
-            What looks like a simple API call hides an entire architecture. Every component adds cost, latency, and failure modes.
+          <h2 className="text-heading-xl">Every AI request is a system.</h2>
+          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+            What appears to be a single API call hides an entire multi-tier pipeline. Every layer introduces token spend, latency penalty, and operational failure modes.
           </p>
         </div>
 
@@ -84,50 +84,53 @@ export function EveryRequestSection() {
                 <button
                   className={`request-system__node ${selectedNode === node.id ? 'selected' : ''}`}
                   onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)}
-                  style={{ '--node-color': node.color } as React.CSSProperties}
                   aria-label={`Inspect ${node.label}`}
                 >
-                  <span>{node.label}</span>
+                  <span className="node-tag text-mono">{node.tag}</span>
+                  <span className="node-title">{node.label}</span>
                 </button>
-          {i < SYSTEM_NODES.length - 1 && (
-            <div className="request-system__connector">
-              <svg width="2" height="20" viewBox="0 0 2 20">
-                <line x1="1" y1="0" x2="1" y2="20" stroke="var(--color-border-strong)" strokeWidth="1" strokeDasharray="3 3" />
-              </svg>
-            </div>
+                {i < SYSTEM_NODES.length - 1 && (
+                  <div className="request-system__connector">
+                    <svg width="2" height="20" viewBox="0 0 2 20">
+                      <line x1="1" y1="0" x2="1" y2="20" stroke="var(--color-border-strong)" strokeWidth="1" strokeDasharray="3 3" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {detail && selectedNode && (
+            <motion.div
+              className="request-system__detail"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              key={selectedNode}
+            >
+              <div className="detail-header-row">
+                <span className="text-technical-label">COMPONENT SPECIFICATION</span>
+                <span className="text-mono" style={{ fontSize: '0.6875rem', color: '#FFFFFF' }}>
+                  {SYSTEM_NODES.find(n => n.id === selectedNode)?.label}
+                </span>
+              </div>
+              <div className="request-system__detail-row">
+                <span className="text-caption">Role</span>
+                <span className="text-body-sm" style={{ color: 'var(--color-text)' }}>{detail.role}</span>
+              </div>
+              <div className="request-system__detail-row">
+                <span className="text-caption">Cost Impact</span>
+                <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text)' }}>{detail.cost}</span>
+              </div>
+              <div className="request-system__detail-row">
+                <span className="text-caption">Latency Added</span>
+                <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text)' }}>{detail.latency}</span>
+              </div>
+            </motion.div>
           )}
         </div>
-            ))}
       </div>
 
-      {detail && selectedNode && (
-        <motion.div
-          className="request-system__detail"
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          key={selectedNode}
-        >
-          <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>
-            {SYSTEM_NODES.find(n => n.id === selectedNode)?.label}
-          </p>
-          <div className="request-system__detail-row">
-            <span style={{ color: 'var(--color-text-muted)' }}>Role</span>
-            <span>{detail.role}</span>
-          </div>
-          <div className="request-system__detail-row">
-            <span style={{ color: 'var(--color-text-muted)' }}>Cost</span>
-            <span className="text-mono">{detail.cost}</span>
-          </div>
-          <div className="request-system__detail-row">
-            <span style={{ color: 'var(--color-text-muted)' }}>Latency</span>
-            <span className="text-mono">{detail.latency}</span>
-          </div>
-        </motion.div>
-      )}
-    </div>
-      </div >
-
-    <style jsx>{`
+      <style jsx>{`
         .request-system {
           display: grid;
           grid-template-columns: auto 1fr;
@@ -145,27 +148,38 @@ export function EveryRequestSection() {
           align-items: center;
         }
         .request-system__node {
-          padding: var(--space-2) var(--space-4);
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2px;
+          padding: 8px 14px;
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          font-family: var(--font-mono);
-          font-size: 0.6875rem;
-          font-weight: 500;
-          letter-spacing: 0.06em;
-          color: var(--color-text);
+          border-radius: var(--radius-sm);
           cursor: pointer;
           transition: all var(--duration-fast) var(--ease-out);
-          min-width: 140px;
-          text-align: center;
+          min-width: 170px;
+          text-align: left;
+        }
+        .node-tag {
+          font-size: 0.625rem;
+          color: var(--color-text-muted);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .node-title {
+          font-family: var(--font-ui);
+          font-size: 0.8125rem;
+          font-weight: 500;
+          color: var(--color-text);
         }
         .request-system__node:hover {
-          border-color: var(--node-color);
-          transform: translateY(-1px);
+          border-color: var(--color-border-strong);
+          background: var(--color-bg-elevated);
         }
         .request-system__node.selected {
-          border-color: var(--node-color);
-          box-shadow: 0 0 0 1px var(--node-color), 0 0 12px rgba(99, 102, 241, 0.15);
+          border-color: var(--color-accent);
+          background: #141417;
         }
         .request-system__connector {
           padding: 2px 0;
@@ -174,9 +188,17 @@ export function EveryRequestSection() {
           padding: var(--space-6);
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           position: sticky;
           top: 120px;
+        }
+        .detail-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: var(--space-3);
+          border-bottom: 1px solid var(--color-border);
+          margin-bottom: var(--space-2);
         }
         .request-system__detail-row {
           display: flex;
@@ -204,12 +226,11 @@ export function EveryRequestSection() {
           }
           .request-system__node {
             min-width: auto;
-            font-size: 0.625rem;
             padding: var(--space-1) var(--space-3);
           }
         }
       `}</style>
-    </Section >
+    </Section>
   );
 }
 
@@ -277,26 +298,26 @@ export function CostDecompositionSection() {
     <Section id="cost-decomposition">
       <div className="container">
         <div style={{ maxWidth: 640, marginBottom: 'var(--space-10)' }}>
-          <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-cost)' }}>
-            ECONOMICS &bull; INTERACTIVE COST INSTRUMENT
+          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
+            [ECONOMIC_DECOMPOSITION]
           </p>
-          <h2 className="text-headline">Cost is not just model pricing.</h2>
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-3)', fontSize: '1.0625rem' }}>
-            Every layer of your architecture contributes to the total cost. Adjust the controls below to see how traffic scale and caching reshape the entire economic profile.
+          <h2 className="text-heading-xl">Cost is not just model pricing.</h2>
+          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+            Every layer of your architecture contributes to the total monthly spend. Adjust the workload parameters to see how traffic scale and cache hit rate reshape the economic profile.
           </p>
         </div>
 
         <div className="cost-instrument">
           {/* Controls Panel */}
           <div className="cost-instrument__controls">
-            <span className="text-label" style={{ color: 'var(--color-accent)', marginBottom: 'var(--space-2)', display: 'block' }}>
+            <span className="text-technical-label" style={{ marginBottom: 'var(--space-2)', display: 'block' }}>
               TUNING PARAMETERS
             </span>
 
             <div className="control-group">
               <div className="control-header">
-                <label className="text-caption">Traffic Volume</label>
-                <span className="text-mono" style={{ fontSize: '0.8125rem' }}>{formatNumber(monthlyRequests)}/mo</span>
+                <label className="text-caption">Workload Volume</label>
+                <span className="text-mono" style={{ fontSize: '0.8125rem' }}>{formatNumber(monthlyRequests)} REQ / MO</span>
               </div>
               <input
                 type="range"
@@ -318,7 +339,7 @@ export function CostDecompositionSection() {
             <div className="control-group">
               <div className="control-header">
                 <label className="text-caption">Semantic Cache Hit Rate</label>
-                <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-quality)' }}>
+                <span className="text-mono" style={{ fontSize: '0.8125rem', color: '#FFFFFF' }}>
                   {Math.round(cacheHitRate * 100)}%
                 </span>
               </div>
@@ -370,7 +391,7 @@ export function CostDecompositionSection() {
             </div>
 
             <button onClick={handleOpenSimulator} className="btn btn-primary" style={{ marginTop: 'var(--space-4)', width: '100%' }}>
-              Load in Spatial Simulator &rarr;
+              LOAD IN SPATIAL SIMULATOR &rarr;
             </button>
           </div>
 
@@ -378,22 +399,22 @@ export function CostDecompositionSection() {
           <div className="cost-instrument__bars">
             <div className="cost-summary-header">
               <div>
-                <span className="text-label">TOTAL MONTHLY SPEND</span>
-                <p className="text-mono cost-total-number" style={{ color: 'var(--color-cost)' }}>
+                <span className="text-technical-label">ESTIMATED MONTHLY SPEND</span>
+                <p className="text-mono cost-total-number" style={{ color: '#FFFFFF' }}>
                   {formatCurrency(result.costBreakdown.total)}
                 </p>
                 <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                  ${(result.costPerRequest * 1000).toFixed(3)} per 1,000 requests
+                  ${(result.costPerRequest * 1000).toFixed(3)} USD per 1,000 requests
                 </span>
               </div>
 
               {monthlySavings > 0 && (
                 <div className="savings-badge">
-                  <span className="text-caption text-mono" style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-                    ⚡ {formatCurrency(monthlySavings)} SAVED / MO
+                  <span className="text-caption text-mono" style={{ color: '#FFFFFF', fontWeight: 600 }}>
+                    Δ -{formatCurrency(monthlySavings)} / MO
                   </span>
-                  <span className="text-caption" style={{ fontSize: '0.6875rem', color: 'var(--color-text-secondary)' }}>
-                    via {Math.round(cacheHitRate * 100)}% prompt cache
+                  <span className="text-caption text-mono" style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
+                    AT {Math.round(cacheHitRate * 100)}% CACHE HIT RATE
                   </span>
                 </div>
               )}
@@ -411,10 +432,10 @@ export function CostDecompositionSection() {
                     <div className="track-label-row">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span className="track-dot" style={{ background: b.color }} />
-                        <span style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{b.label}</span>
+                        <span style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', fontWeight: 500 }}>{b.label}</span>
                         <span className="text-caption text-mono" style={{ opacity: 0.6 }}>({pctOfTotal}%)</span>
                       </div>
-                      <span className="text-mono" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                      <span className="text-mono" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                         {formatCurrency(val)}
                       </span>
                     </div>
@@ -434,9 +455,9 @@ export function CostDecompositionSection() {
             </div>
 
             <div className="cost-causality-callout">
-              <span className="text-mono" style={{ color: 'var(--color-accent)', marginRight: '6px' }}>ℹ</span>
+              <span className="text-mono" style={{ color: 'var(--color-text-muted)', marginRight: '6px' }}>[INFO]</span>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-                Model inference accounts for {Math.round((result.costBreakdown.model / result.costBreakdown.total) * 100)}% of spend. Caching saves {formatCurrency(monthlySavings)}/mo before tokens reach the frontier model.
+                Model inference accounts for {Math.round((result.costBreakdown.model / result.costBreakdown.total) * 100)}% of spend. Caching eliminates {formatCurrency(monthlySavings)}/mo before requests reach frontier inference.
               </span>
             </div>
           </div>
@@ -450,7 +471,7 @@ export function CostDecompositionSection() {
           gap: var(--space-8);
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-8);
         }
         .cost-instrument__controls {
@@ -499,14 +520,14 @@ export function CostDecompositionSection() {
         }
         .cost-total-number {
           font-size: 2rem;
-          font-weight: 700;
+          font-weight: 600;
           line-height: 1.1;
           margin-top: 4px;
         }
         .savings-badge {
-          background: rgba(34, 197, 94, 0.1);
-          border: 1px solid rgba(34, 197, 94, 0.3);
-          border-radius: var(--radius-md);
+          background: var(--color-bg-surface);
+          border: 1px solid var(--color-border-strong);
+          border-radius: var(--radius-sm);
           padding: 6px 12px;
           display: flex;
           flex-direction: column;
@@ -528,19 +549,19 @@ export function CostDecompositionSection() {
           align-items: center;
         }
         .track-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
+          width: 6px;
+          height: 6px;
+          border-radius: 1px;
         }
         .bar-track {
-          height: 10px;
+          height: 6px;
           background: var(--color-bg-surface);
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-xs);
           overflow: hidden;
         }
         .bar-fill {
           height: 100%;
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-xs);
         }
         .cost-causality-callout {
           background: var(--color-bg-surface);
@@ -720,12 +741,12 @@ export function ScaleSection() {
     <Section id="scale">
       <div className="container">
         <div style={{ maxWidth: 640, marginBottom: 'var(--space-10)' }}>
-          <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-capacity)' }}>
-            SCALABILITY &bull; LIVING SYSTEM VISUALIZATION
+          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
+            [SCALE_TRANSITIONS]
           </p>
-          <h2 className="text-headline">Scale changes the architecture.</h2>
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-3)', fontSize: '1.0625rem' }}>
-            What works at 100K requests breaks at 10M. Watch components emerge, routing bifurcate, and economics shift across four orders of magnitude.
+          <h2 className="text-heading-xl">Scale changes the architecture.</h2>
+          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
+            What functions at 100K requests breaks at 10M. Watch components emerge, routing bifurcate, and economics shift across four orders of magnitude.
           </p>
         </div>
 
@@ -740,10 +761,10 @@ export function ScaleSection() {
                 role="tab"
                 aria-selected={activeStep === idx}
               >
-                <span className="text-mono" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                <span className="text-mono" style={{ fontSize: '1.25rem', fontWeight: 600 }}>
                   {t.trafficLabel}
                 </span>
-                <span className="text-label" style={{ color: activeStep === idx ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
+                <span className="text-technical-label" style={{ color: activeStep === idx ? '#FFFFFF' : 'var(--color-text-muted)' }}>
                   {t.label}
                 </span>
               </button>
@@ -754,8 +775,8 @@ export function ScaleSection() {
           <div className="scale-living__content">
             <div className="scale-living__topology">
               <div className="topology-header">
-                <span className="text-label text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                  SYSTEM TOPOLOGY &bull; {tier.architecture.nodes.length} COMPONENTS &bull; {tier.architecture.edges.length} WIRES
+                <span className="text-technical-label">
+                  TOPOLOGY // {tier.architecture.nodes.length} COMPONENTS // {tier.architecture.edges.length} WIRES
                 </span>
                 <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
                   {tier.trafficLabel} REQ / MO
@@ -765,13 +786,6 @@ export function ScaleSection() {
               {/* Animated Mini SVG Graph */}
               <div className="topology-svg-wrap">
                 <svg width="100%" height="160" viewBox="0 0 780 160">
-                  <defs>
-                    <linearGradient id="scale-grad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.8" />
-                      <stop offset="100%" stopColor="var(--color-capacity)" stopOpacity="0.8" />
-                    </linearGradient>
-                  </defs>
-
                   {/* Edges */}
                   {tier.architecture.edges.map((e, i) => {
                     const from = tier.architecture.nodes.find(n => n.id === e.source);
@@ -787,11 +801,11 @@ export function ScaleSection() {
                         <line
                           x1={fx + 40} y1={fy}
                           x2={tx - 40} y2={ty}
-                          stroke="var(--color-border-strong)"
+                          stroke="#3F3F46"
                           strokeWidth="1.5"
                           strokeDasharray="4 4"
                         />
-                        <circle r="3" fill="var(--color-accent)">
+                        <circle r="2.5" fill="#FFFFFF">
                           <animateMotion
                             dur="2s"
                             repeatCount="indefinite"
@@ -806,9 +820,8 @@ export function ScaleSection() {
                   {tier.architecture.nodes.map(n => {
                     const nx = n.x || 100;
                     const ny = n.y || 80;
-                    const isModel = n.type === 'model';
-                    const isCache = n.type === 'cache';
-                    const stroke = isModel ? 'var(--color-accent)' : isCache ? 'var(--color-quality)' : 'var(--color-border-strong)';
+                    const isModel = n.type === 'model' || n.type === 'frontier-model' || n.type === 'fast-model';
+                    const stroke = isModel ? '#FFFFFF' : '#3F3F46';
 
                     return (
                       <g key={n.id}>
@@ -817,19 +830,19 @@ export function ScaleSection() {
                           y={ny - 16}
                           width={90}
                           height={32}
-                          rx={6}
-                          fill="var(--color-bg-surface)"
+                          rx={2}
+                          fill="#18181B"
                           stroke={stroke}
-                          strokeWidth="1.5"
+                          strokeWidth="1"
                         />
                         <text
                           x={nx}
                           y={ny + 4}
                           textAnchor="middle"
-                          fill="var(--color-text)"
+                          fill="#F4F4F5"
                           fontSize="9"
-                          fontFamily="var(--font-mono)"
-                          fontWeight="600"
+                          fontFamily="var(--font-ui)"
+                          fontWeight="500"
                         >
                           {n.label.slice(0, 14)}
                         </text>
@@ -839,15 +852,15 @@ export function ScaleSection() {
                 </svg>
               </div>
 
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: 'var(--space-3)', lineHeight: 1.5 }}>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: 'var(--space-3)', lineHeight: 1.5, fontFamily: 'var(--font-ui)' }}>
                 {tier.description}
               </p>
 
               <div className="bottleneck-strip">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-warning)', fontWeight: 600 }}>
+                <span className="text-caption text-mono" style={{ color: '#FFFFFF', fontWeight: 600 }}>
                   BOTTLENECK AT SCALE:
                 </span>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--color-text)' }}>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-ui)' }}>
                   {tier.bottleneck}
                 </span>
               </div>
@@ -856,37 +869,37 @@ export function ScaleSection() {
             {/* Metrics Sidebar */}
             <div className="scale-living__metrics">
               <div className="scale-metric-box">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>EST. MONTHLY COST</span>
-                <span className="text-mono scale-metric-val" style={{ color: 'var(--color-cost)' }}>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. MONTHLY SPEND</span>
+                <span className="text-mono scale-metric-val" style={{ color: '#FFFFFF' }}>
                   {formatCurrency(sim.monthlyCost)}
                 </span>
                 <span className="text-caption text-mono" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                  ${(sim.costPerRequest * 1000).toFixed(3)}/1K requests
+                  ${(sim.costPerRequest * 1000).toFixed(3)} USD / 1K REQ
                 </span>
               </div>
 
               <div className="scale-metric-box">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>P95 LATENCY</span>
-                <span className="text-mono scale-metric-val" style={{ color: 'var(--color-performance)' }}>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. P95 LATENCY</span>
+                <span className="text-mono scale-metric-val" style={{ color: '#D4D4D8' }}>
                   {formatLatency(sim.p95Latency)}
                 </span>
                 <span className="text-caption text-mono" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                  Throughput: {sim.throughputRPS} RPS
+                  THROUGHPUT: {sim.throughputRPS} RPS
                 </span>
               </div>
 
               <div className="scale-metric-box">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>CAPACITY UTILIZATION</span>
-                <span className="text-mono scale-metric-val" style={{ color: sim.capacityUtilization > 90 ? 'var(--color-warning)' : 'var(--color-capacity)' }}>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>CAPACITY UTILIZATION</span>
+                <span className="text-mono scale-metric-val" style={{ color: '#A1A1AA' }}>
                   {sim.capacityUtilization.toFixed(0)}%
                 </span>
                 <span className="text-caption text-mono" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                  Concurrency: {tier.workload.concurrency}
+                  CONCURRENCY: {tier.workload.concurrency}
                 </span>
               </div>
 
               <button onClick={handleOpenScale} className="btn btn-secondary" style={{ width: '100%', marginTop: 'auto' }}>
-                Open this scale in Simulator &rarr;
+                OPEN IN SIMULATOR &rarr;
               </button>
             </div>
           </div>
@@ -1146,11 +1159,11 @@ export function WhatWouldYouBuildSection() {
     <Section id="what-would-you-build">
       <div className="container">
         <div style={{ maxWidth: 640, marginBottom: 'var(--space-10)' }}>
-          <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-quality)' }}>
-            TRADEOFFS &bull; ARCHITECTURAL OBJECTIVES
+          <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
+            [ARCHITECTURAL_TRADEOFFS]
           </p>
-          <h2 className="text-headline">What would you optimize for?</h2>
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-3)', fontSize: '1.0625rem' }}>
+          <h2 className="text-heading-xl">What would you optimize for?</h2>
+          <p className="text-body-lg" style={{ marginTop: 'var(--space-3)' }}>
             Every AI architecture decision is an explicit engineering tradeoff. Select an objective to inspect how component topologies alter cost, latency, and capability.
           </p>
         </div>
@@ -1167,7 +1180,7 @@ export function WhatWouldYouBuildSection() {
                 aria-selected={selectedId === o.id}
               >
                 <span className="obj-icon">{o.icon}</span>
-                <span className="text-label" style={{ color: selectedId === o.id ? 'var(--color-text)' : undefined }}>
+                <span className="text-technical-label" style={{ color: selectedId === o.id ? '#FFFFFF' : 'var(--color-text-muted)' }}>
                   {o.label}
                 </span>
               </button>
@@ -1185,50 +1198,50 @@ export function WhatWouldYouBuildSection() {
             <div className="obj-card-top">
               <div>
                 <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
-                  {obj.label} TOPOLOGY &bull; {obj.model.toUpperCase()}
+                  {obj.label} TOPOLOGY // {obj.model.toUpperCase()}
                 </span>
-                <p style={{ color: 'var(--color-text)', fontSize: '0.9375rem', marginTop: 'var(--space-2)', fontWeight: 500 }}>
+                <p style={{ color: 'var(--color-text)', fontSize: '0.9375rem', marginTop: 'var(--space-2)', fontFamily: 'var(--font-ui)', fontWeight: 500 }}>
                   {obj.description}
                 </p>
               </div>
 
               <button onClick={handleLoad} className="btn btn-primary" style={{ flexShrink: 0 }}>
-                Load this architecture in Simulator &rarr;
+                LOAD IN SIMULATOR &rarr;
               </button>
             </div>
 
             {/* Metrics Strip */}
             <div className="obj-metrics-grid">
               <div className="obj-metric-item">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>EST. MONTHLY COST</span>
-                <span className="text-mono obj-metric-num" style={{ color: 'var(--color-cost)' }}>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. MONTHLY SPEND</span>
+                <span className="text-mono obj-metric-num" style={{ color: '#FFFFFF' }}>
                   {formatCurrency(result.monthlyCost)}
                 </span>
               </div>
               <div className="obj-metric-item">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>P95 LATENCY</span>
-                <span className="text-mono obj-metric-num" style={{ color: 'var(--color-performance)' }}>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. P95 LATENCY</span>
+                <span className="text-mono obj-metric-num" style={{ color: '#D4D4D8' }}>
                   {formatLatency(result.p95Latency)}
                 </span>
               </div>
               <div className="obj-metric-item">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>CAPACITY UTILIZATION</span>
-                <span className="text-mono obj-metric-num" style={{ color: 'var(--color-capacity)' }}>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>CAPACITY UTILIZATION</span>
+                <span className="text-mono obj-metric-num" style={{ color: '#A1A1AA' }}>
                   {result.capacityUtilization.toFixed(0)}%
                 </span>
               </div>
               <div className="obj-metric-item">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>QUALITY SCORE</span>
-                <span className="text-mono obj-metric-num" style={{ color: 'var(--color-quality)' }}>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>QUALITY ESTIMATE</span>
+                <span className="text-mono obj-metric-num" style={{ color: '#E4E4E7' }}>
                   {result.qualityEstimate}%
                 </span>
               </div>
             </div>
 
             <div className="obj-tradeoff-note">
-              <span className="text-mono" style={{ color: 'var(--color-accent)', marginRight: '6px' }}>⚖</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-                <strong>Tradeoff Reality:</strong> {obj.tradeoffNote}
+              <span className="text-mono" style={{ color: 'var(--color-text-muted)', marginRight: '6px' }}>[TRADEOFF]</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-ui)' }}>
+                <strong>Empirical Reality:</strong> {obj.tradeoffNote}
               </span>
             </div>
           </motion.div>
@@ -1254,7 +1267,7 @@ export function WhatWouldYouBuildSection() {
           padding: var(--space-4) var(--space-2);
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           cursor: pointer;
           color: var(--color-text-secondary);
           transition: all var(--duration-fast);
@@ -1267,16 +1280,16 @@ export function WhatWouldYouBuildSection() {
           border-color: var(--color-accent);
           background: var(--color-bg-surface);
           color: var(--color-text);
-          box-shadow: 0 0 12px rgba(234, 88, 12, 0.15);
+          box-shadow: none;
         }
         .obj-icon {
-          font-size: 1.25rem;
-          color: var(--color-accent);
+          font-size: 1.125rem;
+          color: var(--color-text);
         }
         .obj-card {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-6);
           display: flex;
           flex-direction: column;
@@ -1298,7 +1311,7 @@ export function WhatWouldYouBuildSection() {
         .obj-metric-item {
           background: var(--color-bg);
           border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-sm);
+          border-radius: var(--radius-xs);
           padding: var(--space-3);
           display: flex;
           flex-direction: column;
@@ -1306,12 +1319,12 @@ export function WhatWouldYouBuildSection() {
         }
         .obj-metric-num {
           font-size: 1.25rem;
-          font-weight: 700;
+          font-weight: 500;
         }
         .obj-tradeoff-note {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-sm);
+          border-radius: var(--radius-xs);
           padding: var(--space-3) var(--space-4);
         }
         @media (max-width: 860px) {
@@ -1348,8 +1361,15 @@ function StoryLine({ text, muted }: { text: string; muted: boolean }) {
   return (
     <motion.p
       ref={ref}
-      className="text-headline story-flow__line"
-      style={{ color: muted ? 'var(--color-text-secondary)' : 'var(--color-text)' }}
+      className="story-flow__line"
+      style={{
+        color: muted ? 'var(--color-text-secondary)' : 'var(--color-text)',
+        fontFamily: 'var(--font-display)',
+        fontSize: 'clamp(1.75rem, 3.2vw, 2.5rem)',
+        fontWeight: 600,
+        lineHeight: 1.2,
+        letterSpacing: '-0.02em',
+      }}
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
@@ -1376,16 +1396,16 @@ export function StoryFlowSection() {
           viewport={{ once: true }}
           transition={{ delay: 0.3 }}
         >
-          <p className="text-display" style={{ marginBottom: 'var(--space-8)' }}>
+          <p className="text-display-lg" style={{ marginBottom: 'var(--space-8)' }}>
             Build. <span style={{ color: 'var(--color-text-secondary)' }}>Simulate.</span><br />
             <span style={{ color: 'var(--color-text-muted)' }}>Compare. Optimize.</span>
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/simulator" className="btn btn-primary" style={{ padding: '14px 28px' }}>
-              Build a system &rarr;
+            <Link href="/simulator" className="btn btn-primary" style={{ padding: '12px 24px' }}>
+              OPEN SIMULATOR &rarr;
             </Link>
-            <Link href="/templates" className="btn btn-secondary" style={{ padding: '14px 28px' }}>
-              Explore templates &rarr;
+            <Link href="/templates" className="btn btn-secondary" style={{ padding: '12px 24px' }}>
+              EXPLORE TEMPLATES &rarr;
             </Link>
           </div>
         </motion.div>
@@ -1414,15 +1434,15 @@ export function TemplatesPreviewSection() {
   return (
     <Section id="templates-preview">
       <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: 'var(--space-8)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--space-8)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
           <div style={{ maxWidth: 480 }}>
-            <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-accent)' }}>
-              CANONICAL BLUEPRINTS
+            <p className="text-technical-label" style={{ marginBottom: 'var(--space-2)' }}>
+              [CANONICAL_BLUEPRINTS]
             </p>
-            <h2 className="text-headline">Start from proven architectures.</h2>
+            <h2 className="text-heading-xl">Start from proven architectures.</h2>
           </div>
           <Link href="/templates" className="btn btn-secondary">
-            View all templates →
+            VIEW ALL TEMPLATES &rarr;
           </Link>
         </div>
 
@@ -1432,29 +1452,29 @@ export function TemplatesPreviewSection() {
             return (
               <Link href={`/simulator?template=${template.id}`} key={template.id} className="template-card">
                 <div className="template-card__header">
-                  <span className="text-label" style={{ color: 'var(--color-text-muted)' }}>{template.category.toUpperCase()}</span>
+                  <span className="text-technical-label">{template.category}</span>
                 </div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
+                <h3 style={{ fontSize: '1.125rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
                   {template.name}
                 </h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
                   {template.description}
                 </p>
                 <div className="template-card__metrics">
                   <div>
-                    <span className="text-label">EST. SPEND</span>
-                    <span className="text-mono" style={{ color: 'var(--color-text)', fontSize: '0.8125rem', fontWeight: 600 }}>
+                    <span className="text-technical-label">EST. SPEND</span>
+                    <span className="text-mono" style={{ color: 'var(--color-text)', fontSize: '0.8125rem', fontWeight: 500 }}>
                       {formatCurrency(result.monthlyCost, true)}/mo
                     </span>
                   </div>
                   <div>
-                    <span className="text-label">P95 LATENCY</span>
+                    <span className="text-technical-label">P95 LATENCY</span>
                     <span className="text-mono" style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>
                       {formatLatency(result.p95Latency)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-label">NODES</span>
+                    <span className="text-technical-label">NODES</span>
                     <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
                       {template.architecture.nodes.length}
                     </span>
@@ -1473,7 +1493,7 @@ export function TemplatesPreviewSection() {
           gap: 1px;
           background: var(--color-border);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           overflow: hidden;
         }
         @media (max-width: 820px) {
@@ -1527,29 +1547,31 @@ export function Footer() {
           <div className="footer__brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
               <span style={{ fontSize: '10px', color: '#FFFFFF' }}>■</span>
-              <span style={{ fontWeight: 700, fontSize: '0.875rem', letterSpacing: '0.08em', fontFamily: 'var(--font-display)' }}>COMPUTECANVAS</span>
+              <span style={{ fontWeight: 600, fontSize: '0.9375rem', letterSpacing: '0.06em', fontFamily: 'var(--font-display)' }}>COMPUTECANVAS</span>
+              <span style={{ color: 'var(--color-border-strong)', fontSize: '0.875rem' }}>/</span>
+              <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>V1</span>
             </div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', maxWidth: 280, lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-muted)', maxWidth: 280, lineHeight: 1.5 }}>
               Deterministic interactive AI architecture and economics simulator.
             </p>
           </div>
 
           <div className="footer__links">
             <div>
-              <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>PRODUCT</p>
+              <p className="text-technical-label" style={{ marginBottom: 'var(--space-3)' }}>PRODUCT</p>
               <Link href="/simulator">Simulator Workbench</Link>
               <Link href="/templates">Canonical Templates</Link>
               <Link href="/assumptions">Pricing Assumptions</Link>
               <Link href="/pricing">Free Community V1</Link>
             </div>
             <div>
-              <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>SYSTEM</p>
+              <p className="text-technical-label" style={{ marginBottom: 'var(--space-3)' }}>SYSTEM</p>
               <Link href="/docs">Documentation</Link>
               <Link href="/company">Principles &amp; Design</Link>
               <Link href="/assumptions">Latency Benchmarks</Link>
             </div>
             <div>
-              <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>LEGAL</p>
+              <p className="text-technical-label" style={{ marginBottom: 'var(--space-3)' }}>LEGAL</p>
               <Link href="/privacy">Privacy Policy</Link>
               <Link href="/terms">Terms &amp; Disclaimers</Link>
             </div>
@@ -1557,7 +1579,7 @@ export function Footer() {
         </div>
 
         <div className="footer__bottom">
-          <span className="text-mono" style={{ fontSize: '0.6875rem' }}>© {new Date().getFullYear()} COMPUTECANVAS // DETERMINISTIC SIMULATION</span>
+          <span className="text-mono" style={{ fontSize: '0.6875rem' }}>© {new Date().getFullYear()} COMPUTECANVAS // DETERMINISTIC SIMULATION SYSTEM</span>
         </div>
       </div>
 
@@ -1580,6 +1602,7 @@ export function Footer() {
         }
         .footer__links a {
           display: block;
+          font-family: var(--font-ui);
           color: var(--color-text-secondary);
           text-decoration: none;
           font-size: 0.8125rem;

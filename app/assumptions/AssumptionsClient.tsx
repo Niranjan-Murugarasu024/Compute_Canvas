@@ -16,18 +16,18 @@ export default function AssumptionsClient() {
         <div className="container" style={{ maxWidth: '960px' }}>
           {/* Header */}
           <div className="assumptions-header">
-            <span className="badge badge--primary text-mono">TRANSPARENCY REPORT</span>
-            <h1 className="text-display" style={{ fontSize: '2.5rem', marginTop: 'var(--space-2)' }}>
+            <span className="badge badge--neutral text-mono">TRANSPARENCY SPECIFICATION</span>
+            <h1 className="text-heading-xl" style={{ marginTop: 'var(--space-2)' }}>
               Pricing &amp; Simulation Assumptions
             </h1>
-            <p className="assumptions-subtitle">
+            <p className="assumptions-subtitle text-body-lg">
               Every formula, unit price, latency expectation, and calibration curve used by ComputeCanvas is deterministic and publicly verifiable.
             </p>
             <div className="trust-disclaimer-box" role="note">
-              <span className="trust-icon">ℹ</span>
+              <span className="trust-icon text-mono">[NOTE]</span>
               <p>
-                <strong>Important Principle: </strong>
-                ComputeCanvas produces deterministic estimates based on configurable assumptions. It is intended for architecture comparison and planning, not as a guaranteed cloud invoice.
+                <strong>Operational Scope: </strong>
+                ComputeCanvas produces deterministic estimates based on configurable assumptions. It is designed for architectural comparison, planning, and pre-deployment cost modeling.
               </p>
             </div>
           </div>
@@ -36,8 +36,8 @@ export default function AssumptionsClient() {
             {/* Section 1: Fast Reasoning Models */}
             <section className="assumption-card">
               <div className="card-top-row">
-                <span className="badge badge--success text-mono">TIER 1</span>
-                <span className="card-date text-caption text-mono">Updated: Q1 2026</span>
+                <span className="badge badge--neutral text-mono">TIER 1</span>
+                <span className="card-date text-technical-label">UPDATED: Q1 2026</span>
               </div>
               <h2 className="card-title">Fast Reasoning Models (Low Latency / High Volume)</h2>
               <p className="card-desc">
@@ -59,12 +59,12 @@ export default function AssumptionsClient() {
                   <tbody>
                     {fastModels.map(([id, m]) => (
                       <tr key={id}>
-                        <td style={{ fontWeight: 600, color: 'var(--color-text)' }}>{m.product}</td>
+                        <td style={{ fontWeight: 500, color: 'var(--color-text)' }}>{m.product}</td>
                         <td>{m.provider}</td>
-                        <td style={{ color: 'var(--color-cost)' }}>${m.inputPricePer1M.toFixed(2)}</td>
-                        <td style={{ color: 'var(--color-cost)' }}>${m.outputPricePer1M.toFixed(2)}</td>
-                        <td style={{ color: 'var(--color-performance)' }}>{m.baselineLatencyMs} ms</td>
-                        <td className="text-caption" style={{ color: 'var(--color-text-muted)' }}>{m.source}</td>
+                        <td style={{ color: '#FFFFFF' }}>${m.inputPricePer1M.toFixed(2)}</td>
+                        <td style={{ color: '#FFFFFF' }}>${m.outputPricePer1M.toFixed(2)}</td>
+                        <td style={{ color: '#D4D4D8' }}>{m.baselineLatencyMs} ms</td>
+                        <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>{m.source}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -75,8 +75,8 @@ export default function AssumptionsClient() {
             {/* Section 2: Frontier Reasoning Models */}
             <section className="assumption-card">
               <div className="card-top-row">
-                <span className="badge badge--neutral text-mono" style={{ borderColor: '#ec4899', color: '#ec4899' }}>TIER 2</span>
-                <span className="card-date text-caption text-mono">Updated: Q1 2026</span>
+                <span className="badge badge--neutral text-mono">TIER 2</span>
+                <span className="card-date text-technical-label">UPDATED: Q1 2026</span>
               </div>
               <h2 className="card-title">Frontier Reasoning Models (Complex Synthesis &amp; Code)</h2>
               <p className="card-desc">
@@ -224,21 +224,22 @@ export default function AssumptionsClient() {
           display: flex;
           align-items: flex-start;
           gap: 12px;
-          background: rgba(99, 102, 241, 0.08);
-          border: 1px solid var(--color-accent);
-          border-radius: var(--radius-md);
+          background: var(--color-bg-surface);
+          border: 1px solid var(--color-border-strong);
+          border-radius: var(--radius-sm);
           padding: 12px 16px;
           margin-top: var(--space-6);
         }
         .trust-icon {
-          font-size: 1.1rem;
-          color: var(--color-accent);
+          font-size: 0.8125rem;
+          color: var(--color-text-secondary);
           flex-shrink: 0;
+          padding-top: 2px;
         }
         .trust-disclaimer-box p {
           margin: 0;
           font-size: 0.875rem;
-          color: var(--color-text);
+          color: var(--color-text-secondary);
           line-height: 1.5;
         }
         .assumptions-sections {
@@ -249,7 +250,7 @@ export default function AssumptionsClient() {
         .assumption-card {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-6);
         }
         .card-top-row {
@@ -262,8 +263,10 @@ export default function AssumptionsClient() {
           color: var(--color-text-muted);
         }
         .card-title {
+          font-family: var(--font-display);
           font-size: 1.25rem;
-          font-weight: 700;
+          font-weight: 600;
+          letter-spacing: -0.01em;
           margin: 0 0 6px 0;
         }
         .card-desc {
@@ -289,25 +292,25 @@ export default function AssumptionsClient() {
         .assumptions-data-table th {
           background: var(--color-bg-surface);
           color: var(--color-text-secondary);
-          font-weight: 600;
+          font-weight: 500;
           letter-spacing: 0.03em;
         }
         .formula-box {
           background: var(--color-bg-surface);
-          border: 1px solid var(--color-border-strong);
-          border-radius: var(--radius-md);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
           padding: 14px 18px;
           font-size: 0.8125rem;
-          color: var(--color-cost);
+          color: var(--color-text);
           line-height: 1.7;
         }
         .formula-box p {
           margin: 0;
         }
         .assumptions-cta-banner {
-          background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12) 0%, transparent 70%), var(--color-bg-elevated);
-          border: 1px solid var(--color-accent);
-          border-radius: var(--radius-lg);
+          background: var(--color-bg-elevated);
+          border: 1px solid var(--color-border-strong);
+          border-radius: var(--radius-sm);
           padding: var(--space-8);
           display: flex;
           justify-content: space-between;

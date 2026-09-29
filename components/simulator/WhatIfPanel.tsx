@@ -67,10 +67,9 @@ export default function WhatIfPanel({ onClose }: { onClose?: () => void }) {
       <div className="what-if-header">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--color-accent)', fontSize: '1rem' }}>⚡</span>
-            <span className="text-label" style={{ color: 'var(--color-accent)' }}>WHAT-IF SIMULATION &amp; CAPACITY ENGINE</span>
+            <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>WHAT-IF PERTURBATION ENGINE</span>
           </div>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginTop: '2px' }}>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginTop: '4px' }}>
             Simulate perturbations, traffic spikes, and failure conditions against deterministic baseline economics.
           </p>
         </div>
@@ -368,7 +367,7 @@ export default function WhatIfPanel({ onClose }: { onClose?: () => void }) {
         .delta-matrix-card, .capacity-forecast-card {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-4);
         }
         .delta-grid {
@@ -407,7 +406,7 @@ export default function WhatIfPanel({ onClose }: { onClose?: () => void }) {
           font-family: var(--font-mono);
           background: var(--color-bg);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-sm);
           color: var(--color-text-secondary);
           cursor: pointer;
         }

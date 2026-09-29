@@ -76,7 +76,7 @@ export default function PricingClient() {
         <div className="container" style={{ maxWidth: '1040px' }}>
           <div className="pricing-header">
             <span className="badge badge--success text-mono">100% FREE DURING V1</span>
-            <h1 className="text-display" style={{ marginTop: 'var(--space-2)' }}>
+            <h1 className="pricing-title">
               Simple, Honest Economics
             </h1>
             <p className="pricing-subtitle">
@@ -154,6 +154,14 @@ export default function PricingClient() {
           max-width: 680px;
           margin: 0 auto var(--space-12) auto;
         }
+        .pricing-title {
+          font-family: var(--font-display);
+          font-size: clamp(2rem, 3.5vw, 2.75rem);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          margin-top: var(--space-2);
+          color: var(--color-text);
+        }
         .pricing-subtitle {
           color: var(--color-text-secondary);
           font-size: 1.0625rem;
@@ -169,24 +177,27 @@ export default function PricingClient() {
         .pricing-card {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-sm);
           padding: var(--space-6);
           display: flex;
           flex-direction: column;
           position: relative;
         }
         .pricing-card--active {
-          border-color: var(--color-accent);
+          border-color: var(--color-border-strong);
           background: var(--color-bg-surface);
-          box-shadow: 0 0 24px rgba(99, 102, 241, 0.12);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
         .pricing-card--planned {
-          opacity: 0.85;
+          opacity: 0.75;
         }
         .plan-name {
-          font-size: 1.25rem;
-          font-weight: 700;
+          font-family: var(--font-display);
+          font-size: 1.15rem;
+          font-weight: 600;
+          letter-spacing: -0.01em;
           margin: 0 0 8px 0;
+          color: var(--color-text);
         }
         .price-row {
           display: flex;
@@ -195,8 +206,9 @@ export default function PricingClient() {
           margin-bottom: var(--space-3);
         }
         .price-num {
+          font-family: var(--font-mono);
           font-size: 2rem;
-          font-weight: 800;
+          font-weight: 600;
           color: var(--color-text);
         }
         .price-period {
@@ -212,7 +224,7 @@ export default function PricingClient() {
         }
         .features-divider {
           height: 1px;
-          background: var(--color-border-subtle);
+          background: var(--color-border);
           margin: var(--space-4) 0;
         }
         .plan-features-list {
@@ -233,7 +245,7 @@ export default function PricingClient() {
           line-height: 1.4;
         }
         .feature-check {
-          font-weight: 700;
+          font-weight: 600;
           flex-shrink: 0;
         }
         .card-footer-cta {
@@ -242,7 +254,7 @@ export default function PricingClient() {
         .pricing-trust-footer {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-6);
           max-width: 780px;
           margin: 0 auto;

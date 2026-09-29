@@ -89,13 +89,13 @@ export default function HeroInteractive() {
               <span className="meta-label text-mono">PRE-DEPLOYMENT ARCHITECTURE ECONOMICS</span>
             </div>
 
-            <h1 className="text-display tech-hero__title">
+            <h1 className="text-display-xl tech-hero__title">
               Design AI Systems.<br />
-              <span style={{ color: 'var(--color-text-secondary)' }}>See the cost before you build it.</span>
+              <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>See the economics before you build.</span>
             </h1>
 
-            <p className="tech-hero__lead">
-              Map your multi-tier inference pipeline, simulate deterministic monthly spend and P95 latency, anchor against real invoices, and eliminate six-figure infrastructure refactors before writing deployment code.
+            <p className="text-body-lg tech-hero__lead">
+              Model your architecture, adjust workload assumptions, and understand how infrastructure decisions affect cost and latency before writing deployment code.
             </p>
 
             <div className="tech-hero__cta-group">
@@ -189,38 +189,38 @@ export default function HeroInteractive() {
                   {/* Node 1: API Ingress */}
                   <g transform="translate(20, 52)">
                     <rect width="100" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
-                    <text x="10" y="16" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">GATEWAY</text>
-                    <text x="10" y="28" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">API Ingress</text>
+                    <text x="10" y="15" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">GATEWAY</text>
+                    <text x="10" y="27" fill="#F4F4F5" fontSize="10" fontFamily="var(--font-ui)" fontWeight="500">API Ingress</text>
                   </g>
 
                   {/* Node 2: Semantic Cache */}
                   <g transform="translate(190, 52)">
                     <rect width="100" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
-                    <text x="10" y="16" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">CACHE</text>
-                    <text x="10" y="28" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Semantic Cache</text>
+                    <text x="10" y="15" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">CACHE</text>
+                    <text x="10" y="27" fill="#F4F4F5" fontSize="10" fontFamily="var(--font-ui)" fontWeight="500">Semantic Cache</text>
                   </g>
 
                   {/* Node 3: Complexity Router */}
                   <g transform="translate(350, 52)">
                     <rect width="100" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
-                    <text x="10" y="16" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">ROUTER</text>
-                    <text x="10" y="28" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Dynamic Router</text>
+                    <text x="10" y="15" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">ROUTER</text>
+                    <text x="10" y="27" fill="#F4F4F5" fontSize="10" fontFamily="var(--font-ui)" fontWeight="500">Complexity Router</text>
                   </g>
 
                   {/* Node 4: Fast Model */}
                   <g transform="translate(510, 17)">
                     <rect width="115" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
                     <text x="10" y="15" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">FAST TIER</text>
-                    <text x="10" y="27" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Fast Model (140ms)</text>
+                    <text x="10" y="27" fill="#F4F4F5" fontSize="10" fontFamily="var(--font-ui)" fontWeight="500">Fast Model (140ms)</text>
                   </g>
 
                   {/* Node 5: Frontier Model (Bottleneck highlighted) */}
                   <g transform="translate(510, 87)">
                     <rect width="115" height="36" rx="2" fill="#18181B" stroke="#FFFFFF" strokeWidth="1.5" />
                     <rect x="75" y="4" width="36" height="11" rx="1" fill="#FFFFFF" />
-                    <text x="93" y="12" textAnchor="middle" fill="#09090B" fontSize="6.5" fontFamily="var(--font-mono)" fontWeight="800">BOTTLENECK</text>
+                    <text x="93" y="12" textAnchor="middle" fill="#09090B" fontSize="6.5" fontFamily="var(--font-mono)" fontWeight="700">BOTTLENECK</text>
                     <text x="10" y="15" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">FRONTIER</text>
-                    <text x="10" y="27" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Frontier Model</text>
+                    <text x="10" y="27" fill="#F4F4F5" fontSize="10" fontFamily="var(--font-ui)" fontWeight="500">Frontier Model</text>
                   </g>
                 </svg>
               </div>
@@ -229,8 +229,8 @@ export default function HeroInteractive() {
               <div className="instrument-controls-strip">
                 <div className="instrument-control-block">
                   <div className="control-label-row">
-                    <span className="control-title text-mono">TRAFFIC VOLUME</span>
-                    <span className="control-value text-mono">{formatNumber(monthlyRequests)} req/mo</span>
+                    <span className="control-title text-mono">WORKLOAD VOLUME</span>
+                    <span className="control-value text-mono">{formatNumber(monthlyRequests)} REQ / MO</span>
                   </div>
                   <input
                     type="range"
@@ -262,7 +262,7 @@ export default function HeroInteractive() {
                 <div className="instrument-control-block">
                   <div className="control-label-row">
                     <span className="control-title text-mono">FAST MODEL ROUTING</span>
-                    <span className="control-value text-mono">{Math.round(fastModelRouting * 100)}% Fast</span>
+                    <span className="control-value text-mono">{Math.round(fastModelRouting * 100)}% FAST / {Math.round((1 - fastModelRouting) * 100)}% FRONTIER</span>
                   </div>
                   <input
                     type="range"
@@ -279,7 +279,10 @@ export default function HeroInteractive() {
               {/* Instrument Digital Readouts Table */}
               <div className="instrument-readouts-table">
                 <div className="readout-row readout-row--primary">
-                  <span className="readout-label text-mono">ESTIMATED MONTHLY SPEND</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span className="readout-label text-mono">MONTHLY SPEND</span>
+                    <span className="text-mono" style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>USD / MONTH</span>
+                  </div>
                   <span className="readout-num text-mono">{formatCurrency(sim.monthlyCost)}</span>
                 </div>
                 <div className="readout-grid-3">
@@ -288,16 +291,16 @@ export default function HeroInteractive() {
                     <span className="readout-col-val text-mono">${(sim.costPerRequest * 1000).toFixed(3)}</span>
                   </div>
                   <div className="readout-col">
-                    <span className="readout-col-label text-mono">ESTIMATED P95</span>
+                    <span className="readout-col-label text-mono">P95 LATENCY</span>
                     <span className="readout-col-val text-mono">{formatLatency(sim.p95Latency)}</span>
                   </div>
                   <div className="readout-col">
-                    <span className="readout-col-label text-mono">CACHE SAVINGS</span>
-                    <span className="readout-col-val text-mono">{formatCurrency(estimatedSavings)}/mo</span>
+                    <span className="readout-col-label text-mono">CACHE DELTA</span>
+                    <span className="readout-col-val text-mono">-{formatCurrency(estimatedSavings)}/MO</span>
                   </div>
                 </div>
                 <div className="readout-footnote text-mono">
-                  <span>DOMINANT BOTTLENECK: {sim.bottleneck.componentName.toUpperCase()} ({sim.bottleneck.impactPercentage}% {sim.bottleneck.metricType.toUpperCase()})</span>
+                  <span>DIAGNOSTIC: {sim.bottleneck.componentName.toUpperCase()} CONTRIBUTES {sim.bottleneck.impactPercentage}% TO {sim.bottleneck.metricType.toUpperCase()}</span>
                 </div>
               </div>
             </div>

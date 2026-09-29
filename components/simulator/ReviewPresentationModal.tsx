@@ -397,6 +397,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
           gap: var(--space-4);
         }
         .deck-title {
+          font-family: var(--font-display);
           font-size: 1.125rem;
           font-weight: 600;
           margin-top: 2px;
@@ -406,7 +407,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
           gap: 4px;
           background: var(--color-bg-surface);
           padding: 3px;
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-sm);
           border: 1px solid var(--color-border);
         }
         .step-tab {
@@ -416,7 +417,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
           border: none;
           background: transparent;
           color: var(--color-text-secondary);
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-sm);
           cursor: pointer;
           transition: all var(--duration-fast);
         }
@@ -434,8 +435,10 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
           margin-bottom: var(--space-6);
         }
         .slide-title {
-          font-size: 1.75rem;
-          font-weight: 700;
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 600;
+          letter-spacing: -0.01em;
           margin-top: 4px;
         }
         .slide-nodes-strip {
@@ -448,7 +451,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
         .review-node-card {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-4);
           min-width: 160px;
         }
@@ -460,7 +463,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
         .kpi-item {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-4);
           display: flex;
           flex-direction: column;
@@ -472,8 +475,9 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
           color: var(--color-text-muted);
         }
         .kpi-val {
+          font-family: var(--font-mono);
           font-size: 1.5rem;
-          font-weight: 700;
+          font-weight: 600;
         }
         .assumptions-grid {
           display: grid;
@@ -484,7 +488,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
         .assumption-card {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-4);
           display: flex;
           flex-direction: column;
@@ -496,12 +500,13 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
           color: var(--color-text-muted);
         }
         .assumption-num {
+          font-family: var(--font-mono);
           font-size: 1.25rem;
-          font-weight: 700;
+          font-weight: 600;
         }
         .assumptions-table-wrap {
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           overflow: hidden;
           background: var(--color-bg-surface);
         }
@@ -524,13 +529,14 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
         .cost-total-banner {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-5);
           margin-bottom: var(--space-4);
         }
         .cost-banner-val {
+          font-family: var(--font-mono);
           font-size: 2.25rem;
-          font-weight: 700;
+          font-weight: 600;
           color: var(--color-cost);
           margin: 4px 0;
         }
@@ -549,15 +555,16 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
         .latency-card {
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-5);
           display: flex;
           flex-direction: column;
           gap: 4px;
         }
         .latency-num {
+          font-family: var(--font-mono);
           font-size: 2rem;
-          font-weight: 700;
+          font-weight: 600;
         }
         .warnings-review-list {
           display: flex;

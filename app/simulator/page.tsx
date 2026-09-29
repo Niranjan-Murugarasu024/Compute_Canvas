@@ -572,28 +572,35 @@ function SimulatorContent() {
                 <div className="calibration-active-card">
                   <div className="calibration-status-badge">
                     <span className="status-dot-green" />
-                    <span className="text-mono" style={{ fontSize: '0.75rem', fontWeight: 600 }}>CALIBRATED</span>
+                    <span className="text-mono" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.04em' }}>ANCHORED TO EMPIRICAL BILL</span>
                   </div>
 
                   <div className="calibration-meta-grid">
                     <div className="meta-col">
-                      <span className="meta-sub">Actual Bill</span>
-                      <span className="meta-num text-mono">{formatCurrency(calibration.actualBill)}/mo</span>
+                      <span className="meta-sub">ACTUAL BILL</span>
+                      <span className="meta-num text-mono">{formatCurrency(calibration.actualBill)}</span>
                     </div>
                     <div className="meta-col">
-                      <span className="meta-sub">Simulated Base</span>
-                      <span className="meta-num text-mono">{formatCurrency(calibration.baselineSimulatedCost)}/mo</span>
+                      <span className="meta-sub">MODELLED BASE</span>
+                      <span className="meta-num text-mono">{formatCurrency(calibration.baselineSimulatedCost)}</span>
                     </div>
                     <div className="meta-col">
-                      <span className="meta-sub">Variance</span>
-                      <span className="meta-num text-mono" style={{ color: calibrated.variancePercentage <= 0 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                        {calibrated.variancePercentage > 0 ? `+${calibrated.variancePercentage}%` : `${calibrated.variancePercentage}%`}
+                      <span className="meta-sub">CALIBRATION</span>
+                      <span className="meta-num text-mono">
+                        {(calibration.baselineSimulatedCost > 0 ? (calibration.actualBill / calibration.baselineSimulatedCost) : 1).toFixed(2)}×
                       </span>
                     </div>
                   </div>
 
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                    <span style={{ color: 'var(--color-text-muted)' }} className="text-mono">VARIANCE DELTA</span>
+                    <span className="text-mono" style={{ color: calibrated.variancePercentage <= 0 ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                      {calibrated.variancePercentage > 0 ? `+${calibrated.variancePercentage}%` : `${calibrated.variancePercentage}%`} vs baseline
+                    </span>
+                  </div>
+
                   <p className="calibration-explainer">
-                    Economics are grounded to your empirical bill scale ({formatNumber(calibration.actualRequests)} reqs).
+                    Calibrated on {formatNumber(calibration.actualRequests)} empirical requests.
                   </p>
                 </div>
               ) : isCalibrating ? (
@@ -1227,7 +1234,7 @@ function SimulatorContent() {
         .sidebar-card {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: var(--space-3);
         }
 
@@ -1239,11 +1246,11 @@ function SimulatorContent() {
         }
 
         .sidebar-section-title {
-          font-size: 0.75rem;
-          font-family: var(--font-mono);
-          letter-spacing: 0.08em;
-          font-weight: 700;
-          color: var(--color-text-secondary);
+          font-size: 0.8125rem;
+          font-family: var(--font-display);
+          letter-spacing: 0.05em;
+          font-weight: 600;
+          color: var(--color-text);
           margin: 0;
         }
 
@@ -1274,10 +1281,11 @@ function SimulatorContent() {
         }
 
         .palette-item-icon {
-          font-size: 1rem;
+          font-size: 0.875rem;
           width: 20px;
           text-align: center;
           flex-shrink: 0;
+          color: var(--color-text-secondary);
         }
 
         .palette-item-info {
@@ -1286,8 +1294,9 @@ function SimulatorContent() {
         }
 
         .palette-item-name {
+          font-family: var(--font-ui);
           font-size: 0.8125rem;
-          font-weight: 600;
+          font-weight: 500;
           color: var(--color-text);
           white-space: nowrap;
           overflow: hidden;
@@ -1295,7 +1304,8 @@ function SimulatorContent() {
         }
 
         .palette-item-desc {
-          font-size: 0.65rem;
+          font-family: var(--font-ui);
+          font-size: 0.6875rem;
           color: var(--color-text-muted);
           white-space: nowrap;
           overflow: hidden;
@@ -1303,10 +1313,11 @@ function SimulatorContent() {
         }
 
         .palette-item-badge {
+          font-family: var(--font-mono);
           font-size: 0.5625rem;
-          font-weight: 700;
+          font-weight: 500;
           border: 1px solid;
-          border-radius: 3px;
+          border-radius: 2px;
           padding: 1px 4px;
           flex-shrink: 0;
         }
@@ -1331,13 +1342,16 @@ function SimulatorContent() {
         }
 
         .control-label {
+          font-family: var(--font-ui);
           font-size: 0.75rem;
           color: var(--color-text-secondary);
         }
 
         .control-val {
+          font-family: var(--font-mono);
           font-size: 0.8125rem;
-          font-weight: 600;
+          font-weight: 500;
+          font-variant-numeric: tabular-nums;
           color: var(--color-text);
         }
 
@@ -1370,14 +1384,14 @@ function SimulatorContent() {
           display: flex;
           align-items: center;
           gap: 6px;
-          color: var(--color-success);
+          color: #FFFFFF;
         }
 
         .status-dot-green {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: var(--color-success);
+          background: #FFFFFF;
         }
 
         .calibration-meta-grid {
@@ -1401,7 +1415,8 @@ function SimulatorContent() {
 
         .meta-num {
           font-size: 0.75rem;
-          font-weight: 700;
+          font-weight: 500;
+          font-variant-numeric: tabular-nums;
           color: var(--color-text);
         }
 
@@ -1412,6 +1427,7 @@ function SimulatorContent() {
         }
 
         .calibration-idle-desc {
+          font-family: var(--font-ui);
           font-size: 0.75rem;
           color: var(--color-text-secondary);
           line-height: 1.4;
@@ -1478,9 +1494,9 @@ function SimulatorContent() {
           gap: var(--space-3);
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border-strong);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           padding: 6px 14px;
-          box-shadow: var(--shadow-lg);
+          box-shadow: var(--shadow-md);
           max-width: 90%;
         }
 
@@ -1492,17 +1508,18 @@ function SimulatorContent() {
 
         .inspector-type-pill {
           font-size: 0.625rem;
-          font-weight: 700;
+          font-weight: 500;
           color: #F4F4F5;
           background: #27272A;
           border: 1px solid #3F3F46;
           padding: 2px 6px;
-          border-radius: var(--radius-sm);
+          border-radius: 2px;
         }
 
         .inspector-title {
+          font-family: var(--font-ui);
           font-size: 0.8125rem;
-          font-weight: 600;
+          font-weight: 500;
           color: var(--color-text);
         }
 
@@ -1543,20 +1560,22 @@ function SimulatorContent() {
           font-family: var(--font-mono);
           letter-spacing: 0.05em;
           color: var(--color-text-muted);
-          font-weight: 600;
+          font-weight: 500;
         }
 
         .metric-huge-value {
-          font-size: 1.875rem;
-          font-weight: 800;
+          font-size: 1.75rem;
+          font-weight: 500;
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
           color: var(--color-text);
           line-height: 1.1;
         }
 
         .metric-unit {
-          font-size: 0.875rem;
+          font-size: 0.8125rem;
           color: var(--color-text-muted);
-          font-weight: 500;
+          font-weight: 400;
         }
 
         .metric-sub-detail {
@@ -1581,8 +1600,10 @@ function SimulatorContent() {
         }
 
         .metric-val {
-          font-size: 1.125rem;
-          font-weight: 700;
+          font-size: 1.0625rem;
+          font-weight: 500;
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
           color: var(--color-text);
         }
 
@@ -1604,7 +1625,8 @@ function SimulatorContent() {
         }
 
         .bottleneck-component-name {
-          font-weight: 700;
+          font-family: var(--font-ui);
+          font-weight: 600;
           font-size: 0.875rem;
           color: #FFFFFF;
         }
@@ -1613,12 +1635,13 @@ function SimulatorContent() {
           font-size: 0.6875rem;
           background: #FFFFFF;
           color: #09090B;
-          font-weight: 800;
+          font-weight: 700;
           padding: 1px 6px;
           border-radius: 2px;
         }
 
         .bottleneck-explanation-text {
+          font-family: var(--font-ui);
           font-size: 0.75rem;
           color: var(--color-text-secondary);
           line-height: 1.35;
@@ -1634,8 +1657,8 @@ function SimulatorContent() {
 
         .breakdown-bar-track {
           display: flex;
-          height: 8px;
-          border-radius: 4px;
+          height: 6px;
+          border-radius: var(--radius-xs);
           overflow: hidden;
           background: var(--color-border);
         }
