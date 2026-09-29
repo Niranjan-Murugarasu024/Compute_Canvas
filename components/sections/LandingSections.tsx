@@ -2272,11 +2272,11 @@ export function TemplatesPreviewSection() {
 
 export function Footer() {
   return (
-    <footer className="footer" role="contentinfo">
+    <footer className="footer" id="cc-footer" role="contentinfo">
       <div className="container">
-        {/* Top: 4-Column Navigation & Brand Zone */}
+        {/* Top: 4-Column Navigation & Brand Specification Panel */}
         <div className="footer__grid">
-          {/* Brand Column */}
+          {/* Brand Column (Anchor) */}
           <div className="footer__brand-col">
             <div className="footer__brand-identity">
               <span className="footer__brand-mark" aria-hidden="true">■</span>
@@ -2293,7 +2293,7 @@ export function Footer() {
 
           {/* Product Nav Column */}
           <nav className="footer__nav-col" aria-label="Product navigation">
-            <h4 className="footer__col-label text-mono">PRODUCT</h4>
+            <h3 className="footer__col-label text-mono">PRODUCT</h3>
             <ul className="footer__nav-list">
               <li>
                 <Link href="/simulator" className="footer__link">Simulator</Link>
@@ -2312,7 +2312,7 @@ export function Footer() {
 
           {/* System Nav Column */}
           <nav className="footer__nav-col" aria-label="System navigation">
-            <h4 className="footer__col-label text-mono">SYSTEM</h4>
+            <h3 className="footer__col-label text-mono">SYSTEM</h3>
             <ul className="footer__nav-list">
               <li>
                 <Link href="/docs" className="footer__link">Documentation</Link>
@@ -2323,15 +2323,12 @@ export function Footer() {
               <li>
                 <Link href="/assumptions" className="footer__link">Latency Benchmarks</Link>
               </li>
-              <li>
-                <Link href="/explore" className="footer__link">Explore</Link>
-              </li>
             </ul>
           </nav>
 
           {/* Legal Nav Column */}
           <nav className="footer__nav-col" aria-label="Legal navigation">
-            <h4 className="footer__col-label text-mono">LEGAL</h4>
+            <h3 className="footer__col-label text-mono">LEGAL</h3>
             <ul className="footer__nav-list">
               <li>
                 <Link href="/privacy" className="footer__link">Privacy Policy</Link>
@@ -2343,47 +2340,13 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Mid: System Status & Brand Statement Panel */}
-        <div className="footer__termination-panel">
-          {/* Subtle Technical Status Strip */}
-          <div className="footer__status-strip">
-            <div className="footer__status-item">
-              <span className="status-label text-mono">ENGINE</span>
-              <span className="status-sep text-mono">/</span>
-              <span className="status-val text-mono">PURE DETERMINISTIC</span>
-            </div>
-            <div className="footer__status-item">
-              <span className="status-label text-mono">SPEC</span>
-              <span className="status-sep text-mono">/</span>
-              <span className="status-val text-mono">V1.2 SPEC</span>
-            </div>
-            <div className="footer__status-item">
-              <span className="status-label text-mono">PERSISTENCE</span>
-              <span className="status-sep text-mono">/</span>
-              <span className="status-val text-mono">URL STATE (NO DB)</span>
-            </div>
-            <div className="footer__status-item">
-              <span className="status-label text-mono">TELEMETRY</span>
-              <span className="status-sep text-mono">/</span>
-              <span className="status-val text-mono">ZERO TRACKING</span>
-            </div>
-          </div>
-
-          {/* Footer Brand Statement */}
-          <div className="footer__statement-row">
-            <p className="footer__statement">
-              DESIGN THE ARCHITECTURE. SEE THE ECONOMICS.
-            </p>
-          </div>
-        </div>
-
         {/* Bottom: Technical Signature & Copyright Row */}
         <div className="footer__bottom-row">
           <span className="footer__copyright text-mono">
             &copy; {new Date().getFullYear()} COMPUTECANVAS
           </span>
           <span className="footer__meta text-mono">
-            DETERMINISTIC SIMULATION SYSTEM // V1.2
+            DETERMINISTIC SIMULATION SYSTEM
           </span>
         </div>
       </div>
@@ -2391,36 +2354,37 @@ export function Footer() {
       <style jsx global>{`
         .footer {
           border-top: 1px solid #242428;
-          padding: 72px 0 40px;
-          margin-top: 120px;
+          padding: 64px 0 28px;
+          margin-top: 100px;
           background: var(--color-bg);
           position: relative;
         }
 
         .footer__grid {
           display: grid;
-          grid-template-columns: 2fr 1.1fr 1.1fr 0.9fr;
-          gap: 48px;
-          padding-bottom: 44px;
+          grid-template-columns: minmax(320px, 1.8fr) minmax(140px, 1fr) minmax(160px, 1fr) minmax(140px, 1fr);
+          column-gap: 48px;
+          row-gap: 32px;
+          padding-bottom: 48px;
           border-bottom: 1px solid #242428;
-          align-items: flex-start;
+          align-items: start;
         }
 
         .footer__brand-col {
           display: flex;
           flex-direction: column;
-          gap: 12px;
         }
 
         .footer__brand-identity {
           display: flex;
           align-items: baseline;
           gap: 8px;
+          margin-bottom: 22px;
         }
 
         .footer__brand-mark {
           font-size: 11px;
-          color: #FFFFFF;
+          color: #F5F5F5;
           line-height: 1;
         }
 
@@ -2428,14 +2392,17 @@ export function Footer() {
           font-family: var(--font-display);
           font-size: 1.0625rem;
           font-weight: 600;
-          letter-spacing: 0.04em;
-          color: #FFFFFF;
+          letter-spacing: -0.02em;
+          color: #F5F5F5;
+          line-height: 1;
         }
 
         .footer__version {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
-          color: #71717A;
+          font-weight: 400;
+          color: #74747C;
+          font-variant-numeric: tabular-nums;
         }
 
         .footer__desc {
@@ -2443,16 +2410,17 @@ export function Footer() {
           font-size: 0.875rem;
           line-height: 1.55;
           color: #A0A0A8;
-          max-width: 320px;
-          margin: 0;
+          max-width: 340px;
+          margin: 0 0 24px 0;
         }
 
         .footer__signature {
           font-family: var(--font-mono);
           font-size: 0.625rem;
-          letter-spacing: 0.08em;
-          color: #71717A;
-          margin-top: 4px;
+          letter-spacing: 0.10em;
+          color: #707078;
+          margin: 0;
+          font-variant-numeric: tabular-nums;
         }
 
         .footer__nav-col {
@@ -2464,9 +2432,11 @@ export function Footer() {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
           letter-spacing: 0.10em;
-          color: #71717A;
+          color: #74747C;
           text-transform: uppercase;
-          margin: 0 0 16px 0;
+          font-weight: 500;
+          margin: 0 0 18px 0;
+          line-height: 1;
         }
 
         .footer__nav-list {
@@ -2475,87 +2445,31 @@ export function Footer() {
           margin: 0;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 14px;
         }
 
         .footer__link {
           font-family: var(--font-ui);
           font-size: 0.875rem;
-          color: #A0A0A8;
+          color: #A8A8B0;
           text-decoration: none;
-          transition: color 150ms ease, opacity 150ms ease;
+          transition: color 150ms ease;
           display: inline-block;
           line-height: 1.4;
         }
 
         .footer__link:hover {
-          color: #FFFFFF;
+          color: #F5F5F5;
+          text-decoration: underline;
+          text-underline-offset: 4px;
         }
 
         .footer__link:focus-visible {
-          outline: 1px solid var(--color-border-strong);
-          outline-offset: 2px;
+          outline: 1px solid #F5F5F5;
+          outline-offset: 3px;
         }
 
-        /* ── Termination Panel (Status + Statement) ── */
-        .footer__termination-panel {
-          padding: 32px 0;
-          border-bottom: 1px solid #242428;
-          display: flex;
-          flex-direction: column;
-          gap: 22px;
-        }
-
-        .footer__status-strip {
-          display: flex;
-          align-items: center;
-          gap: 32px;
-          flex-wrap: wrap;
-        }
-
-        .footer__status-item {
-          display: flex;
-          align-items: baseline;
-          gap: 6px;
-        }
-
-        .status-label {
-          font-family: var(--font-mono);
-          font-size: 0.625rem;
-          letter-spacing: 0.08em;
-          color: #71717A;
-        }
-
-        .status-sep {
-          font-family: var(--font-mono);
-          font-size: 0.625rem;
-          color: #3F3F46;
-        }
-
-        .status-val {
-          font-family: var(--font-mono);
-          font-size: 0.6875rem;
-          font-weight: 500;
-          letter-spacing: 0.04em;
-          color: #D4D4D8;
-        }
-
-        .footer__statement-row {
-          display: flex;
-          align-items: center;
-        }
-
-        .footer__statement {
-          font-family: var(--font-display);
-          font-size: clamp(1.1875rem, 1.8vw, 1.4375rem);
-          font-weight: 500;
-          letter-spacing: -0.01em;
-          color: #F5F5F5;
-          margin: 0;
-          line-height: 1.25;
-        }
-
-        /* ── Bottom Row (Copyright + Specs) ── */
+        /* ── Bottom Row (Copyright + Specification Closing Signature) ── */
         .footer__bottom-row {
           padding-top: 24px;
           display: flex;
@@ -2568,58 +2482,64 @@ export function Footer() {
         .footer__copyright {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
-          color: #71717A;
-          letter-spacing: 0.04em;
+          color: #707078;
+          letter-spacing: 0.05em;
+          font-variant-numeric: tabular-nums;
         }
 
         .footer__meta {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
-          color: #71717A;
-          letter-spacing: 0.04em;
+          color: #707078;
+          letter-spacing: 0.05em;
+          font-variant-numeric: tabular-nums;
         }
 
         /* ── Responsive ── */
-        @media (max-width: 960px) {
+        @media (max-width: 1024px) {
           .footer__grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 36px;
+            grid-template-columns: repeat(3, 1fr);
+            column-gap: 36px;
+            row-gap: 36px;
           }
 
-          .footer__status-strip {
-            gap: 16px 24px;
+          .footer__brand-col {
+            grid-column: 1 / -1;
+            max-width: 440px;
+            margin-bottom: 8px;
           }
         }
 
         @media (max-width: 640px) {
           .footer {
-            padding: 48px 0 28px;
-            margin-top: 80px;
+            padding: 48px 0 24px;
+            margin-top: 64px;
           }
 
           .footer__grid {
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 32px;
             padding-bottom: 32px;
           }
 
-          .footer__link {
-            padding: 4px 0;
-            min-height: 38px;
-            display: flex;
-            align-items: center;
+          .footer__brand-col {
+            max-width: 320px;
+            margin-bottom: 0;
           }
 
-          .footer__status-strip {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+          .footer__link {
+            padding: 6px 0;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
           }
 
           .footer__bottom-row {
             flex-direction: column;
             align-items: flex-start;
-            gap: 6px;
+            gap: 8px;
+            padding-top: 20px;
           }
         }
       `}</style>
