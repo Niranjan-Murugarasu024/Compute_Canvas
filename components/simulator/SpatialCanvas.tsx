@@ -6,6 +6,7 @@ import {
   type ArchNode,
   type ArchEdge,
   type SimulationResult,
+  MODEL_PRICING,
   formatCurrency,
   formatLatency,
 } from '@/lib/simulation/engine';
@@ -39,6 +40,8 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
     selectedEdgeIndex,
     pan,
     zoom,
+    canvasDimensions,
+    setCanvasDimensions,
     history,
     setSelectedNode,
     setSelectedEdge,
@@ -47,6 +50,8 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
     addEdge,
     removeEdge,
     removeNode,
+    updateNodeModel,
+    updateEdgeShare,
     setPan,
     setZoom,
     undo,
@@ -107,6 +112,9 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
           const edge = architecture.edges[selectedEdgeIndex];
           removeEdge(edge.source, edge.target);
         }
+      } else if (e.key === 'Escape') {
+        setSelectedNode(null);
+        setSelectedEdge(null);
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         fitToView();
@@ -141,7 +149,22 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedNodeId, selectedEdgeIndex, architecture.edges, removeNode, removeEdge, fitToView, resetView, setZoom, undo, redo]);
+  }, [selectedNodeId, selectedEdgeIndex, architecture.edges, removeNode, removeEdge, setSelectedNode, setSelectedEdge, fitToView, resetView, setZoom, undo, redo]);
+
+  // Track canvas viewport size for deterministic center insertion and bounds
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setCanvasDimensions({ width, height });
+        }
+      }
+    });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [setCanvasDimensions]);
 
   // Mouse wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -300,6 +323,98 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
         return { color: '#A1A1AA', tag: 'BLOCK', icon: '◇', label: 'COMPONENT' };
     }
   };
+
+  const selectedNode = useMemo(
+    () => architecture.nodes.find(n => n.id === selectedNodeId) || null,
+    [architecture.nodes, selectedNodeId]
+  );
+
+  const selectedEdge = useMemo(
+    () => (selectedEdgeIndex !== null ? architecture.edges[selectedEdgeIndex] || null : null),
+    [architecture.edges, selectedEdgeIndex]
+  );
+
+  const FAST_MODELS = useMemo(
+    () =>
+      Object.entries(MODEL_PRICING)
+        .filter(([_, p]) => p.category === 'fast')
+        .map(([id, p]) => ({ id, name: p.product, cost: `$${p.inputPricePer1M}/M` })),
+    []
+  );
+
+  const FRONTIER_MODELS = useMemo(
+    () =>
+      Object.entries(MODEL_PRICING)
+        .filter(([_, p]) => p.category === 'frontier')
+        .map(([id, p]) => ({ id, name: p.product, cost: `$${p.inputPricePer1M}/M` })),
+    []
+  );
+
+  // Boundary-aware contextual node toolbar positioning (always remains within visible canvas)
+  const nodeToolbarPos = useMemo(() => {
+    if (!selectedNode || !containerRef.current) return null;
+    const cw = containerRef.current.clientWidth || canvasDimensions?.width || 800;
+    const ch = containerRef.current.clientHeight || canvasDimensions?.height || 600;
+
+    const nx = selectedNode.x ?? 100;
+    const ny = selectedNode.y ?? 100;
+    const screenX = nx * zoom + pan.x;
+    const screenY = ny * zoom + pan.y;
+    const screenW = NODE_WIDTH * zoom;
+    const screenH = NODE_HEIGHT * zoom;
+
+    const isModel =
+      selectedNode.type === 'fast-model' ||
+      selectedNode.type === 'frontier-model' ||
+      selectedNode.type === 'model';
+    const tbWidth = isModel ? 410 : 310;
+    const tbHeight = 36;
+
+    let left = screenX + screenW / 2 - tbWidth / 2;
+    let top = screenY - tbHeight - 10;
+
+    // Flip below if inadequate space above node
+    if (top < 10) {
+      top = screenY + screenH + 10;
+    }
+
+    // Clamp within visible canvas boundaries
+    left = Math.max(10, Math.min(cw - tbWidth - 10, left));
+    top = Math.max(10, Math.min(ch - tbHeight - 10, top));
+
+    return { left, top, isModel };
+  }, [selectedNode, zoom, pan, canvasDimensions]);
+
+  // Boundary-aware contextual edge toolbar positioning
+  const edgeToolbarPos = useMemo(() => {
+    if (!selectedEdge || !containerRef.current) return null;
+    const from = nodeMap.get(selectedEdge.source);
+    const to = nodeMap.get(selectedEdge.target);
+    if (!from || !to) return null;
+
+    const cw = containerRef.current.clientWidth || canvasDimensions?.width || 800;
+    const ch = containerRef.current.clientHeight || canvasDimensions?.height || 600;
+
+    const midX = ((from.x ?? 100) + (to.x ?? 100) + NODE_WIDTH) / 2;
+    const midY = ((from.y ?? 100) + (to.y ?? 100) + NODE_HEIGHT) / 2;
+    const screenX = midX * zoom + pan.x;
+    const screenY = midY * zoom + pan.y;
+
+    const tbWidth = 340;
+    const tbHeight = 36;
+
+    let left = screenX - tbWidth / 2;
+    let top = screenY - tbHeight - 10;
+
+    if (top < 10) {
+      top = screenY + 12;
+    }
+
+    left = Math.max(10, Math.min(cw - tbWidth - 10, left));
+    top = Math.max(10, Math.min(ch - tbHeight - 10, top));
+
+    return { left, top };
+  }, [selectedEdge, nodeMap, zoom, pan, canvasDimensions]);
 
   return (
     <div
@@ -630,87 +745,209 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                   strokeWidth="1.5"
                   onPointerDown={(e) => handlePortPointerDown(e, node)}
                 />
-
-                {/* Delete button when node is selected */}
-                {isSelected && (
-                  <g
-                    transform={`translate(${NODE_WIDTH - 16}, -8)`}
-                    style={{ cursor: 'pointer' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeNode(node.id);
-                    }}
-                  >
-                    <circle r="8" fill="var(--color-bg-elevated)" stroke="var(--color-border-strong)" strokeWidth="1" />
-                    <text x="0" y="3" textAnchor="middle" fill="var(--color-text-muted)" fontSize="9" fontWeight="700">
-                      ✕
-                    </text>
-                  </g>
-                )}
               </g>
             );
           })}
         </g>
       </svg>
 
+      {/* Empty State */}
+      {architecture.nodes.length === 0 && (
+        <div className="canvas-empty-state">
+          <div className="empty-state-title">BUILD YOUR ARCHITECTURE</div>
+          <div className="empty-state-subtitle">
+            Drag a component here or select one from the component library.
+          </div>
+        </div>
+      )}
+
+      {/* Contextual Floating Node Toolbar (Boundary-Aware & Attached to Selected Node) */}
+      {selectedNode && nodeToolbarPos && (
+        <div
+          className="contextual-node-toolbar"
+          style={{
+            left: `${nodeToolbarPos.left}px`,
+            top: `${nodeToolbarPos.top}px`,
+          }}
+          role="toolbar"
+          aria-label="Selected Component Controls"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="contextual-node-header">
+            <span className="contextual-type-badge text-mono">
+              {getTypeStyling(selectedNode.type).tag}
+            </span>
+            <span className="contextual-node-title">
+              {selectedNode.label}
+            </span>
+          </div>
+
+          {/* Model Switcher for Fast Models */}
+          {(selectedNode.type === 'fast-model' || (selectedNode.type === 'model' && selectedNode.modelId === 'gpt-4o-mini')) && (
+            <select
+              className="contextual-select text-mono"
+              value={selectedNode.modelId || 'gpt-4o-mini'}
+              onChange={(e) => updateNodeModel(selectedNode.id, e.target.value)}
+              aria-label="Select Fast Reasoning Model"
+            >
+              {FAST_MODELS.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.cost})
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Model Switcher for Frontier Models */}
+          {(selectedNode.type === 'frontier-model' || (selectedNode.type === 'model' && selectedNode.modelId !== 'gpt-4o-mini')) && (
+            <select
+              className="contextual-select text-mono"
+              value={selectedNode.modelId || 'gpt-4o'}
+              onChange={(e) => updateNodeModel(selectedNode.id, e.target.value)}
+              aria-label="Select Frontier Reasoning Model"
+            >
+              {FRONTIER_MODELS.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.cost})
+                </option>
+              ))}
+            </select>
+          )}
+
+          <button
+            onClick={() => removeNode(selectedNode.id)}
+            className="contextual-btn-delete"
+            title="Delete component (Delete / Backspace)"
+          >
+            Delete Node
+          </button>
+
+          <button
+            onClick={() => setSelectedNode(null)}
+            className="contextual-btn-close"
+            title="Dismiss toolbar (Esc)"
+          >
+            Close
+          </button>
+        </div>
+      )}
+
+      {/* Contextual Floating Edge Toolbar (Attached to Selected Wire) */}
+      {selectedEdge && edgeToolbarPos && (
+        <div
+          className="contextual-node-toolbar"
+          style={{
+            left: `${edgeToolbarPos.left}px`,
+            top: `${edgeToolbarPos.top}px`,
+          }}
+          role="toolbar"
+          aria-label="Selected Wire Controls"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="contextual-node-header">
+            <span className="contextual-type-badge text-mono">WIRE</span>
+            <span className="contextual-node-title text-mono" style={{ fontSize: '0.6875rem' }}>
+              {selectedEdge.source} &rarr; {selectedEdge.target}
+            </span>
+          </div>
+
+          <div className="contextual-traffic-control">
+            <span className="contextual-traffic-label text-mono">Traffic:</span>
+            <input
+              type="range"
+              min={0.1}
+              max={1.0}
+              step={0.05}
+              value={selectedEdge.trafficShare ?? 1.0}
+              onChange={(e) => updateEdgeShare(selectedEdge.source, selectedEdge.target, parseFloat(e.target.value))}
+              className="contextual-slider"
+            />
+            <span className="contextual-traffic-val text-mono">
+              {Math.round((selectedEdge.trafficShare ?? 1.0) * 100)}%
+            </span>
+          </div>
+
+          <button
+            onClick={() => removeEdge(selectedEdge.source, selectedEdge.target)}
+            className="contextual-btn-delete"
+            title="Remove connection"
+          >
+            Delete Wire
+          </button>
+
+          <button
+            onClick={() => setSelectedEdge(null)}
+            className="contextual-btn-close"
+            title="Dismiss toolbar (Esc)"
+          >
+            Close
+          </button>
+        </div>
+      )}
+
       <style jsx>{`
         .spatial-canvas-container {
           position: relative;
           width: 100%;
           height: 100%;
-          min-height: 520px;
-          background: var(--color-bg);
+          background: #09090B;
           overflow: hidden;
           user-select: none;
         }
         .spatial-canvas-svg {
           display: block;
+          width: 100%;
+          height: 100%;
         }
         .canvas-floating-toolbar {
           position: absolute;
-          top: var(--space-4);
-          left: var(--space-4);
-          z-index: 20;
+          top: 16px;
+          left: 16px;
+          z-index: 50;
           display: flex;
           align-items: center;
           gap: 4px;
-          background: var(--color-bg-elevated);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          background: #0B0B0D;
+          border: 1px solid #252529;
+          border-radius: 4px;
           padding: 3px 6px;
-          box-shadow: var(--shadow-md);
+          box-shadow: none;
         }
         .canvas-tool-btn {
           background: none;
           border: none;
-          color: var(--color-text-secondary);
-          width: 28px;
-          height: 28px;
-          border-radius: var(--radius-sm);
+          color: #A1A1AA;
+          width: 26px;
+          height: 26px;
+          border-radius: 2px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          font-size: 1rem;
-          transition: all var(--duration-fast);
+          font-size: 0.875rem;
+          font-family: var(--font-mono);
+          transition: background-color 0.15s, color 0.15s;
         }
         .canvas-tool-btn:hover:not(:disabled) {
-          background: var(--color-surface);
-          color: var(--color-text);
+          background: #18181B;
+          color: #FFFFFF;
         }
         .canvas-tool-btn:disabled {
-          opacity: 0.35;
+          opacity: 0.3;
           cursor: not-allowed;
         }
         .canvas-zoom-label {
-          font-size: 0.75rem;
-          color: var(--color-text-muted);
+          font-size: 0.6875rem;
+          color: #D4D4D8;
           padding: 0 4px;
+          min-width: 36px;
+          text-align: center;
+          font-variant-numeric: tabular-nums;
         }
         .canvas-tool-divider {
           width: 1px;
-          height: 18px;
-          background: var(--color-border);
+          height: 16px;
+          background: #252529;
           margin: 0 2px;
         }
         .spatial-node-rect {
@@ -722,13 +959,152 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
         }
         .connection-port:hover {
           r: 7.5;
-          stroke: var(--color-text);
+          stroke: #FFFFFF;
         }
         .cursor-grab {
           cursor: grab !important;
         }
         .cursor-grabbing {
           cursor: grabbing !important;
+        }
+
+        /* Contextual Floating Toolbars */
+        .contextual-node-toolbar {
+          position: absolute;
+          z-index: 40;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #0E0E12;
+          border: 1px solid #3F3F46;
+          border-radius: 4px;
+          padding: 5px 10px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
+          pointer-events: auto;
+          user-select: none;
+          white-space: nowrap;
+        }
+        .contextual-node-header {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .contextual-type-badge {
+          font-size: 0.625rem;
+          font-weight: 700;
+          color: #09090B;
+          background: #FFFFFF;
+          padding: 1px 5px;
+          border-radius: 2px;
+          letter-spacing: 0.05em;
+        }
+        .contextual-node-title {
+          font-family: var(--font-ui);
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #FFFFFF;
+          max-width: 140px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .contextual-select {
+          background: #18181B;
+          border: 1px solid #3F3F46;
+          border-radius: 2px;
+          color: #FFFFFF;
+          font-size: 0.6875rem;
+          padding: 3px 6px;
+          outline: none;
+          cursor: pointer;
+        }
+        .contextual-select:focus {
+          border-color: #FFFFFF;
+        }
+        .contextual-traffic-control {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .contextual-traffic-label {
+          font-size: 0.6875rem;
+          color: #A1A1AA;
+        }
+        .contextual-slider {
+          width: 70px;
+          accent-color: #FFFFFF;
+          cursor: pointer;
+        }
+        .contextual-traffic-val {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #FFFFFF;
+          min-width: 32px;
+          font-variant-numeric: tabular-nums;
+        }
+        .contextual-btn-delete {
+          background: none;
+          border: 1px solid #3F3F46;
+          border-radius: 2px;
+          color: #F43F5E;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          padding: 3px 8px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+        .contextual-btn-delete:hover {
+          background: #F43F5E;
+          color: #FFFFFF;
+          border-color: #F43F5E;
+        }
+        .contextual-btn-close {
+          background: #18181B;
+          border: 1px solid #3F3F46;
+          border-radius: 2px;
+          color: #E4E4E7;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          padding: 3px 8px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+        .contextual-btn-close:hover {
+          background: #27272A;
+          color: #FFFFFF;
+        }
+
+        /* Canvas Empty State */
+        .canvas-empty-state {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          pointer-events: none;
+          z-index: 5;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: 24px 32px;
+          background: #0B0B0D;
+          border: 1px dashed #27272A;
+          border-radius: 4px;
+        }
+        .empty-state-title {
+          font-family: var(--font-display);
+          font-size: 0.875rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: #FFFFFF;
+        }
+        .empty-state-subtitle {
+          font-family: var(--font-ui);
+          font-size: 0.75rem;
+          color: #71717A;
         }
       `}</style>
     </div>

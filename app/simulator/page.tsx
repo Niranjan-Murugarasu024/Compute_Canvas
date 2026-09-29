@@ -85,14 +85,6 @@ const CORE_COMPONENTS: {
   },
 ];
 
-const FAST_MODELS = Object.entries(MODEL_PRICING)
-  .filter(([_, p]) => p.category === 'fast')
-  .map(([id, p]) => ({ id, name: p.product, provider: p.provider, cost: `$${p.inputPricePer1M}/M` }));
-
-const FRONTIER_MODELS = Object.entries(MODEL_PRICING)
-  .filter(([_, p]) => p.category === 'frontier')
-  .map(([id, p]) => ({ id, name: p.product, provider: p.provider, cost: `$${p.inputPricePer1M}/M` }));
-
 // ── Isolated Query Sync Component (prevents full-page SSR bailout) ──
 function SimulatorQuerySync({
   onLoadShare,
@@ -294,9 +286,6 @@ function SimulatorContent() {
   const handleSyncError = useCallback((msg: string) => {
     showToast(msg);
   }, [showToast]);
-
-  const selectedNode = architecture.nodes.find(n => n.id === selectedNodeId);
-  const selectedEdge = selectedEdgeIndex !== null ? architecture.edges[selectedEdgeIndex] : null;
 
   return (
     <div className="simulator-v1-root">
@@ -670,108 +659,6 @@ function SimulatorContent() {
         <main className="simulator-canvas-center">
           <div className="canvas-wrapper-outer">
             <SpatialCanvas simulation={result} />
-
-            {/* Selected Element Floating Inspector */}
-            {selectedNode && (
-              <div className="selected-inspector-dock" role="region" aria-label="Component Inspector">
-                <div className="inspector-header">
-                  <span className="inspector-type-pill text-mono">{selectedNode.type.toUpperCase()}</span>
-                  <span className="inspector-title">{selectedNode.label}</span>
-                </div>
-
-                <div className="inspector-actions">
-                  {/* Model Switcher for LLM Nodes */}
-                  {(selectedNode.type === 'fast-model' || (selectedNode.type === 'model' && selectedNode.modelId === 'gpt-4o-mini')) && (
-                    <select
-                      className="inspector-select text-mono"
-                      value={selectedNode.modelId || 'gpt-4o-mini'}
-                      onChange={(e) => updateNodeModel(selectedNode.id, e.target.value)}
-                      aria-label="Select Fast Reasoning Model"
-                    >
-                      {FAST_MODELS.map(m => (
-                        <option key={m.id} value={m.id}>
-                          {m.name} ({m.cost})
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  {(selectedNode.type === 'frontier-model' || (selectedNode.type === 'model' && selectedNode.modelId !== 'gpt-4o-mini')) && (
-                    <select
-                      className="inspector-select text-mono"
-                      value={selectedNode.modelId || 'gpt-4o'}
-                      onChange={(e) => updateNodeModel(selectedNode.id, e.target.value)}
-                      aria-label="Select Frontier Reasoning Model"
-                    >
-                      {FRONTIER_MODELS.map(m => (
-                        <option key={m.id} value={m.id}>
-                          {m.name} ({m.cost})
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  <button
-                    onClick={() => removeNode(selectedNode.id)}
-                    className="btn btn-danger btn-sm"
-                    title="Remove component (Delete)"
-                  >
-                    Delete Node
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedNode(null)}
-                    className="btn btn-ghost btn-sm"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Selected Edge Inspector */}
-            {selectedEdge && (
-              <div className="selected-inspector-dock" role="region" aria-label="Connection Inspector">
-                <div className="inspector-header">
-                  <span className="inspector-type-pill text-mono">CONNECTION</span>
-                  <span className="inspector-title">
-                    {selectedEdge.source} → {selectedEdge.target}
-                  </span>
-                </div>
-
-                <div className="inspector-actions">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="text-caption text-mono">Traffic:</span>
-                    <input
-                      type="range"
-                      min={0.1}
-                      max={1.0}
-                      step={0.05}
-                      value={selectedEdge.trafficShare ?? 1.0}
-                      onChange={(e) => updateEdgeShare(selectedEdge.source, selectedEdge.target, parseFloat(e.target.value))}
-                      style={{ width: '90px' }}
-                    />
-                    <span className="text-caption text-mono" style={{ fontWeight: 600 }}>
-                      {Math.round((selectedEdge.trafficShare ?? 1.0) * 100)}%
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => removeEdge(selectedEdge.source, selectedEdge.target)}
-                    className="btn btn-danger btn-sm"
-                  >
-                    Remove Connection
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedEdge(null)}
-                    className="btn btn-ghost btn-sm"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </main>
 
@@ -1076,31 +963,36 @@ function SimulatorContent() {
 
       <style jsx>{`
         .simulator-v1-root {
-          min-height: 100vh;
+          height: 100vh;
+          max-height: 100vh;
           background: var(--color-bg);
           color: var(--color-text);
           display: flex;
           flex-direction: column;
-          padding-top: var(--nav-height, 58px);
+          padding-top: var(--nav-height, 56px);
+          box-sizing: border-box;
+          overflow: hidden;
         }
 
         .simulator-header-bar {
+          height: 50px;
+          min-height: 50px;
+          max-height: 50px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 8px var(--space-6);
+          padding: 0 var(--space-6);
           border-bottom: 1px solid var(--color-border);
           background: var(--color-bg-elevated);
           z-index: 30;
-          gap: var(--space-4);
-          flex-wrap: wrap;
+          flex-shrink: 0;
+          box-sizing: border-box;
         }
 
         .simulator-header-left {
           display: flex;
           align-items: center;
           gap: var(--space-4);
-          flex-wrap: wrap;
         }
 
         .simulator-title-group {
@@ -1110,7 +1002,7 @@ function SimulatorContent() {
         }
 
         .simulator-app-title {
-          font-size: 1.05rem;
+          font-size: 0.9375rem;
           font-weight: 700;
           letter-spacing: -0.01em;
           margin: 0;
@@ -1160,35 +1052,40 @@ function SimulatorContent() {
           background: #18181B;
           border-bottom: 2px solid #FFFFFF;
           color: #FFFFFF;
-          padding: var(--space-2) var(--space-6);
+          padding: 6px var(--space-6);
           font-size: 0.8125rem;
           font-family: var(--font-mono);
           z-index: 25;
+          flex-shrink: 0;
         }
 
         .warning-icon {
           font-size: 1rem;
         }
 
-        /* 3-Column Work Area Grid */
+        /* 3-Column Work Area Grid: Left 330px, Canvas flex-1, Right 370px */
         .simulator-body-grid {
           display: grid;
-          grid-template-columns: 310px 1fr 340px;
+          grid-template-columns: 330px minmax(0, 1fr) 370px;
           flex: 1;
-          min-height: calc(100vh - var(--nav-height, 58px) - 48px);
+          min-height: 0;
+          height: 100%;
           overflow: hidden;
         }
 
-        /* Sidebars */
+        /* Sidebars: Independent Scroll Areas */
         .simulator-sidebar-left {
+          width: 330px;
+          height: 100%;
           border-right: 1px solid var(--color-border);
           background: var(--color-bg);
           padding: var(--space-3);
           overflow-y: auto;
+          overflow-x: hidden;
           display: flex;
           flex-direction: column;
           gap: var(--space-3);
-          max-height: calc(100vh - var(--nav-height, 58px) - 48px);
+          box-sizing: border-box;
         }
 
         .left-sidebar-tabs {
@@ -1198,6 +1095,7 @@ function SimulatorContent() {
           border-radius: var(--radius-sm);
           padding: 2px;
           gap: 2px;
+          flex-shrink: 0;
         }
 
         .sidebar-tab-btn {
@@ -1222,14 +1120,17 @@ function SimulatorContent() {
         }
 
         .simulator-sidebar-right {
+          width: 370px;
+          height: 100%;
           border-left: 1px solid var(--color-border);
           background: var(--color-bg);
           padding: var(--space-3);
           overflow-y: auto;
+          overflow-x: hidden;
           display: flex;
           flex-direction: column;
           gap: var(--space-3);
-          max-height: calc(100vh - var(--nav-height, 58px) - 48px);
+          box-sizing: border-box;
         }
 
         .sidebar-card {
@@ -1237,6 +1138,7 @@ function SimulatorContent() {
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
           padding: var(--space-3);
+          flex-shrink: 0;
         }
 
         .sidebar-card-header {
@@ -1255,7 +1157,7 @@ function SimulatorContent() {
           margin: 0;
         }
 
-        /* Palette list */
+        /* Palette list: Strict 3-column grid per card */
         .palette-components-list {
           display: flex;
           flex-direction: column;
@@ -1263,45 +1165,53 @@ function SimulatorContent() {
         }
 
         .palette-component-item {
-          display: flex;
+          display: grid;
+          grid-template-columns: 22px minmax(0, 1fr) auto;
           align-items: center;
-          gap: var(--space-2);
+          gap: 10px;
+          min-height: 60px;
+          padding: 10px 12px;
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border-subtle);
           border-radius: var(--radius-sm);
-          padding: 6px 8px;
           cursor: grab;
-          transition: all var(--duration-fast);
+          transition: border-color 0.15s, background-color 0.15s;
           user-select: none;
+          box-sizing: border-box;
         }
 
         .palette-component-item:hover {
-          border-color: var(--color-border-strong);
-          background: var(--color-bg-light-surface, #1e1e24);
-          transform: translateY(-1px);
+          border-color: #FFFFFF;
+          background: #18181B;
         }
 
         .palette-item-icon {
-          font-size: 0.875rem;
-          width: 20px;
-          text-align: center;
+          font-size: 1rem;
+          width: 22px;
+          height: 22px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           flex-shrink: 0;
           color: var(--color-text-secondary);
         }
 
         .palette-item-info {
-          flex: 1;
           min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
 
         .palette-item-name {
           font-family: var(--font-ui);
           font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--color-text);
+          font-weight: 600;
+          color: #FFFFFF;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          line-height: 1.2;
         }
 
         .palette-item-desc {
@@ -1311,15 +1221,21 @@ function SimulatorContent() {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          line-height: 1.2;
         }
 
         .palette-item-badge {
           font-family: var(--font-mono);
           font-size: 0.5625rem;
-          font-weight: 500;
-          border: 1px solid;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          padding: 2px 6px;
           border-radius: 2px;
-          padding: 1px 4px;
+          border: 1px solid var(--color-border-strong);
+          color: var(--color-text-secondary);
+          background: #141417;
+          white-space: nowrap;
+          text-align: center;
           flex-shrink: 0;
         }
 
@@ -1472,72 +1388,17 @@ function SimulatorContent() {
           position: relative;
           background: var(--color-bg);
           height: 100%;
+          min-width: 0;
           display: flex;
           flex-direction: column;
+          overflow: hidden;
         }
 
         .canvas-wrapper-outer {
           position: relative;
           width: 100%;
           height: 100%;
-          min-height: 520px;
-        }
-
-        /* Inspector Floating Bar */
-        .selected-inspector-dock {
-          position: absolute;
-          bottom: var(--space-4);
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 25;
-          display: flex;
-          align-items: center;
-          gap: var(--space-3);
-          background: var(--color-bg-elevated);
-          border: 1px solid var(--color-border-strong);
-          border-radius: var(--radius-sm);
-          padding: 6px 14px;
-          box-shadow: var(--shadow-md);
-          max-width: 90%;
-        }
-
-        .inspector-header {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-        }
-
-        .inspector-type-pill {
-          font-size: 0.625rem;
-          font-weight: 500;
-          color: #F4F4F5;
-          background: #27272A;
-          border: 1px solid #3F3F46;
-          padding: 2px 6px;
-          border-radius: 2px;
-        }
-
-        .inspector-title {
-          font-family: var(--font-ui);
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--color-text);
-        }
-
-        .inspector-actions {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-        }
-
-        .inspector-select {
-          background: var(--color-bg-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          color: var(--color-text);
-          font-size: 0.75rem;
-          padding: 4px 8px;
-          outline: none;
+          overflow: hidden;
         }
 
         /* Right Column Metrics */
@@ -1677,9 +1538,10 @@ function SimulatorContent() {
         }
 
         .breakdown-legend-item {
-          display: flex;
+          display: grid;
+          grid-template-columns: 8px 1fr auto;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           font-size: 0.75rem;
         }
 
@@ -1691,13 +1553,18 @@ function SimulatorContent() {
         }
 
         .legend-name {
-          flex: 1;
           color: var(--color-text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .legend-amount {
           color: var(--color-text);
           font-weight: 600;
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+          text-align: right;
         }
 
         /* Why changed */
@@ -1845,25 +1712,46 @@ function SimulatorContent() {
         }
 
         /* Responsive Layout Breakpoints */
-        @media (max-width: 1100px) {
+        @media (max-width: 1150px) {
           .simulator-body-grid {
-            grid-template-columns: 270px 1fr 290px;
+            grid-template-columns: 290px minmax(0, 1fr) 320px;
+          }
+          .simulator-sidebar-left {
+            width: 290px;
+          }
+          .simulator-sidebar-right {
+            width: 320px;
           }
         }
 
         @media (max-width: 900px) {
+          .simulator-v1-root {
+            height: auto;
+            max-height: none;
+            overflow: auto;
+          }
+          .simulator-header-bar {
+            height: auto;
+            min-height: 48px;
+            max-height: none;
+            padding: 8px var(--space-4);
+          }
           .simulator-body-grid {
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: visible;
+            height: auto;
           }
           .simulator-sidebar-left,
           .simulator-sidebar-right {
+            width: 100%;
+            height: auto;
             max-height: none;
             border: none;
           }
           .simulator-canvas-center {
             min-height: 480px;
+            height: 520px;
           }
         }
       `}</style>

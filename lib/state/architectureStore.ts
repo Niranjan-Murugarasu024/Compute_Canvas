@@ -76,6 +76,8 @@ interface ArchitectureState {
   // Canvas viewport state
   pan: { x: number; y: number };
   zoom: number;
+  canvasDimensions: { width: number; height: number };
+  setCanvasDimensions: (dim: { width: number; height: number }) => void;
 
   // History for Undo/Redo
   history: {
@@ -309,6 +311,8 @@ export const useArchitectureStore = create<ArchitectureState>()(
 
       pan: { x: 0, y: 0 },
       zoom: 1,
+      canvasDimensions: { width: 800, height: 600 },
+      setCanvasDimensions: (canvasDimensions) => set({ canvasDimensions }),
 
       history: {
         past: [],
@@ -466,17 +470,104 @@ export const useArchitectureStore = create<ArchitectureState>()(
           type === 'fast-model' ? 'Fast Model' :
           type === 'frontier-model' ? 'Frontier Model' : 'Component';
 
-        // Position near center or offset from existing nodes
-        const posX = x !== undefined ? x : 180 + (state.architecture.nodes.length % 3) * 160;
-        const posY = y !== undefined ? y : 100 + Math.floor(state.architecture.nodes.length / 3) * 120;
+        const NODE_WIDTH = 204;
+        const NODE_HEIGHT = 82;
+
+        let targetX: number = 0;
+        let targetY: number = 0;
+
+        if (x !== undefined && y !== undefined) {
+          targetX = x;
+          targetY = y;
+        } else {
+          // Calculate center of visible canvas in graph coordinates
+          const cw = state.canvasDimensions?.width || 800;
+          const ch = state.canvasDimensions?.height || 600;
+          const centerX = (cw / 2 - state.pan.x) / state.zoom;
+          const centerY = (ch / 2 - state.pan.y) / state.zoom;
+          const idealX = Math.round(centerX - NODE_WIDTH / 2);
+          const idealY = Math.round(centerY - NODE_HEIGHT / 2);
+
+          const existingNodes = state.architecture.nodes;
+          if (existingNodes.length === 0) {
+            targetX = idealX;
+            targetY = idealY;
+          } else {
+            // Check collision with existing nodes
+            const collides = (px: number, py: number) => {
+              return existingNodes.some(n => {
+                const nx = n.x ?? 100;
+                const ny = n.y ?? 100;
+                return Math.abs(px - nx) < NODE_WIDTH * 0.85 && Math.abs(py - ny) < NODE_HEIGHT * 1.05;
+              });
+            };
+
+            if (!collides(idealX, idealY)) {
+              targetX = idealX;
+              targetY = idealY;
+            } else {
+              // Deterministic spatial offsets to find unobstructed visible spot
+              const stepX = NODE_WIDTH + 24;
+              const stepY = NODE_HEIGHT + 28;
+              const searchOffsets = [
+                [stepX, 0],
+                [0, stepY],
+                [-stepX, 0],
+                [0, -stepY],
+                [stepX, stepY],
+                [-stepX, stepY],
+                [stepX, -stepY],
+                [-stepX, -stepY],
+                [stepX * 2, 0],
+                [0, stepY * 2],
+                [-stepX * 2, 0],
+                [0, -stepY * 2],
+              ];
+
+              let found = false;
+              for (const [ox, oy] of searchOffsets) {
+                const candX = idealX + ox;
+                const candY = idealY + oy;
+                if (!collides(candX, candY)) {
+                  targetX = candX;
+                  targetY = candY;
+                  found = true;
+                  break;
+                }
+              }
+
+              if (!found) {
+                targetX = idealX + (existingNodes.length % 4) * 36;
+                targetY = idealY + Math.floor(existingNodes.length / 4) * 36;
+              }
+            }
+          }
+        }
+
+        // Auto-pan if node would be outside or clipped by visible viewport
+        let newPan = { ...state.pan };
+        const cw = state.canvasDimensions?.width || 800;
+        const ch = state.canvasDimensions?.height || 600;
+        const screenX = targetX * state.zoom + state.pan.x;
+        const screenY = targetY * state.zoom + state.pan.y;
+        const screenRight = (targetX + NODE_WIDTH) * state.zoom + state.pan.x;
+        const screenBottom = (targetY + NODE_HEIGHT) * state.zoom + state.pan.y;
+
+        const pad = 36;
+        if (screenX < pad || screenRight > cw - pad || screenY < pad || screenBottom > ch - pad) {
+          newPan = {
+            x: Math.round(cw / 2 - (targetX + NODE_WIDTH / 2) * state.zoom),
+            y: Math.round(ch / 2 - (targetY + NODE_HEIGHT / 2) * state.zoom),
+          };
+        }
 
         const newNode: ArchNode = {
           id,
           type,
           label: label || fallbackLabel,
           modelId,
-          x: posX,
-          y: posY,
+          x: targetX,
+          y: targetY,
         };
 
         const prevSim = simulate(state.workload, state.architecture);
@@ -486,6 +577,7 @@ export const useArchitectureStore = create<ArchitectureState>()(
         };
 
         set({
+          pan: newPan,
           previousState: {
             arch: state.architecture,
             workload: state.workload,
@@ -790,22 +882,35 @@ export const useArchitectureStore = create<ArchitectureState>()(
       fitToView: () => {
         const state = get();
         const nodes = state.architecture.nodes;
+        const cw = state.canvasDimensions?.width || 800;
+        const ch = state.canvasDimensions?.height || 600;
+
         if (nodes.length === 0) {
-          set({ pan: { x: 0, y: 0 }, zoom: 1 });
+          set({ pan: { x: cw / 2 - 100, y: ch / 2 - 40 }, zoom: 1 });
           return;
         }
 
-        const minX = Math.min(...nodes.map(n => n.x || 0));
-        const maxX = Math.max(...nodes.map(n => (n.x || 0) + 140));
-        const minY = Math.min(...nodes.map(n => n.y || 0));
-        const maxY = Math.max(...nodes.map(n => (n.y || 0) + 70));
+        const NODE_WIDTH = 204;
+        const NODE_HEIGHT = 82;
+        const padding = 50;
 
-        const archWidth = maxX - minX || 600;
-        const archHeight = maxY - minY || 400;
+        const minX = Math.min(...nodes.map(n => n.x ?? 100));
+        const maxX = Math.max(...nodes.map(n => (n.x ?? 100) + NODE_WIDTH));
+        const minY = Math.min(...nodes.map(n => n.y ?? 100));
+        const maxY = Math.max(...nodes.map(n => (n.y ?? 100) + NODE_HEIGHT));
 
-        const targetZoom = Math.min(1.2, Math.max(0.5, Math.min(700 / archWidth, 500 / archHeight)));
-        const targetPanX = -minX * targetZoom + 60;
-        const targetPanY = -minY * targetZoom + 60;
+        const graphW = Math.max(100, maxX - minX);
+        const graphH = Math.max(100, maxY - minY);
+
+        const availW = Math.max(200, cw - padding * 2);
+        const availH = Math.max(200, ch - padding * 2);
+
+        const targetZoom = Math.min(1.15, Math.max(0.4, Math.min(availW / graphW, availH / graphH)));
+        const graphCenterX = minX + graphW / 2;
+        const graphCenterY = minY + graphH / 2;
+
+        const targetPanX = Math.round(cw / 2 - graphCenterX * targetZoom);
+        const targetPanY = Math.round(ch / 2 - graphCenterY * targetZoom);
 
         set({ pan: { x: targetPanX, y: targetPanY }, zoom: targetZoom });
       },
