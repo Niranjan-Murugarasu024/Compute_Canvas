@@ -1,683 +1,547 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import {
   simulate,
   formatCurrency,
   formatLatency,
   formatNumber,
-  DEFAULT_SIMPLE_ARCHITECTURE,
-  DEFAULT_OPTIMIZED_ARCHITECTURE,
   type Workload,
   type Architecture,
-  type SimulationResult,
 } from '@/lib/simulation/engine';
+import { useArchitectureStore } from '@/lib/state/architectureStore';
 
-// ── Traffic Presets ──
-const TRAFFIC_STOPS = [100_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000, 20_000_000];
+// Canonical V1 Architecture for Hero Live Instrument
+const HERO_V1_ARCHITECTURE: Architecture = {
+  nodes: [
+    { id: 'api-ingress', type: 'api', label: 'API Ingress', x: 40, y: 70 },
+    { id: 'semantic-cache', type: 'cache', label: 'Semantic Cache', x: 190, y: 70 },
+    { id: 'complexity-router', type: 'router', label: 'Complexity Router', x: 350, y: 70 },
+    { id: 'fast-model', type: 'fast-model', label: 'Fast Model', x: 510, y: 35 },
+    { id: 'frontier-model', type: 'frontier-model', label: 'Frontier Model', x: 510, y: 105 },
+  ],
+  edges: [
+    { source: 'api-ingress', target: 'semantic-cache' },
+    { source: 'semantic-cache', target: 'complexity-router' },
+    { source: 'complexity-router', target: 'fast-model', trafficShare: 0.70 },
+    { source: 'complexity-router', target: 'frontier-model', trafficShare: 0.30 },
+  ],
+};
 
-function trafficToPercent(traffic: number): number {
-  for (let i = 0; i < TRAFFIC_STOPS.length - 1; i++) {
-    if (traffic <= TRAFFIC_STOPS[i + 1]) {
-      const range = TRAFFIC_STOPS[i + 1] - TRAFFIC_STOPS[i];
-      const segWidth = 100 / (TRAFFIC_STOPS.length - 1);
-      return segWidth * i + segWidth * ((traffic - TRAFFIC_STOPS[i]) / range);
-    }
-  }
-  return 100;
-}
-
-function percentToTraffic(pct: number): number {
-  const segWidth = 100 / (TRAFFIC_STOPS.length - 1);
-  const seg = Math.min(Math.floor(pct / segWidth), TRAFFIC_STOPS.length - 2);
-  const segPct = (pct - seg * segWidth) / segWidth;
-  const val = TRAFFIC_STOPS[seg] + segPct * (TRAFFIC_STOPS[seg + 1] - TRAFFIC_STOPS[seg]);
-  // Round to nearest 10K
-  return Math.round(val / 10_000) * 10_000;
-}
-
-function formatTraffic(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
-  return n.toString();
-}
-
-// ── Animated Number ──
-function AnimatedMetric({ value, prefix = '', suffix = '', className = '' }: {
-  value: number; prefix?: string; suffix?: string; className?: string;
-}) {
-  const [display, setDisplay] = useState(value);
-  const prev = useRef(value);
-
-  useEffect(() => {
-    const start = prev.current;
-    const end = value;
-    if (start === end) return;
-
-    const duration = 350;
-    const startTime = performance.now();
-
-    function step(now: number) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(start + (end - start) * eased);
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-    prev.current = end;
-  }, [value]);
-
-  const formatted = prefix === '$'
-    ? formatCurrency(Math.round(display))
-    : suffix === 'ms' || suffix === 's'
-      ? formatLatency(Math.round(display))
-      : `${Math.round(display * 10) / 10}${suffix}`;
-
-  return (
-    <span className={`text-metric-sm ${className}`} style={{ fontVariantNumeric: 'tabular-nums' }}>
-      {prefix === '$' ? formatted : prefix}{prefix !== '$' ? formatted : ''}
-    </span>
-  );
-}
-
-// ── Architecture Visualization (SVG) ──
-function ArchitectureGraph({ architecture, result, traffic }: {
-  architecture: Architecture; result: SimulationResult; traffic: number;
-}) {
-  const isSimple = architecture.nodes.length <= 4;
-
-  // Layout the nodes
-  const nodePositions = useMemo(() => {
-    const positions: Record<string, { x: number; y: number }> = {};
-
-    if (isSimple) {
-      // Simple: vertical stack
-      const api = architecture.nodes.find(n => n.type === 'api');
-      const model = architecture.nodes.find(n => n.type === 'model');
-      const vectordb = architecture.nodes.find(n => n.type === 'vectordb');
-      if (api) positions[api.id] = { x: 200, y: 40 };
-      if (model) positions[model.id] = { x: 200, y: 140 };
-      if (vectordb) positions[vectordb.id] = { x: 200, y: 240 };
-    } else {
-      // Optimized: tree layout
-      const api = architecture.nodes.find(n => n.type === 'api');
-      const cache = architecture.nodes.find(n => n.type === 'cache');
-      const router = architecture.nodes.find(n => n.type === 'router');
-      const models = architecture.nodes.filter(n => n.type === 'model');
-      const vectordb = architecture.nodes.find(n => n.type === 'vectordb');
-      const embedding = architecture.nodes.find(n => n.type === 'embedding');
-
-      if (api) positions[api.id] = { x: 200, y: 30 };
-      if (cache) positions[cache.id] = { x: 200, y: 100 };
-      if (router) positions[router.id] = { x: 200, y: 170 };
-      if (models[0]) positions[models[0].id] = { x: 115, y: 250 };
-      if (models[1]) positions[models[1].id] = { x: 285, y: 250 };
-      if (vectordb) positions[vectordb.id] = { x: 200, y: 330 };
-      if (embedding) positions[embedding.id] = { x: 50, y: 330 };
-    }
-
-    return positions;
-  }, [architecture, isSimple]);
-
-  // Flow speed based on traffic
-  const flowSpeed = Math.max(0.5, Math.min(4, traffic / 2_000_000));
-  const isOverCapacity = result.capacityUtilization > 100;
-  const isNearCapacity = result.capacityUtilization > 80;
-
-  return (
-    <svg
-      viewBox="0 0 400 380"
-      className="arch-svg"
-      role="img"
-      aria-label={`Architecture diagram with ${architecture.nodes.length} components`}
-    >
-      <defs>
-        <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
-          <polygon points="0 0, 6 2, 0 4" fill="var(--color-text-muted)" />
-        </marker>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* Edges */}
-      {architecture.edges.map((edge, i) => {
-        const from = nodePositions[edge.source];
-        const to = nodePositions[edge.target];
-        if (!from || !to) return null;
-
-        return (
-          <g key={`edge-${i}`}>
-            <line
-              x1={from.x} y1={from.y + 20}
-              x2={to.x} y2={to.y - 20}
-              stroke={isOverCapacity ? 'var(--color-critical)' : 'var(--color-border-strong)'}
-              strokeWidth={isNearCapacity ? 2 : 1.5}
-              strokeDasharray={isOverCapacity ? '4 4' : 'none'}
-              markerEnd="url(#arrowhead)"
-            />
-            {/* Animated flow dot */}
-            <circle r={isOverCapacity ? 3.5 : 2.5} fill={isOverCapacity ? 'var(--color-critical)' : 'var(--color-accent)'} filter={isOverCapacity ? 'url(#glow)' : undefined}>
-              <animateMotion
-                dur={`${2 / flowSpeed}s`}
-                repeatCount="indefinite"
-                path={`M${from.x},${from.y + 20} L${to.x},${to.y - 20}`}
-              />
-            </circle>
-          </g>
-        );
-      })}
-
-      {/* Nodes */}
-      {architecture.nodes.map(node => {
-        const pos = nodePositions[node.id];
-        if (!pos) return null;
-
-        const nodeColor = node.type === 'model'
-          ? 'var(--color-accent)'
-          : node.type === 'cache'
-            ? 'var(--color-quality)'
-            : node.type === 'vectordb'
-              ? 'var(--color-performance)'
-              : node.type === 'router'
-                ? 'var(--color-cost)'
-                : 'var(--color-border-strong)';
-
-        return (
-          <g key={node.id}>
-            <rect
-              x={pos.x - 52}
-              y={pos.y - 16}
-              width={104}
-              height={32}
-              rx={6}
-              fill="var(--color-bg-surface)"
-              stroke={nodeColor}
-              strokeWidth={1}
-              opacity={0.95}
-            />
-            <text
-              x={pos.x}
-              y={pos.y + 1}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="var(--color-text)"
-              fontSize="10"
-              fontFamily="var(--font-mono)"
-              fontWeight="500"
-              letterSpacing="0.05em"
-            >
-              {node.label.toUpperCase()}
-            </text>
-            {/* Active indicator */}
-            <circle
-              cx={pos.x + 47}
-              cy={pos.y - 11}
-              r={3}
-              fill={isOverCapacity ? 'var(--color-critical)' : 'var(--color-success)'}
-            >
-              <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
-            </circle>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-// ── Main Hero Component ──
 export default function HeroInteractive() {
-  const [traffic, setTraffic] = useState(1_000_000);
-  const [isOptimized, setIsOptimized] = useState(false);
-  const [showCapacityWarning, setShowCapacityWarning] = useState(false);
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
+  const router = useRouter();
+  const { loadArchitecture } = useArchitectureStore();
 
-  const architecture = isOptimized ? DEFAULT_OPTIMIZED_ARCHITECTURE : DEFAULT_SIMPLE_ARCHITECTURE;
+  const [monthlyRequests, setMonthlyRequests] = useState(2_500_000);
+  const [cacheHitRate, setCacheHitRate] = useState(0.60);
+  const [fastModelRouting, setFastModelRouting] = useState(0.70);
 
+  // Dynamic workload based on user hero sliders
   const workload: Workload = useMemo(() => ({
-    requestsPerMonth: traffic,
+    requestsPerMonth: monthlyRequests,
     avgInputTokens: 1200,
     avgOutputTokens: 400,
-    concurrency: 50,
-    cacheHitRate: isOptimized ? 0.30 : 0,
-    retrievalsPerRequest: 1,
+    concurrency: 60,
+    cacheHitRate,
+    retrievalsPerRequest: 0,
     toolCallsPerRequest: 0,
-  }), [traffic, isOptimized]);
+  }), [monthlyRequests, cacheHitRate]);
 
-  const result = useMemo(() => simulate(workload, architecture), [workload, architecture]);
-
-  // Check capacity warning
-  useEffect(() => {
-    if (result.capacityUtilization > 100 && !isOptimized) {
-      setShowCapacityWarning(true);
-    } else {
-      setShowCapacityWarning(false);
-    }
-  }, [result.capacityUtilization, isOptimized]);
-
-  // Optimized result for comparison
-  const optimizedResult = useMemo(() => {
-    if (!isOptimized) {
-      const optWorkload = { ...workload, cacheHitRate: 0.30 };
-      return simulate(optWorkload, DEFAULT_OPTIMIZED_ARCHITECTURE);
-    }
-    return null;
-  }, [workload, isOptimized]);
-
-  // Slider interaction
-  const handleSliderInteraction = useCallback((clientX: number) => {
-    if (!sliderRef.current) return;
-    const rect = sliderRef.current.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    setTraffic(percentToTraffic(pct));
-  }, []);
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    isDragging.current = true;
-    handleSliderInteraction(e.clientX);
-    const handleMove = (e: MouseEvent) => {
-      if (isDragging.current) handleSliderInteraction(e.clientX);
+  // Dynamic architecture reflecting routing
+  const activeArch: Architecture = useMemo(() => {
+    return {
+      ...HERO_V1_ARCHITECTURE,
+      edges: HERO_V1_ARCHITECTURE.edges.map(e => {
+        if (e.source === 'complexity-router' && e.target === 'fast-model') {
+          return { ...e, trafficShare: fastModelRouting };
+        }
+        if (e.source === 'complexity-router' && e.target === 'frontier-model') {
+          return { ...e, trafficShare: Math.round((1 - fastModelRouting) * 100) / 100 };
+        }
+        return e;
+      }),
     };
-    const handleUp = () => {
-      isDragging.current = false;
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleUp);
-    };
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleUp);
-  }, [handleSliderInteraction]);
+  }, [fastModelRouting]);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    isDragging.current = true;
-    handleSliderInteraction(e.touches[0].clientX);
-    const handleMove = (e: TouchEvent) => {
-      if (isDragging.current) handleSliderInteraction(e.touches[0].clientX);
-    };
-    const handleUp = () => {
-      isDragging.current = false;
-      window.removeEventListener('touchmove', handleMove);
-      window.removeEventListener('touchend', handleUp);
-    };
-    window.addEventListener('touchmove', handleMove, { passive: true });
-    window.addEventListener('touchend', handleUp);
-  }, [handleSliderInteraction]);
+  // Pure deterministic simulation calculation
+  const sim = useMemo(() => simulate(workload, activeArch), [workload, activeArch]);
 
-  const sliderPercent = trafficToPercent(traffic);
+  // Savings relative to zero cache
+  const noCacheSim = useMemo(() => simulate({ ...workload, cacheHitRate: 0 }, activeArch), [workload, activeArch]);
+  const estimatedSavings = Math.max(0, noCacheSim.monthlyCost - sim.monthlyCost);
 
-  const handleOptimize = useCallback(() => {
-    setIsOptimized(true);
-    setShowCapacityWarning(false);
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setIsOptimized(false);
-    setTraffic(1_000_000);
-  }, []);
+  const handleOpenWorkbench = () => {
+    loadArchitecture(activeArch, workload);
+    router.push('/simulator');
+  };
 
   return (
-    <section className="hero" id="hero">
-      <div className="hero__container container">
-        {/* Opening copy */}
-        <motion.div
-          className="hero__intro"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-        >
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', borderRadius: '999px', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-glow)', marginBottom: 'var(--space-4)' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-accent)' }} />
-            <span className="text-caption text-mono" style={{ color: 'var(--color-text)', fontWeight: 600 }}>COMPUTECANVAS V1</span>
-          </div>
-          <h1 className="text-display" style={{ letterSpacing: '-0.02em' }}>
-            Design your AI architecture.<br />
-            <span style={{ color: 'var(--color-text-secondary)' }}>See the cost before you build it.</span>
-          </h1>
-          <p className="hero__subtitle" style={{ maxWidth: '620px' }}>
-            Map your AI pipeline, simulate monthly spend and latency, calibrate against your real bill, and share the architecture with your team.
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', marginTop: 'var(--space-6)', flexWrap: 'wrap' }}>
-            <Link href="/simulator" className="btn btn-primary btn-lg" style={{ minWidth: '160px' }}>
-              Open Simulator
-            </Link>
-            <Link href="/simulator?template=rag-pipeline" className="btn btn-secondary btn-lg">
-              Explore Templates
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* Interactive demo */}
-        <motion.div
-          className="hero__demo"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
-        >
-          <div className="hero__demo-inner">
-            {/* Architecture visualization */}
-            <div className="hero__graph">
-              <div className="hero__graph-header">
-                <span className="text-label">ARCHITECTURE</span>
-                {isOptimized && (
-                  <button className="btn-ghost" onClick={handleReset} style={{ fontSize: '0.75rem' }}>
-                    Reset
-                  </button>
-                )}
-              </div>
-              <ArchitectureGraph architecture={architecture} result={result} traffic={traffic} />
+    <section className="tech-hero">
+      <div className="container">
+        <div className="tech-hero__grid">
+          {/* Left Column: Technical Narrative & Actions */}
+          <div className="tech-hero__left">
+            <div className="tech-hero__meta-strip">
+              <span className="coordinate-tag text-mono">[SYS_SPEC: V1.2]</span>
+              <span className="dot-divider" />
+              <span className="meta-label text-mono">PRE-DEPLOYMENT ARCHITECTURE ECONOMICS</span>
             </div>
 
-            {/* Controls + Metrics */}
-            <div className="hero__panel">
-              {/* Traffic slider */}
-              <div className="hero__traffic">
-                <div className="hero__traffic-header">
-                  <span className="text-label">TRAFFIC</span>
-                  <span className="text-mono" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                    {formatTraffic(traffic)} <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>req/month</span>
-                  </span>
+            <h1 className="text-display tech-hero__title">
+              Design AI Systems.<br />
+              <span style={{ color: 'var(--color-text-secondary)' }}>See the cost before you build it.</span>
+            </h1>
+
+            <p className="tech-hero__lead">
+              Map your multi-tier inference pipeline, simulate deterministic monthly spend and P95 latency, anchor against real invoices, and eliminate six-figure infrastructure refactors before writing deployment code.
+            </p>
+
+            <div className="tech-hero__cta-group">
+              <Link href="/simulator" className="btn btn-primary btn-lg">
+                OPEN SIMULATOR &rarr;
+              </Link>
+              <Link href="/templates" className="btn btn-secondary btn-lg">
+                EXPLORE TEMPLATES
+              </Link>
+              <Link href="/assumptions" className="btn btn-ghost btn-lg text-mono" style={{ fontSize: '0.75rem' }}>
+                PRICING ASSUMPTIONS &rarr;
+              </Link>
+            </div>
+
+            <div className="tech-hero__specs-footer">
+              <div className="spec-item">
+                <span className="spec-label text-mono">ENGINE</span>
+                <span className="spec-val text-mono">Pure Deterministic</span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-label text-mono">DATA PERSISTENCE</span>
+                <span className="spec-val text-mono">0 Backend // URL State</span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-label text-mono">CALIBRATION</span>
+                <span className="spec-val text-mono">Empirical Invoice Scalar</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Live Interactive Architecture Instrument */}
+          <div className="tech-hero__right">
+            <div className="instrument-shell">
+              {/* Instrument Header Bar */}
+              <div className="instrument-header">
+                <div className="instrument-title-row">
+                  <span className="instrument-live-tag text-mono">● LIVE INSTRUMENT</span>
+                  <span className="instrument-model-tag text-mono">TOPOLOGY: ROUTER + CACHE</span>
                 </div>
-                <div
-                  className="slider-track"
-                  ref={sliderRef}
-                  onMouseDown={handleMouseDown}
-                  onTouchStart={handleTouchStart}
-                  role="slider"
-                  aria-label="Traffic requests per month"
-                  aria-valuemin={100000}
-                  aria-valuemax={20000000}
-                  aria-valuenow={traffic}
-                  aria-valuetext={`${formatTraffic(traffic)} requests per month`}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                      e.preventDefault();
-                      setTraffic(t => Math.min(20_000_000, percentToTraffic(trafficToPercent(t) + 5)));
-                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      setTraffic(t => Math.max(100_000, percentToTraffic(trafficToPercent(t) - 5)));
-                    } else if (e.key === 'Home') {
-                      e.preventDefault();
-                      setTraffic(100_000);
-                    } else if (e.key === 'End') {
-                      e.preventDefault();
-                      setTraffic(20_000_000);
-                    }
-                  }}
+                <button
+                  onClick={handleOpenWorkbench}
+                  className="btn btn-ghost btn-sm text-mono"
+                  style={{ border: '1px solid var(--color-border)', fontSize: '0.625rem', padding: '3px 8px' }}
                 >
-                  <div className="slider-fill" style={{ width: `${sliderPercent}%` }} />
-                  <div className="slider-thumb" style={{ left: `${sliderPercent}%` }} />
+                  OPEN IN WORKBENCH &rarr;
+                </button>
+              </div>
+
+              {/* Blueprint Topology View */}
+              <div className="instrument-svg-wrap">
+                <svg viewBox="0 0 660 140" className="instrument-svg" aria-label="Architecture Topology">
+                  <defs>
+                    <pattern id="hero-grid-pat" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <circle cx="1" cy="1" r="0.8" fill="var(--color-border-strong)" />
+                    </pattern>
+                    <marker id="hero-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                      <polygon points="0 0, 6 3, 0 6" fill="#A1A1AA" />
+                    </marker>
+                  </defs>
+
+                  <rect width="100%" height="100%" fill="url(#hero-grid-pat)" opacity="0.4" />
+
+                  {/* Edges */}
+                  <line x1="120" y1="70" x2="190" y2="70" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#hero-arrow)" />
+                  <line x1="290" y1="70" x2="350" y2="70" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#hero-arrow)" />
+                  <path d="M 450 70 C 480 70, 480 35, 510 35" stroke="#3F3F46" strokeWidth="1.5" fill="none" markerEnd="url(#hero-arrow)" />
+                  <path d="M 450 70 C 480 70, 480 105, 510 105" stroke="#3F3F46" strokeWidth="1.5" fill="none" markerEnd="url(#hero-arrow)" />
+
+                  {/* Animated Traffic Particles */}
+                  <circle r="2" fill="#FFFFFF">
+                    <animateMotion dur="1.8s" repeatCount="indefinite" path="M 120 70 L 190 70" />
+                  </circle>
+                  <circle r="2" fill="#FFFFFF">
+                    <animateMotion dur="1.8s" repeatCount="indefinite" path="M 290 70 L 350 70" />
+                  </circle>
+                  <circle r="2" fill="#A1A1AA">
+                    <animateMotion dur="2.2s" repeatCount="indefinite" path="M 450 70 C 480 70, 480 35, 510 35" />
+                  </circle>
+                  <circle r="2" fill="#A1A1AA">
+                    <animateMotion dur="2.2s" repeatCount="indefinite" path="M 450 70 C 480 70, 480 105, 510 105" />
+                  </circle>
+
+                  {/* Routing Percent Badges */}
+                  <text x="475" y="44" fill="#A1A1AA" fontSize="8" fontFamily="var(--font-mono)" fontWeight="600">
+                    {Math.round(fastModelRouting * 100)}%
+                  </text>
+                  <text x="475" y="102" fill="#A1A1AA" fontSize="8" fontFamily="var(--font-mono)" fontWeight="600">
+                    {Math.round((1 - fastModelRouting) * 100)}%
+                  </text>
+
+                  {/* Node 1: API Ingress */}
+                  <g transform="translate(20, 52)">
+                    <rect width="100" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
+                    <text x="10" y="16" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">GATEWAY</text>
+                    <text x="10" y="28" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">API Ingress</text>
+                  </g>
+
+                  {/* Node 2: Semantic Cache */}
+                  <g transform="translate(190, 52)">
+                    <rect width="100" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
+                    <text x="10" y="16" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">CACHE</text>
+                    <text x="10" y="28" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Semantic Cache</text>
+                  </g>
+
+                  {/* Node 3: Complexity Router */}
+                  <g transform="translate(350, 52)">
+                    <rect width="100" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
+                    <text x="10" y="16" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">ROUTER</text>
+                    <text x="10" y="28" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Dynamic Router</text>
+                  </g>
+
+                  {/* Node 4: Fast Model */}
+                  <g transform="translate(510, 17)">
+                    <rect width="115" height="36" rx="2" fill="#18181B" stroke="#3F3F46" strokeWidth="1" />
+                    <text x="10" y="15" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">FAST TIER</text>
+                    <text x="10" y="27" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Fast Model (140ms)</text>
+                  </g>
+
+                  {/* Node 5: Frontier Model (Bottleneck highlighted) */}
+                  <g transform="translate(510, 87)">
+                    <rect width="115" height="36" rx="2" fill="#18181B" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <rect x="75" y="4" width="36" height="11" rx="1" fill="#FFFFFF" />
+                    <text x="93" y="12" textAnchor="middle" fill="#09090B" fontSize="6.5" fontFamily="var(--font-mono)" fontWeight="800">BOTTLENECK</text>
+                    <text x="10" y="15" fill="#71717A" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">FRONTIER</text>
+                    <text x="10" y="27" fill="#F4F4F5" fontSize="9" fontFamily="var(--font-mono)" fontWeight="600">Frontier Model</text>
+                  </g>
+                </svg>
+              </div>
+
+              {/* Live Sliders Instrument */}
+              <div className="instrument-controls-strip">
+                <div className="instrument-control-block">
+                  <div className="control-label-row">
+                    <span className="control-title text-mono">TRAFFIC VOLUME</span>
+                    <span className="control-value text-mono">{formatNumber(monthlyRequests)} req/mo</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={200_000}
+                    max={15_000_000}
+                    step={100_000}
+                    value={monthlyRequests}
+                    onChange={e => setMonthlyRequests(Number(e.target.value))}
+                    className="tech-slider"
+                  />
                 </div>
-                <div className="hero__traffic-labels">
-                  <span>100K</span>
-                  <span>1M</span>
-                  <span>10M</span>
-                  <span>20M</span>
+
+                <div className="instrument-control-block">
+                  <div className="control-label-row">
+                    <span className="control-title text-mono">CACHE HIT RATE</span>
+                    <span className="control-value text-mono">{Math.round(cacheHitRate * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={0.85}
+                    step={0.05}
+                    value={cacheHitRate}
+                    onChange={e => setCacheHitRate(Number(e.target.value))}
+                    className="tech-slider"
+                  />
+                </div>
+
+                <div className="instrument-control-block">
+                  <div className="control-label-row">
+                    <span className="control-title text-mono">FAST MODEL ROUTING</span>
+                    <span className="control-value text-mono">{Math.round(fastModelRouting * 100)}% Fast</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.1}
+                    max={0.9}
+                    step={0.05}
+                    value={fastModelRouting}
+                    onChange={e => setFastModelRouting(Number(e.target.value))}
+                    className="tech-slider"
+                  />
                 </div>
               </div>
 
-              {/* Metrics */}
-              <div className="hero__metrics">
-                <div className="hero__metric" data-type="cost">
-                  <span className="text-label">MONTHLY COST</span>
-                  <AnimatedMetric value={result.monthlyCost} prefix="$" className="hero__metric-value" />
+              {/* Instrument Digital Readouts Table */}
+              <div className="instrument-readouts-table">
+                <div className="readout-row readout-row--primary">
+                  <span className="readout-label text-mono">ESTIMATED MONTHLY SPEND</span>
+                  <span className="readout-num text-mono">{formatCurrency(sim.monthlyCost)}</span>
                 </div>
-                <div className="hero__metric" data-type="latency">
-                  <span className="text-label">P95 LATENCY</span>
-                  <AnimatedMetric value={result.p95Latency} suffix="ms" className="hero__metric-value" />
-                </div>
-                <div className="hero__metric" data-type="capacity">
-                  <span className="text-label">CAPACITY</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                    <AnimatedMetric value={result.capacityUtilization} suffix="%" className="hero__metric-value" />
-                    {result.capacityUtilization > 100 && (
-                      <span className="warning-badge critical">⚠</span>
-                    )}
-                    {result.capacityUtilization > 80 && result.capacityUtilization <= 100 && (
-                      <span className="warning-badge warn">!</span>
-                    )}
+                <div className="readout-grid-3">
+                  <div className="readout-col">
+                    <span className="readout-col-label text-mono">COST / 1K REQ</span>
+                    <span className="readout-col-val text-mono">${(sim.costPerRequest * 1000).toFixed(3)}</span>
+                  </div>
+                  <div className="readout-col">
+                    <span className="readout-col-label text-mono">ESTIMATED P95</span>
+                    <span className="readout-col-val text-mono">{formatLatency(sim.p95Latency)}</span>
+                  </div>
+                  <div className="readout-col">
+                    <span className="readout-col-label text-mono">CACHE SAVINGS</span>
+                    <span className="readout-col-val text-mono">{formatCurrency(estimatedSavings)}/mo</span>
                   </div>
                 </div>
-                <div className="hero__metric" data-type="quality">
-                  <span className="text-label">QUALITY</span>
-                  <AnimatedMetric value={result.qualityEstimate} suffix="%" className="hero__metric-value" />
+                <div className="readout-footnote text-mono">
+                  <span>DOMINANT BOTTLENECK: {sim.bottleneck.componentName.toUpperCase()} ({sim.bottleneck.impactPercentage}% {sim.bottleneck.metricType.toUpperCase()})</span>
                 </div>
               </div>
-
-              {/* Capacity warning */}
-              <AnimatePresence>
-                {showCapacityWarning && (
-                  <motion.div
-                    className="hero__warning"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="hero__warning-inner">
-                      <p className="text-label" style={{ color: 'var(--color-critical)', marginBottom: 'var(--space-2)' }}>
-                        CAPACITY LIMIT REACHED
-                      </p>
-                      <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>
-                        Your current architecture is projected to exceed recommended capacity at {formatTraffic(traffic)} requests/month.
-                      </p>
-                      <button className="btn btn-primary" onClick={handleOptimize} style={{ fontSize: '0.8125rem' }}>
-                        Optimize architecture
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Optimization result */}
-              <AnimatePresence>
-                {isOptimized && optimizedResult === null && (
-                  <motion.div
-                    className="hero__optimized"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    <p className="text-label" style={{ color: 'var(--color-success)', marginBottom: 'var(--space-3)' }}>
-                      ARCHITECTURE OPTIMIZED
-                    </p>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-3)' }}>
-                      Added routing, caching, and multi-model inference to handle load efficiently.
-                    </p>
-                    <a href="/simulator" className="btn btn-secondary" style={{ fontSize: '0.8125rem' }}>
-                      Open in simulator →
-                    </a>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
-
-          {/* Assumptions link */}
-          <div className="hero__assumptions">
-            <details>
-              <summary className="text-caption" style={{ cursor: 'pointer', color: 'var(--color-text-muted)' }}>
-                View assumptions
-              </summary>
-              <div className="hero__assumptions-list">
-                {result.assumptions.map((a, i) => (
-                  <div key={i} className="hero__assumption">
-                    <span style={{ color: 'var(--color-text-muted)' }}>{a.category}</span>
-                    <span>{a.detail}</span>
-                  </div>
-                ))}
-              </div>
-            </details>
-          </div>
-        </motion.div>
+        </div>
       </div>
 
       <style jsx>{`
-        .hero {
-          min-height: 100vh;
+        .tech-hero {
+          min-height: calc(100vh - 52px);
+          padding-top: 84px;
+          padding-bottom: 64px;
+          background: #09090B;
+          border-bottom: 1px solid var(--color-border);
           display: flex;
           align-items: center;
-          padding: 120px 0 var(--space-16);
-          position: relative;
-          overflow: hidden;
         }
-        .hero::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 600px;
-          height: 600px;
-          background: radial-gradient(ellipse, var(--color-accent-dim) 0%, transparent 70%);
-          pointer-events: none;
-          opacity: 0.5;
-        }
-        .hero__container {
-          position: relative;
-          z-index: 1;
-        }
-        .hero__intro {
-          text-align: center;
-          max-width: 800px;
-          margin: 0 auto var(--space-12);
-        }
-        .hero__subtitle {
-          font-size: clamp(1rem, 1.5vw, 1.25rem);
-          color: var(--color-text-secondary);
-          margin-top: var(--space-4);
-          max-width: 520px;
-          margin-left: auto;
-          margin-right: auto;
-        }
-        .hero__demo {
-          max-width: 960px;
-          margin: 0 auto;
-        }
-        .hero__demo-inner {
+        .tech-hero__grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1px;
-          background: var(--color-border);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
+          grid-template-columns: 1fr 1.08fr;
+          gap: 48px;
+          align-items: center;
         }
-        .hero__graph {
-          background: var(--color-bg-elevated);
-          padding: var(--space-6);
+        .tech-hero__left {
           display: flex;
           flex-direction: column;
+          gap: 20px;
         }
-        .hero__graph-header {
+        .tech-hero__meta-strip {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .coordinate-tag {
+          font-size: 0.6875rem;
+          color: #A1A1AA;
+          letter-spacing: 0.08em;
+        }
+        .dot-divider {
+          width: 3px;
+          height: 3px;
+          background: #3F3F46;
+          border-radius: 50%;
+        }
+        .meta-label {
+          font-size: 0.6875rem;
+          color: #71717A;
+          letter-spacing: 0.1em;
+        }
+        .tech-hero__title {
+          margin-top: 4px;
+        }
+        .tech-hero__lead {
+          font-family: var(--font-sans);
+          font-size: 1.0625rem;
+          color: var(--color-text-secondary);
+          line-height: 1.6;
+          max-width: 540px;
+        }
+        .tech-hero__cta-group {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-top: 8px;
+        }
+        .tech-hero__specs-footer {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          padding-top: 24px;
+          margin-top: 8px;
+          border-top: 1px solid var(--color-border);
+        }
+        .spec-item {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .spec-label {
+          font-size: 0.625rem;
+          color: #71717A;
+          letter-spacing: 0.1em;
+        }
+        .spec-val {
+          font-size: 0.75rem;
+          color: #D4D4D8;
+          font-weight: 500;
+        }
+
+        /* ── Right Column: Instrument Shell ── */
+        .instrument-shell {
+          background: #111114;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          overflow: hidden;
+        }
+        .instrument-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: var(--space-4);
+          padding: 10px 16px;
+          background: #18181B;
+          border-bottom: 1px solid var(--color-border);
         }
-        .hero__panel {
-          background: var(--color-bg-elevated);
-          padding: var(--space-6);
+        .instrument-title-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .instrument-live-tag {
+          font-size: 0.6875rem;
+          color: #FFFFFF;
+          letter-spacing: 0.08em;
+          font-weight: 700;
+        }
+        .instrument-model-tag {
+          font-size: 0.625rem;
+          color: #71717A;
+          letter-spacing: 0.08em;
+        }
+        .instrument-svg-wrap {
+          background: #09090B;
+          padding: 12px;
+          border-bottom: 1px solid var(--color-border);
+        }
+        .instrument-svg {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .instrument-controls-strip {
+          padding: 16px;
           display: flex;
           flex-direction: column;
-          gap: var(--space-6);
+          gap: 12px;
+          background: #111114;
+          border-bottom: 1px solid var(--color-border);
         }
-        .hero__traffic {
+        .instrument-control-block {
           display: flex;
           flex-direction: column;
-          gap: var(--space-3);
+          gap: 6px;
         }
-        .hero__traffic-header {
+        .control-label-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .control-title {
+          font-size: 0.6875rem;
+          color: #A1A1AA;
+          letter-spacing: 0.08em;
+        }
+        .control-value {
+          font-size: 0.75rem;
+          color: #FFFFFF;
+          font-weight: 600;
+        }
+        .tech-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100%;
+          height: 3px;
+          background: #27272A;
+          outline: none;
+          border-radius: 1px;
+        }
+        .tech-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 12px;
+          height: 12px;
+          background: #FFFFFF;
+          cursor: pointer;
+          border-radius: 1px;
+          border: 1px solid #09090B;
+        }
+        .tech-slider::-moz-range-thumb {
+          width: 12px;
+          height: 12px;
+          background: #FFFFFF;
+          cursor: pointer;
+          border-radius: 1px;
+          border: 1px solid #09090B;
+        }
+        .instrument-readouts-table {
+          padding: 16px;
+          background: #09090B;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .readout-row--primary {
           display: flex;
           justify-content: space-between;
           align-items: baseline;
+          padding-bottom: 10px;
+          border-bottom: 1px solid var(--color-border-subtle);
         }
-        .hero__traffic-labels {
+        .readout-label {
+          font-size: 0.6875rem;
+          letter-spacing: 0.1em;
+          color: #A1A1AA;
+        }
+        .readout-num {
+          font-size: 1.75rem;
+          font-weight: 700;
+          color: #FFFFFF;
+          letter-spacing: -0.03em;
+        }
+        .readout-grid-3 {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+        }
+        .readout-col {
           display: flex;
-          justify-content: space-between;
-          font-family: var(--font-mono);
+          flex-direction: column;
+          gap: 4px;
+        }
+        .readout-col-label {
           font-size: 0.625rem;
-          color: var(--color-text-muted);
-          margin-top: var(--space-1);
+          letter-spacing: 0.08em;
+          color: #71717A;
         }
-        .hero__metrics {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--space-4);
+        .readout-col-val {
+          font-size: 0.9375rem;
+          font-weight: 600;
+          color: #D4D4D8;
         }
-        .hero__metric {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-1);
-        }
-        .hero__metric[data-type="cost"] .hero__metric-value { color: var(--color-cost); }
-        .hero__metric[data-type="latency"] .hero__metric-value { color: var(--color-performance); }
-        .hero__metric[data-type="capacity"] .hero__metric-value { color: var(--color-capacity); }
-        .hero__metric[data-type="quality"] .hero__metric-value { color: var(--color-quality); }
-        .hero__warning {
-          overflow: hidden;
-        }
-        .hero__warning-inner {
-          padding: var(--space-4);
-          background: var(--color-critical-dim);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          border-radius: var(--radius-md);
-        }
-        .hero__optimized {
-          padding: var(--space-4);
-          background: var(--color-success-dim);
-          border: 1px solid rgba(34, 197, 94, 0.2);
-          border-radius: var(--radius-md);
-        }
-        .hero__assumptions {
-          margin-top: var(--space-4);
-          text-align: center;
-        }
-        .hero__assumptions-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-          gap: var(--space-2);
-          margin-top: var(--space-3);
-          padding: var(--space-4);
-          background: var(--color-bg-elevated);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          text-align: left;
-        }
-        .hero__assumption {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          font-size: 0.75rem;
-          font-family: var(--font-mono);
+        .readout-footnote {
+          padding-top: 8px;
+          border-top: 1px solid var(--color-border-subtle);
+          font-size: 0.625rem;
+          color: #A1A1AA;
+          letter-spacing: 0.06em;
         }
 
-        @media (max-width: 768px) {
-          .hero {
-            padding: 100px 0 var(--space-12);
-          }
-          .hero__demo-inner {
+        @media (max-width: 960px) {
+          .tech-hero__grid {
             grid-template-columns: 1fr;
+            gap: 40px;
           }
-          .hero__metrics {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-      `}</style>
-
-      <style jsx global>{`
-        .arch-svg {
-          width: 100%;
-          max-height: 360px;
-          flex: 1;
         }
       `}</style>
     </section>

@@ -41,7 +41,7 @@ const CORE_COMPONENTS: {
     icon: '◇',
     badge: 'INGRESS',
     desc: 'API gateway entrypoint & rate limiting',
-    color: '#38bdf8',
+    color: '#F4F4F5',
   },
   {
     type: 'cache',
@@ -49,7 +49,7 @@ const CORE_COMPONENTS: {
     icon: '▤',
     badge: 'CACHE',
     desc: 'Prompt & embedding cache tier',
-    color: '#34d399',
+    color: '#D4D4D8',
   },
   {
     type: 'router',
@@ -57,7 +57,7 @@ const CORE_COMPONENTS: {
     icon: '⬡',
     badge: 'ROUTER',
     desc: 'Dynamic traffic steering between models',
-    color: '#a78bfa',
+    color: '#A1A1AA',
   },
   {
     type: 'vectordb',
@@ -65,7 +65,7 @@ const CORE_COMPONENTS: {
     icon: '▣',
     badge: 'RETRIEVAL',
     desc: 'High-dim nearest-neighbor search for RAG',
-    color: '#fbbf24',
+    color: '#D4D4D8',
   },
   {
     type: 'fast-model',
@@ -73,7 +73,7 @@ const CORE_COMPONENTS: {
     icon: '⚡',
     badge: 'FAST LLM',
     desc: 'Sub-150ms reasoning tier (GPT-4o Mini / Flash)',
-    color: '#06b6d4',
+    color: '#E4E4E7',
   },
   {
     type: 'frontier-model',
@@ -81,7 +81,7 @@ const CORE_COMPONENTS: {
     icon: '◈',
     badge: 'FRONTIER',
     desc: 'High-intelligence reasoning (GPT-4o / Sonnet)',
-    color: '#ec4899',
+    color: '#FFFFFF',
   },
 ];
 
@@ -445,7 +445,7 @@ function SimulatorContent() {
                       <div className="palette-item-name">{comp.label}</div>
                       <div className="palette-item-desc">{comp.desc}</div>
                     </div>
-                    <span className="palette-item-badge text-mono" style={{ borderColor: comp.color, color: comp.color }}>
+                    <span className="palette-item-badge text-mono" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-base)' }}>
                       {comp.badge}
                     </span>
                   </div>
@@ -853,7 +853,7 @@ function SimulatorContent() {
                       className="breakdown-bar-segment"
                       style={{
                         width: `${(result.costBreakdown.models / result.monthlyCost) * 100}%`,
-                        backgroundColor: '#ec4899',
+                        backgroundColor: '#FFFFFF',
                       }}
                       title={`Models: ${formatCurrency(result.costBreakdown.models)}`}
                     />
@@ -861,7 +861,7 @@ function SimulatorContent() {
                       className="breakdown-bar-segment"
                       style={{
                         width: `${(result.costBreakdown.vectorDb / result.monthlyCost) * 100}%`,
-                        backgroundColor: '#fbbf24',
+                        backgroundColor: '#A1A1AA',
                       }}
                       title={`Vector DB: ${formatCurrency(result.costBreakdown.vectorDb)}`}
                     />
@@ -869,7 +869,7 @@ function SimulatorContent() {
                       className="breakdown-bar-segment"
                       style={{
                         width: `${(result.costBreakdown.cache / result.monthlyCost) * 100}%`,
-                        backgroundColor: '#34d399',
+                        backgroundColor: '#71717A',
                       }}
                       title={`Cache: ${formatCurrency(result.costBreakdown.cache)}`}
                     />
@@ -877,7 +877,7 @@ function SimulatorContent() {
                       className="breakdown-bar-segment"
                       style={{
                         width: `${(result.costBreakdown.ingress / result.monthlyCost) * 100}%`,
-                        backgroundColor: '#38bdf8',
+                        backgroundColor: '#3F3F46',
                       }}
                       title={`Ingress: ${formatCurrency(result.costBreakdown.ingress)}`}
                     />
@@ -888,25 +888,25 @@ function SimulatorContent() {
               {/* Breakdown List */}
               <div className="breakdown-legend-list">
                 <div className="breakdown-legend-item">
-                  <span className="legend-indicator" style={{ backgroundColor: '#ec4899' }} />
+                  <span className="legend-indicator" style={{ backgroundColor: '#FFFFFF' }} />
                   <span className="legend-name">Model Inference</span>
                   <span className="legend-amount text-mono">{formatCurrency(result.costBreakdown.models)}</span>
                 </div>
 
                 <div className="breakdown-legend-item">
-                  <span className="legend-indicator" style={{ backgroundColor: '#fbbf24' }} />
+                  <span className="legend-indicator" style={{ backgroundColor: '#A1A1AA' }} />
                   <span className="legend-name">Vector Retrieval</span>
                   <span className="legend-amount text-mono">{formatCurrency(result.costBreakdown.vectorDb)}</span>
                 </div>
 
                 <div className="breakdown-legend-item">
-                  <span className="legend-indicator" style={{ backgroundColor: '#34d399' }} />
+                  <span className="legend-indicator" style={{ backgroundColor: '#71717A' }} />
                   <span className="legend-name">Semantic Cache</span>
                   <span className="legend-amount text-mono">{formatCurrency(result.costBreakdown.cache)}</span>
                 </div>
 
                 <div className="breakdown-legend-item">
-                  <span className="legend-indicator" style={{ backgroundColor: '#38bdf8' }} />
+                  <span className="legend-indicator" style={{ backgroundColor: '#3F3F46' }} />
                   <span className="legend-name">API Gateway Ingress</span>
                   <span className="legend-amount text-mono">{formatCurrency(result.costBreakdown.ingress)}</span>
                 </div>
@@ -1134,9 +1134,9 @@ function SimulatorContent() {
           display: flex;
           align-items: center;
           gap: var(--space-2);
-          background: rgba(245, 158, 11, 0.12);
-          border-bottom: 1px solid #f59e0b;
-          color: #fbbf24;
+          background: #18181B;
+          border-bottom: 2px solid #FFFFFF;
+          color: #FFFFFF;
           padding: var(--space-2) var(--space-6);
           font-size: 0.8125rem;
           font-family: var(--font-mono);
@@ -1478,10 +1478,11 @@ function SimulatorContent() {
         .inspector-type-pill {
           font-size: 0.625rem;
           font-weight: 700;
-          color: var(--color-accent);
-          background: rgba(99, 102, 241, 0.15);
+          color: #F4F4F5;
+          background: #27272A;
+          border: 1px solid #3F3F46;
           padding: 2px 6px;
-          border-radius: 3px;
+          border-radius: var(--radius-sm);
         }
 
         .inspector-title {
@@ -1572,8 +1573,8 @@ function SimulatorContent() {
 
         /* Bottleneck */
         .bottleneck-display-card {
-          background: rgba(245, 158, 11, 0.08);
-          border: 1px solid rgba(245, 158, 11, 0.3);
+          background: #141417;
+          border: 1px solid #FFFFFF;
           border-radius: var(--radius-sm);
           padding: 8px 10px;
           display: flex;
@@ -1590,16 +1591,16 @@ function SimulatorContent() {
         .bottleneck-component-name {
           font-weight: 700;
           font-size: 0.875rem;
-          color: #fbbf24;
+          color: #FFFFFF;
         }
 
         .bottleneck-impact-badge {
           font-size: 0.6875rem;
-          background: #f59e0b;
-          color: #000;
+          background: #FFFFFF;
+          color: #09090B;
           font-weight: 800;
           padding: 1px 6px;
-          border-radius: 3px;
+          border-radius: 2px;
         }
 
         .bottleneck-explanation-text {
@@ -1837,7 +1838,7 @@ function SimulatorFallbackShell() {
     <div style={{ minHeight: '100vh', background: '#09090b', color: '#f4f4f5', display: 'flex', flexDirection: 'column' }}>
       <header style={{ height: '60px', borderBottom: '1px solid #27272a', background: '#121215', display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', background: 'rgba(99,102,241,0.15)', color: '#6366f1', padding: '2px 6px', borderRadius: '4px' }}>SIMULATOR V1</span>
+          <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', background: '#27272a', color: '#f4f4f5', padding: '2px 6px', borderRadius: '2px' }}>SIMULATOR V1</span>
           <span style={{ fontWeight: 700, fontSize: '1rem' }}>AI Architecture &amp; Economics</span>
         </div>
       </header>

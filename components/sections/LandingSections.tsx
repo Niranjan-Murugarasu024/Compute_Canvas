@@ -260,12 +260,10 @@ export function CostDecompositionSection() {
   const monthlySavings = Math.max(0, noCacheResult.monthlyCost - result.monthlyCost);
 
   const breakdown: { label: string; key: keyof CostBreakdown; color: string }[] = [
-    { label: 'Model Inference', key: 'model', color: 'var(--color-accent)' },
-    { label: 'Vector Database', key: 'vectorDb', color: 'var(--color-performance)' },
-    { label: 'Compute & Workers', key: 'compute', color: 'var(--color-capacity)' },
-    { label: 'Semantic Cache', key: 'cache', color: 'var(--color-quality)' },
-    { label: 'Network & Egress', key: 'network', color: 'var(--color-cost)' },
-    { label: 'Observability', key: 'observability', color: 'var(--color-text-muted)' },
+    { label: 'Model Inference', key: 'model', color: '#FFFFFF' },
+    { label: 'Vector Database', key: 'vectorDb', color: '#D4D4D8' },
+    { label: 'Semantic Cache', key: 'cache', color: '#A1A1AA' },
+    { label: 'API Ingress Gateway', key: 'network', color: '#71717A' },
   ];
 
   const maxVal = Math.max(...breakdown.map(b => (result.costBreakdown[b.key] as number) || 1));
@@ -672,38 +670,36 @@ const SCALE_TIERS: ScaleTier[] = [
     bottleneck: 'Cross-provider rate limits require failover queues and retry buffers.',
   },
   {
-    trafficLabel: '100M',
-    trafficVal: 100_000_000,
-    label: 'Global Mesh',
-    description: 'Anycast edge points, multi-region cache replicas, decoupled worker clusters, and sharded vector nodes.',
-    templateId: 'ai-agent',
+    trafficLabel: '50M',
+    trafficVal: 50_000_000,
+    label: 'High-Volume Router',
+    description: 'Tiered semantic cache and dynamic complexity routing directing 85% of queries to fast model inference.',
+    templateId: 'router-cache',
     architecture: {
       nodes: [
-        { id: 'edge', type: 'loadbalancer', label: 'Anycast Edge', x: 60, y: 90 },
-        { id: 'api', type: 'api', label: 'Gateway Mesh', x: 190, y: 90 },
-        { id: 'cache', type: 'cache', label: 'Global Cache', x: 320, y: 90 },
-        { id: 'router', type: 'router', label: 'Routing Mesh', x: 450, y: 90 },
-        { id: 'model', type: 'model', label: 'Multi-Region Fleet', modelId: 'gpt-4o-mini', x: 580, y: 90 },
-        { id: 'compute', type: 'compute', label: 'Worker Queue', x: 710, y: 90 },
+        { id: 'api', type: 'api', label: 'API Ingress', x: 80, y: 80 },
+        { id: 'cache', type: 'cache', label: 'Semantic Cache', x: 220, y: 80 },
+        { id: 'router', type: 'router', label: 'Complexity Router', x: 380, y: 80 },
+        { id: 'm-fast', type: 'fast-model', label: 'Fast Model (85%)', modelId: 'gemini-2.0-flash', x: 540, y: 45 },
+        { id: 'm-deep', type: 'frontier-model', label: 'Frontier (15%)', modelId: 'gpt-4o', x: 540, y: 115 },
       ],
       edges: [
-        { source: 'edge', target: 'api' },
         { source: 'api', target: 'cache' },
         { source: 'cache', target: 'router' },
-        { source: 'router', target: 'model' },
-        { source: 'model', target: 'compute' },
+        { source: 'router', target: 'm-fast', trafficShare: 0.85 },
+        { source: 'router', target: 'm-deep', trafficShare: 0.15 },
       ],
     },
     workload: {
-      requestsPerMonth: 100_000_000,
+      requestsPerMonth: 50_000_000,
       avgInputTokens: 1000,
       avgOutputTokens: 300,
-      concurrency: 800,
-      cacheHitRate: 0.60,
-      retrievalsPerRequest: 1,
-      toolCallsPerRequest: 2,
+      concurrency: 400,
+      cacheHitRate: 0.65,
+      retrievalsPerRequest: 0,
+      toolCallsPerRequest: 0,
     },
-    bottleneck: 'Egress bandwidth saturation and cross-region consensus latency.',
+    bottleneck: 'Frontier reasoning tier capacity during burst complexity traffic.',
   },
 ];
 
@@ -1062,14 +1058,12 @@ const OBJECTIVES: ObjectiveItem[] = [
     tradeoffNote: 'Prioritizes reasoning precision; higher token cost and longer inference generation times.',
     architecture: {
       nodes: [
-        { id: 'api', type: 'api', label: 'API Gateway' },
-        { id: 'embedding', type: 'embedding', label: 'Dense Embeddings' },
-        { id: 'vectordb', type: 'vectordb', label: 'Vector DB' },
-        { id: 'model', type: 'model', label: 'Claude 3.5 Sonnet', modelId: 'claude-3.5-sonnet' },
+        { id: 'api', type: 'api', label: 'API Ingress' },
+        { id: 'vectordb', type: 'vectordb', label: 'Vector Database' },
+        { id: 'model', type: 'frontier-model', label: 'Claude 3.5 Sonnet', modelId: 'claude-3.5-sonnet' },
       ],
       edges: [
-        { source: 'api', target: 'embedding' },
-        { source: 'embedding', target: 'vectordb' },
+        { source: 'api', target: 'vectordb' },
         { source: 'vectordb', target: 'model' },
       ],
     },
@@ -1078,21 +1072,23 @@ const OBJECTIVES: ObjectiveItem[] = [
     id: 'scale',
     label: 'HIGH THROUGHPUT',
     icon: '⬡',
-    description: 'Dynamic load balancing across OpenAI GPT-4o-mini clusters with failover queueing.',
+    description: 'Tiered cache and complexity routing steering 85% of traffic to fast model inference.',
     model: 'gpt-4o-mini',
     cache: 0.50,
     tradeoffNote: 'Optimized for high concurrency and steady availability under sustained burst traffic.',
     architecture: {
       nodes: [
-        { id: 'lb', type: 'loadbalancer', label: 'Load Balancer' },
-        { id: 'api', type: 'api', label: 'API Gateway' },
-        { id: 'cache', type: 'cache', label: 'Cache Cluster' },
-        { id: 'model', type: 'model', label: 'GPT-4o-mini Pool', modelId: 'gpt-4o-mini' },
+        { id: 'api', type: 'api', label: 'API Ingress' },
+        { id: 'cache', type: 'cache', label: 'Semantic Cache' },
+        { id: 'router', type: 'router', label: 'Complexity Router' },
+        { id: 'm-fast', type: 'fast-model', label: 'Fast Model (85%)', modelId: 'gpt-4o-mini' },
+        { id: 'm-deep', type: 'frontier-model', label: 'Frontier (15%)', modelId: 'gpt-4o' },
       ],
       edges: [
-        { source: 'lb', target: 'api' },
         { source: 'api', target: 'cache' },
-        { source: 'cache', target: 'model' },
+        { source: 'cache', target: 'router' },
+        { source: 'router', target: 'm-fast', trafficShare: 0.85 },
+        { source: 'router', target: 'm-deep', trafficShare: 0.15 },
       ],
     },
   },
@@ -1106,15 +1102,17 @@ const OBJECTIVES: ObjectiveItem[] = [
     tradeoffNote: 'Evenly distributes spend and latency; solid baseline for general application workloads.',
     architecture: {
       nodes: [
-        { id: 'api', type: 'api', label: 'API Gateway' },
+        { id: 'api', type: 'api', label: 'API Ingress' },
         { id: 'cache', type: 'cache', label: 'Semantic Cache' },
-        { id: 'model', type: 'model', label: 'GPT-4o', modelId: 'gpt-4o' },
-        { id: 'vectordb', type: 'vectordb', label: 'Vector DB' },
+        { id: 'router', type: 'router', label: 'Complexity Router' },
+        { id: 'm-fast', type: 'fast-model', label: 'Fast Model (70%)', modelId: 'gpt-4o-mini' },
+        { id: 'm-deep', type: 'frontier-model', label: 'Frontier (30%)', modelId: 'gpt-4o' },
       ],
       edges: [
         { source: 'api', target: 'cache' },
-        { source: 'cache', target: 'model' },
-        { source: 'model', target: 'vectordb' },
+        { source: 'cache', target: 'router' },
+        { source: 'router', target: 'm-fast', trafficShare: 0.70 },
+        { source: 'router', target: 'm-deep', trafficShare: 0.30 },
       ],
     },
   },
@@ -1384,10 +1382,10 @@ export function StoryFlowSection() {
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/simulator" className="btn btn-primary" style={{ padding: '14px 28px' }}>
-              Build a system
+              Build a system &rarr;
             </Link>
-            <Link href="/explore" className="btn btn-secondary" style={{ padding: '14px 28px' }}>
-              Explore templates
+            <Link href="/templates" className="btn btn-secondary" style={{ padding: '14px 28px' }}>
+              Explore templates &rarr;
             </Link>
           </div>
         </motion.div>
@@ -1419,7 +1417,7 @@ export function TemplatesPreviewSection() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: 'var(--space-8)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
           <div style={{ maxWidth: 480 }}>
             <p className="text-label" style={{ marginBottom: 'var(--space-3)', color: 'var(--color-accent)' }}>
-              TEMPLATES
+              CANONICAL BLUEPRINTS
             </p>
             <h2 className="text-headline">Start from proven architectures.</h2>
           </div>
@@ -1429,12 +1427,12 @@ export function TemplatesPreviewSection() {
         </div>
 
         <div className="templates-grid">
-          {TEMPLATES.slice(0, 4).map(template => {
+          {TEMPLATES.slice(0, 3).map(template => {
             const result = simulate(template.defaultWorkload, template.architecture);
             return (
               <Link href={`/simulator?template=${template.id}`} key={template.id} className="template-card">
                 <div className="template-card__header">
-                  <span className="text-label" style={{ color: 'var(--color-accent)' }}>{template.category.toUpperCase()}</span>
+                  <span className="text-label" style={{ color: 'var(--color-text-muted)' }}>{template.category.toUpperCase()}</span>
                 </div>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
                   {template.name}
@@ -1444,20 +1442,20 @@ export function TemplatesPreviewSection() {
                 </p>
                 <div className="template-card__metrics">
                   <div>
-                    <span className="text-label">COST</span>
-                    <span className="text-mono" style={{ color: 'var(--color-cost)', fontSize: '0.8125rem' }}>
+                    <span className="text-label">EST. SPEND</span>
+                    <span className="text-mono" style={{ color: 'var(--color-text)', fontSize: '0.8125rem', fontWeight: 600 }}>
                       {formatCurrency(result.monthlyCost, true)}/mo
                     </span>
                   </div>
                   <div>
-                    <span className="text-label">LATENCY</span>
-                    <span className="text-mono" style={{ color: 'var(--color-performance)', fontSize: '0.8125rem' }}>
+                    <span className="text-label">P95 LATENCY</span>
+                    <span className="text-mono" style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>
                       {formatLatency(result.p95Latency)}
                     </span>
                   </div>
                   <div>
                     <span className="text-label">NODES</span>
-                    <span className="text-mono" style={{ fontSize: '0.8125rem' }}>
+                    <span className="text-mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
                       {template.architecture.nodes.length}
                     </span>
                   </div>
@@ -1471,14 +1469,14 @@ export function TemplatesPreviewSection() {
       <style jsx>{`
         .templates-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 1px;
           background: var(--color-border);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-md);
           overflow: hidden;
         }
-        @media (max-width: 640px) {
+        @media (max-width: 820px) {
           .templates-grid {
             grid-template-columns: 1fr;
           }
@@ -1502,7 +1500,7 @@ export function TemplatesPreviewSection() {
         }
         .template-card__metrics {
           display: flex;
-          gap: var(--space-4);
+          gap: var(--space-6);
           margin-top: auto;
           padding-top: var(--space-4);
           border-top: 1px solid var(--color-border-subtle);
@@ -1528,44 +1526,38 @@ export function Footer() {
         <div className="footer__inner">
           <div className="footer__brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="2" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.9" />
-                <rect x="11" y="2" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.5" />
-                <rect x="2" y="11" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.5" />
-                <rect x="11" y="11" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.3" />
-              </svg>
-              <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>ComputeCanvas</span>
+              <span style={{ fontSize: '10px', color: '#FFFFFF' }}>■</span>
+              <span style={{ fontWeight: 700, fontSize: '0.875rem', letterSpacing: '0.08em', fontFamily: 'var(--font-display)' }}>COMPUTECANVAS</span>
             </div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', maxWidth: 280 }}>
-              Interactive AI architecture and economics simulator.
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', maxWidth: 280, lineHeight: 1.5 }}>
+              Deterministic interactive AI architecture and economics simulator.
             </p>
           </div>
 
           <div className="footer__links">
             <div>
               <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>PRODUCT</p>
-              <Link href="/explore">Explore</Link>
-              <Link href="/simulator">Simulator</Link>
-              <Link href="/templates">Templates</Link>
-              <Link href="/pricing">Pricing</Link>
+              <Link href="/simulator">Simulator Workbench</Link>
+              <Link href="/templates">Canonical Templates</Link>
+              <Link href="/assumptions">Pricing Assumptions</Link>
+              <Link href="/pricing">Free Community V1</Link>
             </div>
             <div>
-              <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>COMPANY</p>
-              <Link href="/company">About</Link>
+              <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>SYSTEM</p>
               <Link href="/docs">Documentation</Link>
-              <Link href="/changelog">Changelog</Link>
-              <Link href="/contact">Contact</Link>
+              <Link href="/company">Principles &amp; Design</Link>
+              <Link href="/assumptions">Latency Benchmarks</Link>
             </div>
             <div>
               <p className="text-label" style={{ marginBottom: 'var(--space-3)' }}>LEGAL</p>
-              <Link href="/privacy">Privacy</Link>
-              <Link href="/terms">Terms</Link>
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/terms">Terms &amp; Disclaimers</Link>
             </div>
           </div>
         </div>
 
         <div className="footer__bottom">
-          <span>© {new Date().getFullYear()} ComputeCanvas</span>
+          <span className="text-mono" style={{ fontSize: '0.6875rem' }}>© {new Date().getFullYear()} COMPUTECANVAS // DETERMINISTIC SIMULATION</span>
         </div>
       </div>
 

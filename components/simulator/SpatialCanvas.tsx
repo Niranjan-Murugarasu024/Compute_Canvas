@@ -280,24 +280,24 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
     return map;
   }, [architecture.nodes]);
 
-  // Color mapping by component type
+  // Monochrome styling by component type
   const getTypeStyling = (type: ArchNode['type']) => {
     switch (type) {
       case 'api':
-        return { color: '#38bdf8', icon: '◇', label: 'API INGRESS' };
+        return { color: '#E4E4E7', tag: 'INGRESS', icon: '◇', label: 'API INGRESS' };
       case 'cache':
-        return { color: '#34d399', icon: '▤', label: 'SEMANTIC CACHE' };
+        return { color: '#D4D4D8', tag: 'CACHE', icon: '▤', label: 'SEMANTIC CACHE' };
       case 'router':
-        return { color: '#a78bfa', icon: '⬡', label: 'COMPLEXITY ROUTER' };
+        return { color: '#D4D4D8', tag: 'ROUTER', icon: '⬡', label: 'COMPLEXITY ROUTER' };
       case 'vectordb':
-        return { color: '#fbbf24', icon: '▣', label: 'VECTOR DATABASE' };
+        return { color: '#D4D4D8', tag: 'RETRIEVAL', icon: '▣', label: 'VECTOR DATABASE' };
       case 'fast-model':
-        return { color: '#06b6d4', icon: '⚡', label: 'FAST REASONING' };
+        return { color: '#F4F4F5', tag: 'FAST LLM', icon: '⚡', label: 'FAST REASONING' };
       case 'frontier-model':
       case 'model':
-        return { color: '#ec4899', icon: '◈', label: 'FRONTIER MODEL' };
+        return { color: '#FFFFFF', tag: 'FRONTIER', icon: '◈', label: 'FRONTIER MODEL' };
       default:
-        return { color: '#94a3b8', icon: '◇', label: 'COMPONENT' };
+        return { color: '#A1A1AA', tag: 'BLOCK', icon: '◇', label: 'COMPONENT' };
     }
   };
 
@@ -531,48 +531,47 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                   y="0"
                   width={NODE_WIDTH}
                   height={NODE_HEIGHT}
-                  rx="8"
-                  fill="var(--color-bg-elevated)"
-                  stroke={isBottleneck ? '#f59e0b' : isSelected ? 'var(--color-accent)' : styling.color}
-                  strokeWidth={isBottleneck ? 2.5 : isSelected ? 2 : 1}
-                  filter={isBottleneck ? 'url(#bottleneck-glow)' : undefined}
+                  rx="2"
+                  fill="#141417"
+                  stroke={isBottleneck ? '#FFFFFF' : isSelected ? '#FFFFFF' : '#27272A'}
+                  strokeWidth={isBottleneck ? 2 : isSelected ? 1.5 : 1}
                   className="spatial-node-rect"
                 />
 
-                {/* Focus ring for accessibility */}
+                {/* Focus indicator for selected node */}
                 {isSelected && !isBottleneck && (
                   <rect
-                    x="-4"
-                    y="-4"
-                    width={NODE_WIDTH + 8}
-                    height={NODE_HEIGHT + 8}
-                    rx="12"
+                    x="-3"
+                    y="-3"
+                    width={NODE_WIDTH + 6}
+                    height={NODE_HEIGHT + 6}
+                    rx="3"
                     fill="none"
-                    stroke="var(--color-accent)"
-                    strokeWidth="1.5"
-                    strokeDasharray="3 3"
+                    stroke="#FFFFFF"
+                    strokeWidth="1"
+                    strokeDasharray="2 2"
                     opacity="0.8"
                   />
                 )}
 
-                {/* Top Header: Icon + Category Tag */}
+                {/* Top Header: Category Tag */}
                 <text
                   x="12"
                   y="18"
-                  fill={styling.color}
-                  fontSize="9"
+                  fill="#71717A"
+                  fontSize="8"
                   fontFamily="var(--font-mono)"
-                  letterSpacing="0.08em"
+                  letterSpacing="0.1em"
                   fontWeight="700"
                 >
-                  {styling.icon} {isBottleneck && styling.label.length > 12 ? styling.label.split(' ')[0] : styling.label}
+                  {styling.icon} {styling.tag}
                 </text>
 
-                {/* Bottleneck Badge */}
+                {/* Monochrome Inverted Bottleneck Badge */}
                 {isBottleneck && (
                   <g transform={`translate(${NODE_WIDTH - 76}, 6)`}>
-                    <rect x="0" y="0" width="68" height="15" rx="3" fill="#f59e0b" />
-                    <text x="34" y="11" textAnchor="middle" fill="#000000" fontSize="8" fontFamily="var(--font-mono)" fontWeight="800">
+                    <rect x="0" y="0" width="68" height="15" rx="1" fill="#FFFFFF" />
+                    <text x="34" y="11" textAnchor="middle" fill="#09090B" fontSize="7.5" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">
                       BOTTLENECK
                     </text>
                   </g>
@@ -582,9 +581,9 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                 <text
                   x="12"
                   y="38"
-                  fill="var(--color-text)"
+                  fill="#F4F4F5"
                   fontSize="12"
-                  fontFamily="var(--font-sans)"
+                  fontFamily="var(--font-mono)"
                   fontWeight="600"
                 >
                   {node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label}
@@ -594,7 +593,7 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                 <text
                   x="12"
                   y="62"
-                  fill="var(--color-accent)"
+                  fill="#FFFFFF"
                   fontSize="11"
                   fontFamily="var(--font-mono)"
                   fontWeight="700"
@@ -606,7 +605,7 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                   x={NODE_WIDTH - 12}
                   y="62"
                   textAnchor="end"
-                  fill="var(--color-text-secondary)"
+                  fill="#A1A1AA"
                   fontSize="10"
                   fontFamily="var(--font-mono)"
                   fontWeight="500"
@@ -618,10 +617,10 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                 <circle
                   cx={NODE_WIDTH / 2}
                   cy="0"
-                  r="5"
+                  r="4.5"
                   className="connection-port port-input"
-                  fill="var(--color-bg)"
-                  stroke="var(--color-border-strong)"
+                  fill="#09090B"
+                  stroke="#3F3F46"
                   strokeWidth="1.5"
                 />
 
@@ -629,10 +628,10 @@ export default function SpatialCanvas({ simulation }: { simulation: SimulationRe
                 <circle
                   cx={NODE_WIDTH / 2}
                   cy={NODE_HEIGHT}
-                  r="5.5"
+                  r="5"
                   className="connection-port port-output"
-                  fill={styling.color}
-                  stroke="var(--color-bg)"
+                  fill="#FFFFFF"
+                  stroke="#09090B"
                   strokeWidth="1.5"
                   onPointerDown={(e) => handlePortPointerDown(e, node)}
                 />
