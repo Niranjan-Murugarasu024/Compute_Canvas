@@ -10,6 +10,7 @@ import {
   calculateCalibratedEconomics,
   calculateSensitivity,
   calculateHardwareCost,
+  formatCurrency,
   TEMPLATES,
   DEFAULT_V1_ARCHITECTURE,
   DEFAULT_V1_WORKLOAD,
@@ -273,14 +274,20 @@ const [tDirect, tRag, tRouter] = TEMPLATES;
 const simDirect = simulate(tDirect.defaultWorkload, tDirect.architecture);
 assert(simDirect.validation.isValid, 'Template 1 (Direct LLM): Passes graph validation');
 assert(simDirect.monthlyCost > 0, 'Template 1: Generates valid monthly spend');
+assert(simDirect.qualityEstimate === 95, 'Template 1: Evaluates to deterministic 95% quality');
 
 const simRag = simulate(tRag.defaultWorkload, tRag.architecture);
 assert(simRag.validation.isValid, 'Template 2 (RAG Pipeline): Passes graph validation');
 assert(simRag.costBreakdown.vectorDb > 0, 'Template 2: Vector DB cost actively modeled');
+assert(simRag.qualityEstimate === 97, 'Template 2: Evaluates to grounded 97% quality (+1% RAG grounding)');
 
 const simRouter = simulate(tRouter.defaultWorkload, tRouter.architecture);
 assert(simRouter.validation.isValid, 'Template 3 (Router + Cache): Passes graph validation');
 assert(simRouter.costBreakdown.cache > 0, 'Template 3: Semantic Cache actively modeled');
+assert(simRouter.qualityEstimate === 86, 'Template 3: Evaluates to routed 86% quality (70% fast + 30% frontier)');
+
+assert(formatCurrency(0.50) === '$0.50', 'Currency formatting: Sub-dollar amounts display with 2 decimal places ($0.50)');
+assert(formatCurrency(0.0025) === '$0.0025', 'Currency formatting: Sub-cent per-request values retain 4 decimal places ($0.0025)');
 
 // ══════════════════════════════════════════════════════════════
 // SUITE 7: WORKBENCH STATE HISTORY & CASCADE

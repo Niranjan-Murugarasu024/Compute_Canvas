@@ -5,6 +5,7 @@ import { useArchitectureStore } from '@/lib/state/architectureStore';
 import {
   type ArchNode,
   type ArchEdge,
+  type Architecture,
   type SimulationResult,
   MODEL_PRICING,
   formatCurrency,
@@ -30,12 +31,20 @@ interface WireDraft {
 const NODE_WIDTH = 204;
 const NODE_HEIGHT = 82;
 
-export default function SpatialCanvas({ simulation }: { simulation: SimulationResult }) {
+export default function SpatialCanvas({
+  simulation,
+  architecture: propArchitecture,
+}: {
+  simulation: SimulationResult;
+  architecture?: Architecture;
+}) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const store = useArchitectureStore();
+  const architecture = propArchitecture || store.architecture;
+
   const {
-    architecture,
     selectedNodeId,
     selectedEdgeIndex,
     pan,

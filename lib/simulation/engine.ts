@@ -286,16 +286,25 @@ export function formatNumber(n: number): string {
 }
 
 export function formatCurrency(n: number, compact = false): string {
-  if (compact && n >= 1_000_000) {
-    return `$${(n / 1_000_000).toFixed(2)}M`;
+  const isNegative = n < 0;
+  const absN = Math.abs(n);
+  const prefix = isNegative ? '-$' : '$';
+
+  if (compact && absN >= 1_000_000) {
+    return `${prefix}${(absN / 1_000_000).toFixed(2)}M`;
   }
-  if (compact && n >= 1_000) {
-    return `$${(n / 1_000).toFixed(1)}K`;
+  if (compact && absN >= 1_000) {
+    return `${prefix}${(absN / 1_000).toFixed(1)}K`;
   }
-  if (n < 1 && n > 0) {
-    return `$${n.toFixed(4)}`;
+  // Sub-cent pricing (e.g. per-request unit cost $0.0025)
+  if (absN < 0.01 && absN > 0) {
+    return `${prefix}${absN.toFixed(4)}`;
   }
-  return `$${Math.round(n).toLocaleString('en-US')}`;
+  // Sub-dollar pricing (e.g. router infra cost $0.50/mo)
+  if (absN < 1 && absN > 0) {
+    return `${prefix}${absN.toFixed(2)}`;
+  }
+  return `${prefix}${Math.round(absN).toLocaleString('en-US')}`;
 }
 
 export function formatLatency(ms: number): string {
@@ -754,7 +763,36 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
   };
 
   const capacityUtilization = Math.min(100, Math.round((workload.requestsPerMonth / 5_000_000) * 100));
-  const qualityEstimate = architecture.nodes.some(n => n.type === 'frontier-model' || n.modelId === 'gpt-4o' || n.modelId === 'claude-3.5-sonnet') ? 95 : 82;
+
+  // Deterministic quality score derived from model allocations & RAG grounding
+  let rawQuality = 80;
+  if (modelNodes.length === 1) {
+    const node = modelNodes[0];
+    const defaultModelId = node.type === 'fast-model' ? 'gpt-4o-mini' : 'gpt-4o';
+    const modelId = node.modelId || defaultModelId;
+    const pricing = MODEL_PRICING[modelId] || (node.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']);
+    rawQuality = pricing.qualityScore;
+  } else if (modelNodes.length > 1) {
+    let weightedScoreSum = 0;
+    let totalShare = 0;
+    const edges = architecture.edges;
+    modelNodes.forEach(m => {
+      const edge = edges.find(e => e.target === m.id);
+      const share = edge?.trafficShare !== undefined ? edge.trafficShare : 1 / modelNodes.length;
+      const defaultModelId = m.type === 'fast-model' ? 'gpt-4o-mini' : 'gpt-4o';
+      const modelId = m.modelId || defaultModelId;
+      const pricing = MODEL_PRICING[modelId] || (m.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']);
+      weightedScoreSum += pricing.qualityScore * share;
+      totalShare += share;
+    });
+    rawQuality = totalShare > 0 ? (weightedScoreSum / totalShare) : 80;
+  }
+
+  // Grounding / Retrieval boost: Vector DB adds verifiable factual grounding (+1%)
+  const hasVectorGrounding = architecture.nodes.some(n => n.type === 'vectordb');
+  const groundingBonus = hasVectorGrounding ? 1 : 0;
+  const qualityEstimate = Math.min(99, Math.max(50, Math.round(rawQuality + groundingBonus)));
+
   const throughputRPS = requestsPerMonth > 0 ? Math.max(1, Math.round(requestsPerMonth / (30 * 24 * 3600))) : 0;
 
   if (bottleneckMetrics && bottleneckMetrics.costPercentage > 50) {

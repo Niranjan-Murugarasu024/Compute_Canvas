@@ -44,9 +44,9 @@ export default function CompanyPage() {
               </div>
 
               <div className="company-card">
-                <h3 className="card-heading">The Team</h3>
+                <h3 className="card-heading">The Builder</h3>
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6 }}>
-                  Engineers, architects, and systems designers passionate about transparent, deterministic developer tooling and high-craft interaction design.
+                  Built by a systems engineer and software craftsman focused on making distributed AI architectures transparent, mathematically deterministic, and visually intelligible before production deployment.
                 </p>
               </div>
             </div>

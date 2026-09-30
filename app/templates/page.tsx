@@ -5,7 +5,7 @@ import TemplatesClient from './TemplatesClient';
 
 export const metadata: Metadata = {
   title: 'Templates — ComputeCanvas',
-  description: 'Start from proven AI architecture templates. RAG, AI Agents, Customer Support, Code Assistants, and more.',
+  description: 'Explore production-grade AI architecture templates. Simulate Direct LLM, RAG Pipeline, and Router + Cache architectures with deterministic cost and latency modeling.',
 };
 
 export default function TemplatesPage() {

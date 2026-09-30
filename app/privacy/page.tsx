@@ -58,12 +58,12 @@ export default function PrivacyPage() {
                 <p>
                   ComputeCanvas is developed openly. You can inspect the complete source code, mathematical simulation formulas, and sharing mechanics on GitHub at{' '}
                   <a
-                    href="https://github.com/Niranjan-Murugarasu024/Compute_Canvas"
+                    href="https://github.com/computecanvas/computecanvas"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: 'var(--color-text)', textDecoration: 'underline' }}
                   >
-                    github.com/Niranjan-Murugarasu024/Compute_Canvas
+                    github.com/computecanvas/computecanvas
                   </a>.
                 </p>
               </section>
