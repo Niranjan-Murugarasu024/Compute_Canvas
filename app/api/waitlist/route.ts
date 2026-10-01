@@ -67,6 +67,9 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     };
 
+    // Structured stdout logging for permanent Vercel runtime logs capture
+    console.log('[WAITLIST_LEAD_SUBMISSION]', JSON.stringify(lead));
+
     // Add to in-memory store and file
     const current = getStoredLeads();
     const updated = [lead, ...current.filter(l => l.email !== lead.email)];
