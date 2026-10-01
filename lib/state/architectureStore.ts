@@ -29,7 +29,8 @@ export interface SavedArchitecture {
   monthlyCost: number;
   p95Latency: number;
   capacityUtilization: number;
-  qualityEstimate: number;
+  qualityEstimate?: number;
+  capabilityTier?: string;
 }
 
 export interface ScenarioItem {
@@ -218,67 +219,82 @@ const INITIAL_VERSIONS: ArchitectureVersion[] = [
   },
 ];
 
-const DEFAULT_SAVED_ARCHITECTURES: SavedArchitecture[] = [
-  {
-    id: 'customer-support-ai',
-    name: 'Customer Support AI',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    architecture: initializeNodePositions(DEFAULT_OPTIMIZED_ARCHITECTURE),
-    workload: { ...DEFAULT_WORKLOAD, requestsPerMonth: 2_000_000, cacheHitRate: 0.3 },
-    monthlyCost: 18420,
-    p95Latency: 640,
-    capacityUtilization: 74,
-    qualityEstimate: 93,
-  },
-  {
-    id: 'ai-coding-assistant',
+const DEFAULT_SAVED_ARCHITECTURES: SavedArchitecture[] = (() => {
+  const item1Arch = initializeNodePositions(DEFAULT_OPTIMIZED_ARCHITECTURE);
+  const item1Wl: Workload = { ...DEFAULT_WORKLOAD, requestsPerMonth: 2_000_000, cacheHitRate: 0.3 };
+  const item1Sim = simulate(item1Wl, item1Arch);
+
+  const item2Arch = initializeNodePositions({
     name: 'Code Assistant',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-    architecture: initializeNodePositions({
-      name: 'Code Assistant',
-      nodes: [
-        { id: 'api', type: 'api', label: 'API Gateway', x: 120, y: 80 },
-        { id: 'model', type: 'model', label: 'Claude 3.5 Sonnet', modelId: 'claude-3.5-sonnet', x: 320, y: 80 },
-        { id: 'cache', type: 'cache', label: 'Prompt Cache', x: 220, y: 200 },
-        { id: 'vectordb', type: 'vectordb', label: 'Code Base Embeddings', x: 420, y: 200 },
-      ],
-      edges: [
-        { source: 'api', target: 'cache' },
-        { source: 'cache', target: 'model' },
-        { source: 'model', target: 'vectordb' },
-      ],
-    }),
-    workload: { ...DEFAULT_WORKLOAD, requestsPerMonth: 500_000, avgInputTokens: 3000, avgOutputTokens: 800, cacheHitRate: 0.4 },
-    monthlyCost: 7210,
-    p95Latency: 340,
-    capacityUtilization: 82,
-    qualityEstimate: 95,
-  },
-  {
-    id: 'rag-search',
+    nodes: [
+      { id: 'api', type: 'api', label: 'API Gateway', x: 120, y: 80 },
+      { id: 'model', type: 'frontier-model', label: 'Claude 3.5 Sonnet', modelId: 'claude-3.5-sonnet', x: 320, y: 80 },
+      { id: 'cache', type: 'cache', label: 'Prompt Cache', x: 220, y: 200 },
+      { id: 'vectordb', type: 'vectordb', label: 'Code Base Embeddings', x: 420, y: 200 },
+    ],
+    edges: [
+      { source: 'api', target: 'cache' },
+      { source: 'cache', target: 'model' },
+      { source: 'model', target: 'vectordb' },
+    ],
+  });
+  const item2Wl: Workload = { ...DEFAULT_WORKLOAD, requestsPerMonth: 500_000, avgInputTokens: 3000, avgOutputTokens: 800, cacheHitRate: 0.4 };
+  const item2Sim = simulate(item2Wl, item2Arch);
+
+  const item3Arch = initializeNodePositions({
     name: 'RAG Search & Retrieval',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    architecture: initializeNodePositions({
+    nodes: [
+      { id: 'api', type: 'api', label: 'API Ingress', x: 100, y: 100 },
+      { id: 'vectordb', type: 'vectordb', label: 'Pinecone Vector DB', x: 300, y: 100 },
+      { id: 'model', type: 'frontier-model', label: 'GPT-4o', modelId: 'gpt-4o', x: 500, y: 100 },
+    ],
+    edges: [
+      { source: 'api', target: 'vectordb' },
+      { source: 'vectordb', target: 'model' },
+    ],
+  });
+  const item3Wl: Workload = { ...DEFAULT_WORKLOAD, requestsPerMonth: 1_200_000, retrievalsPerRequest: 3 };
+  const item3Sim = simulate(item3Wl, item3Arch);
+
+  return [
+    {
+      id: 'customer-support-ai',
+      name: 'Customer Support AI',
+      updatedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+      architecture: item1Arch,
+      workload: item1Wl,
+      monthlyCost: item1Sim.monthlyCost,
+      p95Latency: item1Sim.p95Latency,
+      capacityUtilization: item1Sim.capacityUtilization,
+      qualityEstimate: item1Sim.qualityEstimate ?? 86,
+      capabilityTier: item1Sim.capabilityTier,
+    },
+    {
+      id: 'ai-coding-assistant',
+      name: 'Code Assistant',
+      updatedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+      architecture: item2Arch,
+      workload: item2Wl,
+      monthlyCost: item2Sim.monthlyCost,
+      p95Latency: item2Sim.p95Latency,
+      capacityUtilization: item2Sim.capacityUtilization,
+      qualityEstimate: item2Sim.qualityEstimate ?? 95,
+      capabilityTier: item2Sim.capabilityTier,
+    },
+    {
+      id: 'rag-search',
       name: 'RAG Search & Retrieval',
-      nodes: [
-        { id: 'api', type: 'api', label: 'API', x: 100, y: 100 },
-        { id: 'embedding', type: 'embedding', label: 'Embedding', x: 260, y: 100 },
-        { id: 'vectordb', type: 'vectordb', label: 'Pinecone Vector DB', x: 420, y: 100 },
-        { id: 'model', type: 'model', label: 'GPT-4o', modelId: 'gpt-4o', x: 580, y: 100 },
-      ],
-      edges: [
-        { source: 'api', target: 'embedding' },
-        { source: 'embedding', target: 'vectordb' },
-        { source: 'vectordb', target: 'model' },
-      ],
-    }),
-    workload: { ...DEFAULT_WORKLOAD, requestsPerMonth: 1_200_000, retrievalsPerRequest: 3 },
-    monthlyCost: 3890,
-    p95Latency: 520,
-    capacityUtilization: 91,
-    qualityEstimate: 91,
-  },
-];
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      architecture: item3Arch,
+      workload: item3Wl,
+      monthlyCost: item3Sim.monthlyCost,
+      p95Latency: item3Sim.p95Latency,
+      capacityUtilization: item3Sim.capacityUtilization,
+      qualityEstimate: item3Sim.qualityEstimate ?? 95,
+      capabilityTier: item3Sim.capabilityTier,
+    },
+  ];
+})();
 
 export const useArchitectureStore = create<ArchitectureState>()(
   persist(

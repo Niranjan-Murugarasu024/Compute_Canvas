@@ -183,9 +183,10 @@ const routerOverAllocArch: Architecture = {
   ],
 };
 const routerOverVal = validateArchitecture(routerOverAllocArch);
-assert(routerOverVal.warnings.some(w => w.includes('exceeds 100% capacity')), 'Router >100%: Warning raised for capacity overrun');
+assert(!routerOverVal.isValid, 'Router >100%: Invalid routing blocks architecture calculation');
+assert(routerOverVal.errors.some(e => e.includes('INVALID ROUTING') && e.includes('exceeds 100% capacity')), 'Router >100%: Explicit error raised for capacity overrun');
 const routerOverSim = simulate(DEFAULT_V1_WORKLOAD, routerOverAllocArch);
-assert(!isNaN(routerOverSim.monthlyCost), 'Router >100%: Simulation clamped safely without NaN');
+assert(routerOverSim.monthlyCost === 0, 'Router >100%: Calculation blocked safely (monthlyCost is 0)');
 
 // 2.5 Percentile Latency Engine
 assert(zeroSim.latencies.p50 >= 0, 'Latency engine: P50 latency calculated');
@@ -274,16 +275,19 @@ const [tDirect, tRag, tRouter] = TEMPLATES;
 const simDirect = simulate(tDirect.defaultWorkload, tDirect.architecture);
 assert(simDirect.validation.isValid, 'Template 1 (Direct LLM): Passes graph validation');
 assert(simDirect.monthlyCost > 0, 'Template 1: Generates valid monthly spend');
-assert(simDirect.qualityEstimate === 95, 'Template 1: Evaluates to deterministic 95% quality');
+assert(simDirect.capabilityTier === 'Frontier Reasoning', 'Template 1: Evaluates to Frontier Reasoning capability tier');
+assert(simDirect.qualityEstimate === 95, 'Template 1: Evaluates to deterministic 95% quality legacy score');
 
 const simRag = simulate(tRag.defaultWorkload, tRag.architecture);
 assert(simRag.validation.isValid, 'Template 2 (RAG Pipeline): Passes graph validation');
 assert(simRag.costBreakdown.vectorDb > 0, 'Template 2: Vector DB cost actively modeled');
+assert(simRag.capabilityTier === 'Context-Grounded Frontier', 'Template 2: Evaluates to Context-Grounded Frontier tier');
 assert(simRag.qualityEstimate === 97, 'Template 2: Evaluates to grounded 97% quality (+1% RAG grounding)');
 
 const simRouter = simulate(tRouter.defaultWorkload, tRouter.architecture);
 assert(simRouter.validation.isValid, 'Template 3 (Router + Cache): Passes graph validation');
 assert(simRouter.costBreakdown.cache > 0, 'Template 3: Semantic Cache actively modeled');
+assert(simRouter.capabilityTier === 'Blended Routing', 'Template 3: Evaluates to Blended Routing capability tier');
 assert(simRouter.qualityEstimate === 86, 'Template 3: Evaluates to routed 86% quality (70% fast + 30% frontier)');
 
 assert(formatCurrency(0.50) === '$0.50', 'Currency formatting: Sub-dollar amounts display with 2 decimal places ($0.50)');

@@ -8,6 +8,7 @@ import {
   type Architecture,
   type SimulationResult,
   MODEL_PRICING,
+  TEMPLATES_MAP,
   formatCurrency,
   formatLatency,
 } from '@/lib/simulation/engine';
@@ -760,12 +761,48 @@ export default function SpatialCanvas({
         </g>
       </svg>
 
-      {/* Empty State */}
+      {/* Empty State per Rule 20 */}
       {architecture.nodes.length === 0 && (
-        <div className="canvas-empty-state">
-          <div className="empty-state-title">BUILD YOUR ARCHITECTURE</div>
+        <div className="canvas-empty-state" role="region" aria-label="Empty canvas prompt">
+          <div className="empty-state-badge text-mono">NO ARCHITECTURE</div>
+          <div className="empty-state-title">ARCHITECTURE STAGE EMPTY</div>
           <div className="empty-state-subtitle">
-            Drag a component here or select one from the component library.
+            Start by adding a component from the palette or load a canonical architecture:
+          </div>
+          <div className="empty-state-actions">
+            <button
+              type="button"
+              className="empty-state-btn text-mono"
+              onClick={() => {
+                const t = TEMPLATES_MAP['direct-llm'];
+                if (t) store.loadArchitecture(t.architecture, t.defaultWorkload);
+              }}
+              title="Load Direct LLM baseline architecture"
+            >
+              [ DIRECT LLM ]
+            </button>
+            <button
+              type="button"
+              className="empty-state-btn text-mono"
+              onClick={() => {
+                const t = TEMPLATES_MAP['rag-pipeline'];
+                if (t) store.loadArchitecture(t.architecture, t.defaultWorkload);
+              }}
+              title="Load RAG Pipeline architecture"
+            >
+              [ RAG PIPELINE ]
+            </button>
+            <button
+              type="button"
+              className="empty-state-btn text-mono"
+              onClick={() => {
+                const t = TEMPLATES_MAP['router-cache'];
+                if (t) store.loadArchitecture(t.architecture, t.defaultWorkload);
+              }}
+              title="Load Router + Cache architecture"
+            >
+              [ ROUTER + CACHE ]
+            </button>
           </div>
         </div>
       )}
@@ -1093,15 +1130,28 @@ export default function SpatialCanvas({
           left: 50%;
           transform: translate(-50%, -50%);
           text-align: center;
-          pointer-events: none;
-          z-index: 5;
+          pointer-events: auto;
+          z-index: 10;
           display: flex;
           flex-direction: column;
-          gap: 6px;
-          padding: 24px 32px;
+          align-items: center;
+          gap: 10px;
+          padding: 28px 36px;
           background: #0B0B0D;
-          border: 1px dashed #27272A;
+          border: 1px solid #27272A;
           border-radius: 4px;
+          max-width: 480px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+        }
+        .empty-state-badge {
+          font-size: 0.625rem;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          color: #71717A;
+          background: #18181B;
+          padding: 2px 8px;
+          border-radius: 2px;
+          border: 1px solid #27272A;
         }
         .empty-state-title {
           font-family: var(--font-display);
@@ -1113,7 +1163,35 @@ export default function SpatialCanvas({
         .empty-state-subtitle {
           font-family: var(--font-ui);
           font-size: 0.75rem;
-          color: #71717A;
+          color: #A1A1AA;
+          line-height: 1.4;
+          margin-bottom: 4px;
+        }
+        .empty-state-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .empty-state-btn {
+          background: #18181B;
+          border: 1px solid #3F3F46;
+          color: #FFFFFF;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          padding: 6px 12px;
+          border-radius: 2px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .empty-state-btn:hover {
+          background: #27272A;
+          border-color: #FFFFFF;
+        }
+        .empty-state-btn:focus-visible {
+          outline: 2px solid #FFFFFF;
+          outline-offset: 1px;
         }
       `}</style>
     </div>

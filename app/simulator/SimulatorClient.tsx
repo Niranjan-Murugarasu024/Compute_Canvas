@@ -121,7 +121,7 @@ function SimulatorQuerySync({
       if (decoded.success && decoded.data) {
         onLoadShare(decoded.data);
       } else {
-        onError('Unable to restore this shared architecture. Loaded default baseline.');
+        onError('SHARED ARCHITECTURE COULD NOT BE RESTORED. The link may be corrupted or from an incompatible version. A clean baseline workspace has been loaded.');
       }
       return;
     }
@@ -220,6 +220,8 @@ export default function SimulatorClient({
   const [calBillInput, setCalBillInput] = useState(calibration.actualBill ? String(calibration.actualBill) : '4500');
   const [calReqInput, setCalReqInput] = useState(calibration.actualRequests ? String(calibration.actualRequests) : '1200000');
   const [isAssumptionsOpen, setIsAssumptionsOpen] = useState(false);
+  const [isCostModalOpen, setIsCostModalOpen] = useState(false);
+  const [isLatencyModalOpen, setIsLatencyModalOpen] = useState(false);
   const [shareModalUrl, setShareModalUrl] = useState<string | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(initialTemplateId || 'router-cache');
   const [calibrationError, setCalibrationError] = useState<string | null>(null);
@@ -290,21 +292,15 @@ export default function SimulatorClient({
     };
   }, [selectedNode, architecture, workload]);
 
-  // Share architecture action: Base64URL encode and copy to clipboard
-  const handleShare = useCallback(async () => {
+  // Share architecture action: Base64URL encode and open share modal with disclosure (Section 26)
+  const handleShare = useCallback(() => {
     try {
       const encoded = encodeArchitectureState({ architecture, workload, calibration });
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://computecanvas.io';
       const shareUrl = `${origin}/simulator?data=${encoded}`;
-
-      if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(shareUrl);
-        showToast('Architecture link copied to clipboard.');
-      } else {
-        setShareModalUrl(shareUrl);
-      }
+      setShareModalUrl(shareUrl);
     } catch {
-      showToast('Architecture URL generated.');
+      showToast('Architecture URL could not be generated.');
     }
   }, [architecture, workload, calibration, showToast]);
 
@@ -465,6 +461,80 @@ export default function SimulatorClient({
           </div>
         </div>
       )}
+
+      {/* Section 21 & 22: Engineering Telemetry Strip */}
+      <section className="simulator-telemetry-strip" aria-label="Live Simulation Telemetry">
+        <div
+          className="telemetry-cell telemetry-cell--clickable"
+          onClick={() => setIsCostModalOpen(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsCostModalOpen(true)}
+          title="Click to view detailed itemized cost breakdown"
+        >
+          <div className="telemetry-cell-header">
+            <span className="telemetry-cell-label">MONTHLY SPEND</span>
+            <span className={`telemetry-mode-tag text-mono ${calibrated.isCalibrated ? 'mode-calibrated' : 'mode-live'}`}>
+              {calibrated.isCalibrated ? 'CALIBRATED ESTIMATE' : 'LIVE SIMULATION'}
+            </span>
+          </div>
+          <div className="telemetry-cell-value text-mono">
+            {calibrated.isCalibrated ? formatCurrency(calibrated.calibratedMonthlyCost) : formatCurrency(result.monthlyCost)}
+            <span className="telemetry-unit">/mo</span>
+          </div>
+          <div className="telemetry-cell-subtext text-mono">
+            {calibrated.isCalibrated
+              ? `Factor: ${calibrated.calibrationFactor.toFixed(2)}× (Baseline: ${formatCurrency(calibrated.simulatedBaselineCost)})`
+              : `$${result.costPerRequest.toFixed(4)} / request · Breakdown →`}
+          </div>
+        </div>
+
+        <div
+          className="telemetry-cell telemetry-cell--clickable"
+          onClick={() => setIsLatencyModalOpen(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsLatencyModalOpen(true)}
+          title="Click to inspect modeled tail latency critical path"
+        >
+          <div className="telemetry-cell-header">
+            <span className="telemetry-cell-label">MODELED TAIL LATENCY</span>
+            <span className="telemetry-mode-tag text-mono mode-live">ESTIMATED P95</span>
+          </div>
+          <div className="telemetry-cell-value text-mono" style={{ color: 'var(--color-performance, #FAFAFA)' }}>
+            {formatLatency(result.p95Latency)}
+          </div>
+          <div className="telemetry-cell-subtext text-mono">
+            Critical path: {formatLatency(result.latencies.criticalPathMs || result.p95Latency)} · Critical path →
+          </div>
+        </div>
+
+        <div className="telemetry-cell">
+          <div className="telemetry-cell-header">
+            <span className="telemetry-cell-label">BOTTLENECK IDENTIFIER</span>
+            <span className="telemetry-mode-tag text-mono mode-warning">DOMINANT FACTOR</span>
+          </div>
+          <div className="telemetry-cell-value text-mono">
+            {result.bottleneck.componentName.toUpperCase()}
+          </div>
+          <div className="telemetry-cell-subtext text-mono">
+            {result.bottleneck.impactPercentage}% of total spend
+          </div>
+        </div>
+
+        <div className="telemetry-cell">
+          <div className="telemetry-cell-header">
+            <span className="telemetry-cell-label">CAPABILITY TIER</span>
+            <span className="telemetry-mode-tag text-mono mode-neutral">QUALITATIVE</span>
+          </div>
+          <div className="telemetry-cell-value text-mono" style={{ fontSize: '1.05rem', letterSpacing: '0.01em' }}>
+            {result.capabilityTier || 'Quality Not Modeled'}
+          </div>
+          <div className="telemetry-cell-subtext text-mono" style={{ fontSize: '0.6875rem' }}>
+            {result.capabilityDescription || 'Architectural tier classification'}
+          </div>
+        </div>
+      </section>
 
       {/* 3-Column Responsive Work Area */}
       <div className="simulator-body-grid">
@@ -659,36 +729,47 @@ export default function SimulatorClient({
                 <div className="calibration-active-card">
                   <div className="calibration-status-badge">
                     <span className="status-dot-green" />
-                    <span className="text-mono" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.04em' }}>ANCHORED TO EMPIRICAL BILL</span>
+                    <span className="text-mono" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.04em' }}>CALIBRATED EMPIRICAL BASELINE</span>
                   </div>
 
-                  <div className="calibration-meta-grid">
+                  <div className="calibration-meta-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                     <div className="meta-col">
-                      <span className="meta-sub">ACTUAL BILL</span>
-                      <span className="meta-num text-mono">{formatCurrency(calibration.actualBill)}</span>
+                      <span className="meta-sub">THEORETICAL MODEL</span>
+                      <span className="meta-num text-mono">{formatCurrency(calibrated.simulatedBaselineCost)}</span>
                     </div>
                     <div className="meta-col">
-                      <span className="meta-sub">MODELLED BASE</span>
-                      <span className="meta-num text-mono">{formatCurrency(calibration.baselineSimulatedCost)}</span>
+                      <span className="meta-sub">ACTUAL HISTORICAL BILL</span>
+                      <span className="meta-num text-mono">{formatCurrency(calibrated.actualHistoricalBill)}</span>
                     </div>
                     <div className="meta-col">
-                      <span className="meta-sub">CALIBRATION</span>
-                      <span className="meta-num text-mono">
-                        {(calibration.baselineSimulatedCost > 0 ? (calibration.actualBill / calibration.baselineSimulatedCost) : 1).toFixed(2)}×
+                      <span className="meta-sub">HISTORICAL REQUESTS</span>
+                      <span className="meta-num text-mono">{formatNumber(calibrated.historicalRequests)}/mo</span>
+                    </div>
+                    <div className="meta-col">
+                      <span className="meta-sub">CALIBRATION FACTOR</span>
+                      <span className="meta-num text-mono">{calibrated.calibrationFactor.toFixed(2)}×</span>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '8px', background: '#18181B', borderRadius: '3px', border: '1px solid var(--color-border)', marginTop: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                      <span style={{ color: 'var(--color-text-muted)' }} className="text-mono">CALIBRATED ESTIMATE</span>
+                      <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.875rem' }}>
+                        {formatCurrency(calibrated.calibratedMonthlyCost)}/mo
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.625rem', marginTop: '4px' }}>
+                      <span style={{ color: 'var(--color-text-muted)' }} className="text-mono">CONFIDENCE:</span>
+                      <span className="text-mono" style={{ color: calibrated.confidenceLevel === 'High Confidence' ? '#FAFAFA' : '#A1A1AA' }}>
+                        {calibrated.confidenceLevel}
                       </span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
-                    <span style={{ color: 'var(--color-text-muted)' }} className="text-mono">VARIANCE DELTA</span>
-                    <span className="text-mono" style={{ color: calibrated.variancePercentage <= 0 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                      {calibrated.variancePercentage > 0 ? `+${calibrated.variancePercentage}%` : `${calibrated.variancePercentage}%`} vs baseline
-                    </span>
+                  <div style={{ marginTop: '8px', padding: '8px 10px', background: '#09090B', border: '1px solid #27272A', borderRadius: '3px', fontSize: '0.625rem', color: '#71717A', lineHeight: 1.4 }}>
+                    <strong style={{ color: '#A1A1AA' }}>IMPORTANT: </strong>
+                    Calibration adjusts the model to your historical baseline. It does not reproduce provider invoices and does not guarantee future spend.
                   </div>
-
-                  <p className="calibration-explainer">
-                    Calibrated on {formatNumber(calibration.actualRequests)} empirical requests.
-                  </p>
                 </div>
               ) : isCalibrating ? (
                 <form onSubmit={handleApplyCalibration} className="calibration-form">
@@ -1019,38 +1100,219 @@ export default function SimulatorClient({
         </aside>
       </div>
 
-      {/* Share URL Fallback Modal */}
+      {/* Share URL Modal with Section 26 Privacy Disclosure */}
       {shareModalUrl && (
         <div className="assumptions-modal-overlay" onClick={() => setShareModalUrl(null)}>
-          <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
+          <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
             <div className="dialog-header">
-              <h3 className="dialog-title">Share Architecture</h3>
-              <button onClick={() => setShareModalUrl(null)} className="btn btn-ghost btn-sm">✕</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="badge badge--primary text-mono">SHAREABLE ARCHITECTURE</span>
+              </div>
+              <button onClick={() => setShareModalUrl(null)} className="btn btn-ghost btn-sm" aria-label="Close dialog">✕</button>
             </div>
             <div className="dialog-content">
-              <p className="dialog-intro">
-                Copy this URL to share this exact architecture, components, workload parameters, and bill calibration:
-              </p>
-              <input
-                type="text"
-                readOnly
-                value={shareModalUrl}
-                className="simulator-text-input text-mono"
-                style={{ width: '100%', fontSize: '0.75rem', padding: '8px' }}
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
+              <div className="share-disclosure-box">
+                <div className="share-disclosure-title text-mono">ENCODED PAYLOAD DISCLOSURE</div>
+                <p className="share-disclosure-text">
+                  This shareable link encodes your architecture topology directly in the URL query string:
+                </p>
+                <ul className="share-disclosure-list text-mono">
+                  <li>• Architecture nodes, types, and model selections</li>
+                  <li>• Graph connections &amp; traffic routing percentages</li>
+                  <li>• Monthly requests, input tokens, output tokens &amp; cache hit rate</li>
+                  <li>• Anchor bill calibration parameters (if enabled)</li>
+                </ul>
+                <p className="share-disclosure-warning">
+                  <strong>Notice:</strong> Anyone with this link can view these architectural parameters. Do not embed confidential provider credentials or private network identifiers in component labels.
+                </p>
+              </div>
+
+              <div style={{ marginTop: '14px' }}>
+                <label className="text-caption text-mono" style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
+                  SHAREABLE URL (ZERO-DATABASE / CLIENT-ENCODED)
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareModalUrl}
+                    className="simulator-text-input text-mono"
+                    style={{ flex: 1, fontSize: '0.75rem', padding: '8px' }}
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(shareModalUrl);
+                        showToast('Link copied to clipboard.');
+                      } catch {
+                        showToast('Link ready to copy.');
+                      }
+                    }}
+                    className="btn btn-primary btn-sm"
+                  >
+                    Copy Link
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="dialog-footer">
+            <div className="dialog-footer" style={{ justifyContent: 'flex-end' }}>
               <button
-                onClick={() => {
-                  navigator.clipboard?.writeText?.(shareModalUrl);
-                  showToast('Architecture link copied.');
-                  setShareModalUrl(null);
-                }}
-                className="btn btn-primary btn-sm"
+                onClick={() => setShareModalUrl(null)}
+                className="btn btn-secondary btn-sm"
               >
-                Copy Link
+                Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cost Subsystems Drill-Down Modal (Section 14) */}
+      {isCostModalOpen && (
+        <div className="assumptions-modal-overlay" onClick={() => setIsCostModalOpen(false)}>
+          <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px' }}>
+            <div className="dialog-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="badge badge--primary text-mono">COST MODEL TRANSPARENCY</span>
+                <h3 className="dialog-title" style={{ margin: 0 }}>Itemized Spend Breakdown</h3>
+              </div>
+              <button onClick={() => setIsCostModalOpen(false)} className="btn btn-ghost btn-sm" aria-label="Close dialog">✕</button>
+            </div>
+            <div className="dialog-content">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
+                <div>
+                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>TOTAL MONTHLY SPEND</span>
+                  <div className="text-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF' }}>
+                    {formatCurrency(result.monthlyCost)} <span style={{ fontSize: '0.875rem', color: '#71717A' }}>/ mo</span>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>COST PER REQUEST</span>
+                  <div className="text-mono" style={{ fontSize: '1.125rem', fontWeight: 600, color: '#A1A1AA' }}>
+                    ${result.costPerRequest.toFixed(4)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="assumptions-table-wrapper">
+                <table className="assumptions-table text-mono" style={{ fontSize: '0.75rem' }}>
+                  <thead>
+                    <tr>
+                      <th>Subsystem Component</th>
+                      <th>Type</th>
+                      <th style={{ textAlign: 'right' }}>Monthly Spend</th>
+                      <th style={{ textAlign: 'right' }}>Share</th>
+                      <th>Unit Rate Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.costBreakdown.subsystems && result.costBreakdown.subsystems.length > 0 ? (
+                      result.costBreakdown.subsystems.map(sub => (
+                        <tr key={sub.id}>
+                          <td style={{ fontWeight: 600, color: '#FFFFFF' }}>{sub.name}</td>
+                          <td style={{ color: '#A1A1AA' }}>{sub.type}</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(sub.monthlyCost)}</td>
+                          <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{sub.sharePercentage}%</td>
+                          <td style={{ color: '#71717A', fontSize: '0.6875rem' }}>{sub.unitRateDescription}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', color: '#71717A' }}>No active subsystems modeled</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.6875rem', color: '#A1A1AA', lineHeight: 1.5 }}>
+                <strong style={{ color: '#FFFFFF' }}>Methodology Note: </strong>
+                ComputeCanvas computes cost deterministically from active graph routes and configured token counts. Token pricing reflects publicly cited list rates (March 2026). Ingress and routing costs are modeled on public edge gateway tiers ($0.50 - $0.60 / 1M requests).
+              </div>
+            </div>
+            <div className="dialog-footer" style={{ justifyContent: 'flex-end' }}>
+              <button onClick={() => setIsCostModalOpen(false)} className="btn btn-secondary btn-sm">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Latency Critical Path Modal (Sections 12 & 13) */}
+      {isLatencyModalOpen && (
+        <div className="assumptions-modal-overlay" onClick={() => setIsLatencyModalOpen(false)}>
+          <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px' }}>
+            <div className="dialog-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="badge badge--primary text-mono">LATENCY FORMULA TRANSPARENCY</span>
+                <h3 className="dialog-title" style={{ margin: 0 }}>Modeled Tail Latency Breakdown</h3>
+              </div>
+              <button onClick={() => setIsLatencyModalOpen(false)} className="btn btn-ghost btn-sm" aria-label="Close dialog">✕</button>
+            </div>
+            <div className="dialog-content">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
+                <div>
+                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED P95 TAIL LATENCY</span>
+                  <div className="text-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-performance, #FAFAFA)' }}>
+                    {formatLatency(result.p95Latency)}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '16px' }} className="text-mono">
+                  <div>
+                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>P50</span>
+                    <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p50)}</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>P90</span>
+                    <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p90)}</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>P99</span>
+                    <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p99)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="assumptions-table-wrapper">
+                <table className="assumptions-table text-mono" style={{ fontSize: '0.75rem' }}>
+                  <thead>
+                    <tr>
+                      <th>Pipeline Stage</th>
+                      <th>Type</th>
+                      <th style={{ textAlign: 'right' }}>Base Latency</th>
+                      <th style={{ textAlign: 'right' }}>Traffic Factor</th>
+                      <th style={{ textAlign: 'right' }}>Effective Path</th>
+                      <th>Architectural Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.latencies.criticalPathSegments && result.latencies.criticalPathSegments.length > 0 ? (
+                      result.latencies.criticalPathSegments.map((seg, idx) => (
+                        <tr key={`${seg.componentId}-${idx}`}>
+                          <td style={{ fontWeight: 600, color: '#FFFFFF' }}>{seg.componentName}</td>
+                          <td style={{ color: '#A1A1AA' }}>{seg.type}</td>
+                          <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatLatency(seg.baseLatencyMs)}</td>
+                          <td style={{ textAlign: 'right', color: '#71717A' }}>{Math.round(seg.trafficFactor * 100)}%</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF', fontWeight: 600 }}>{formatLatency(seg.effectiveLatencyMs)}</td>
+                          <td style={{ color: '#71717A', fontSize: '0.6875rem' }}>{seg.notes}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: 'center', color: '#71717A' }}>No critical path stages identified</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.6875rem', color: '#A1A1AA', lineHeight: 1.5 }}>
+                <strong style={{ color: '#FFFFFF' }}>Model Transparency: </strong>
+                {result.latencies.latencyDisclaimer || 'P95 is a model-derived estimate based on configured latency and saturation assumptions, not a measurement from production infrastructure.'}
+              </div>
+            </div>
+            <div className="dialog-footer" style={{ justifyContent: 'flex-end' }}>
+              <button onClick={() => setIsLatencyModalOpen(false)} className="btn btn-secondary btn-sm">Close</button>
             </div>
           </div>
         </div>
@@ -1239,6 +1501,163 @@ export default function SimulatorClient({
 
         .warning-icon {
           font-size: 1rem;
+        }
+
+        /* Section 21 & 22: Engineering Telemetry Strip */
+        .simulator-telemetry-strip {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          background: #09090B;
+          border-bottom: 1px solid var(--color-border);
+          flex-shrink: 0;
+          z-index: 20;
+        }
+
+        .telemetry-cell {
+          padding: 8px 16px;
+          border-right: 1px solid var(--color-border);
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          background: #09090B;
+          transition: background 0.15s ease;
+        }
+
+        .telemetry-cell:last-child {
+          border-right: none;
+        }
+
+        .telemetry-cell--clickable {
+          cursor: pointer;
+        }
+
+        .telemetry-cell--clickable:hover {
+          background: #141417;
+        }
+
+        .telemetry-cell--clickable:focus-visible {
+          outline: 1px solid #FFFFFF;
+          outline-offset: -1px;
+        }
+
+        .telemetry-cell-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .telemetry-cell-label {
+          font-family: var(--font-display);
+          font-size: 0.6875rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: #71717A;
+        }
+
+        .telemetry-mode-tag {
+          font-size: 0.5625rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          padding: 1px 4px;
+          border-radius: 2px;
+        }
+
+        .mode-live {
+          color: #FAFAFA;
+          background: #18181B;
+          border: 1px solid #3F3F46;
+        }
+
+        .mode-calibrated {
+          color: #09090B;
+          background: #FAFAFA;
+          font-weight: 800;
+        }
+
+        .mode-warning {
+          color: #FAFAFA;
+          background: #27272A;
+          border: 1px solid #52525B;
+        }
+
+        .mode-neutral {
+          color: #A1A1AA;
+          background: #141417;
+          border: 1px solid #27272A;
+        }
+
+        .telemetry-cell-value {
+          font-family: var(--font-mono);
+          font-size: 1.1875rem;
+          font-weight: 700;
+          color: #FFFFFF;
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .telemetry-unit {
+          font-size: 0.75rem;
+          font-weight: 400;
+          color: #71717A;
+        }
+
+        .telemetry-cell-subtext {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: #A1A1AA;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* Share Disclosure Box (Section 26) */
+        .share-disclosure-box {
+          background: #141417;
+          border: 1px solid var(--color-border);
+          border-radius: 4px;
+          padding: 12px 14px;
+        }
+
+        .share-disclosure-title {
+          font-size: 0.6875rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: #FFFFFF;
+          margin-bottom: 6px;
+        }
+
+        .share-disclosure-text {
+          font-family: var(--font-ui);
+          font-size: 0.75rem;
+          color: #A1A1AA;
+          margin-bottom: 8px;
+          line-height: 1.4;
+        }
+
+        .share-disclosure-list {
+          font-size: 0.6875rem;
+          color: #D4D4D8;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+          margin-bottom: 10px;
+          list-style: none;
+          padding: 0;
+        }
+
+        .share-disclosure-warning {
+          font-family: var(--font-ui);
+          font-size: 0.6875rem;
+          color: #71717A;
+          line-height: 1.4;
+          border-top: 1px solid #27272A;
+          padding-top: 8px;
+          margin: 0;
         }
 
         /* 3-Column Work Area Grid: Left 330px, Canvas flex-1, Right 370px */

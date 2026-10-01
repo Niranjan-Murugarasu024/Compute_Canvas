@@ -1430,9 +1430,14 @@ export function ScaleSection() {
                 <span className="text-technical-label">
                   TOPOLOGY // {tier.architecture.nodes.length} COMPONENTS // {tier.architecture.edges.length} WIRES
                 </span>
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
-                  {tier.trafficLabel} REQ / MO
-                </span>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                    REFERENCE SCENARIO
+                  </span>
+                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
+                    {tier.trafficLabel} REQ / MO
+                  </span>
+                </div>
               </div>
 
               {/* Animated Mini SVG Graph */}
@@ -1531,7 +1536,7 @@ export function ScaleSection() {
               </div>
 
               <div className="scale-metric-box">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. P95 LATENCY</span>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED P95</span>
                 <span className="text-mono scale-metric-val" style={{ color: '#D4D4D8' }}>
                   {formatLatency(sim.p95Latency)}
                 </span>
@@ -1873,9 +1878,14 @@ export function WhatWouldYouBuildSection() {
           >
             <div className="obj-card-top">
               <div>
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
-                  {obj.label} TOPOLOGY // {obj.model.toUpperCase()}
-                </span>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
+                    {obj.label} TOPOLOGY // {obj.model.toUpperCase()}
+                  </span>
+                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                    REFERENCE SCENARIO
+                  </span>
+                </div>
                 <p style={{ color: 'var(--color-text)', fontSize: '0.9375rem', marginTop: 'var(--space-2)', fontFamily: 'var(--font-ui)', fontWeight: 500 }}>
                   {obj.description}
                 </p>
@@ -1895,7 +1905,7 @@ export function WhatWouldYouBuildSection() {
                 </span>
               </div>
               <div className="obj-metric-item">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. P95 LATENCY</span>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED P95</span>
                 <span className="text-mono obj-metric-num" style={{ color: '#D4D4D8' }}>
                   {formatLatency(result.p95Latency)}
                 </span>
@@ -1907,9 +1917,9 @@ export function WhatWouldYouBuildSection() {
                 </span>
               </div>
               <div className="obj-metric-item">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>QUALITY ESTIMATE</span>
-                <span className="text-mono obj-metric-num" style={{ color: '#E4E4E7' }}>
-                  {result.qualityEstimate}%
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>CAPABILITY TIER</span>
+                <span className="text-mono obj-metric-num" style={{ color: '#FAFAFA', fontSize: '0.875rem' }}>
+                  {result.capabilityTier || 'Frontier Reasoning'}
                 </span>
               </div>
             </div>
@@ -1917,7 +1927,7 @@ export function WhatWouldYouBuildSection() {
             <div className="obj-tradeoff-note">
               <span className="text-mono" style={{ color: 'var(--color-text-muted)', marginRight: '6px' }}>[TRADEOFF]</span>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-ui)' }}>
-                <strong>Empirical Reality:</strong> {obj.tradeoffNote}
+                <strong>Architectural Tradeoff:</strong> {obj.tradeoffNote}
               </span>
             </div>
           </motion.div>

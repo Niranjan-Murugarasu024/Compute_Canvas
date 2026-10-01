@@ -132,7 +132,7 @@ export default function HeroInteractive() {
               {/* Instrument Header Bar */}
               <div className="instrument-header">
                 <div className="instrument-title-row">
-                  <span className="instrument-live-tag text-mono">● LIVE INSTRUMENT</span>
+                  <span className="instrument-live-tag text-mono">● LIVE SIMULATION</span>
                   <span className="instrument-model-tag text-mono">TOPOLOGY: ROUTER + CACHE</span>
                 </div>
                 <button
@@ -291,16 +291,17 @@ export default function HeroInteractive() {
                     <span className="readout-col-val text-mono">${(sim.costPerRequest * 1000).toFixed(3)}</span>
                   </div>
                   <div className="readout-col">
-                    <span className="readout-col-label text-mono">P95 LATENCY</span>
+                    <span className="readout-col-label text-mono">MODELED P95</span>
                     <span className="readout-col-val text-mono">{formatLatency(sim.p95Latency)}</span>
                   </div>
                   <div className="readout-col">
-                    <span className="readout-col-label text-mono">CACHE DELTA</span>
+                    <span className="readout-col-label text-mono">CACHE SAVINGS</span>
                     <span className="readout-col-val text-mono">-{formatCurrency(estimatedSavings)}/MO</span>
                   </div>
                 </div>
-                <div className="readout-footnote text-mono">
-                  <span>DIAGNOSTIC: {sim.bottleneck.componentName.toUpperCase()} CONTRIBUTES {sim.bottleneck.impactPercentage}% TO {sim.bottleneck.metricType.toUpperCase()}</span>
+                <div className="readout-footnote text-mono" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  <span>BASELINE: {formatCurrency(noCacheSim.monthlyCost)}/MO (0% CACHE) → {formatCurrency(sim.monthlyCost)}/MO ({Math.round(cacheHitRate * 100)}% CACHE) · SAVINGS: {formatCurrency(estimatedSavings)}/MO</span>
+                  <span>DIAGNOSTIC: {sim.bottleneck.componentName.toUpperCase()} CONTRIBUTES {sim.bottleneck.impactPercentage}% TO SPEND</span>
                 </div>
               </div>
             </div>

@@ -3,7 +3,13 @@
 import Navigation from '@/components/navigation/Navigation';
 import { Footer } from '@/components/sections/LandingSections';
 import Link from 'next/link';
-import { MODEL_PRICING, INFRA_PRICING, QUALITY_BENCHMARK_METHODOLOGY } from '@/lib/simulation/engine';
+import {
+  MODEL_PRICING,
+  INFRA_PRICING,
+  MODEL_METADATA,
+  ASSUMPTION_REGISTRY,
+  QUALITY_BENCHMARK_METHODOLOGY,
+} from '@/lib/simulation/engine';
 
 export default function AssumptionsClient() {
   const fastModels = Object.entries(MODEL_PRICING).filter(([_, m]) => m.category === 'fast');
@@ -18,27 +24,85 @@ export default function AssumptionsClient() {
             <span className="section-label">[TRANSPARENCY_SPECIFICATION]</span>
             <h1 className="section-heading">Pricing &amp; Simulation Assumptions</h1>
             <p className="section-lead">
-              Every formula, unit price, latency expectation, quality score, and calibration curve used by ComputeCanvas is deterministic and publicly verifiable.
+              Every formula, unit price, latency baseline, and calibration parameter used by ComputeCanvas is deterministic and publicly verifiable.
             </p>
-            <div className="trust-disclaimer-box" role="note" style={{ marginTop: '20px' }}>
+
+            {/* Model Metadata & Provenance Strip (Section 11) */}
+            <div className="model-metadata-strip text-mono" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', padding: '12px 16px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.75rem', marginTop: '16px' }}>
+              <div><span style={{ color: '#71717A' }}>ENGINE: </span><strong style={{ color: '#FFFFFF' }}>{MODEL_METADATA.engineVersion}</strong></div>
+              <div><span style={{ color: '#71717A' }}>PRICING EFFECTIVE: </span><strong style={{ color: '#FFFFFF' }}>{MODEL_METADATA.pricingAssumptionsDate}</strong></div>
+              <div><span style={{ color: '#71717A' }}>LATENCY BENCHMARKS: </span><strong style={{ color: '#FFFFFF' }}>{MODEL_METADATA.latencyAssumptionsDate}</strong></div>
+              <div><span style={{ color: '#71717A' }}>DATA MODE: </span><strong style={{ color: '#FFFFFF' }}>DETERMINISTIC SIMULATION</strong></div>
+            </div>
+
+            <div className="trust-disclaimer-box" role="note" style={{ marginTop: '16px' }}>
               <span className="trust-icon text-mono">[NOTE]</span>
               <p>
                 <strong>Operational Scope: </strong>
-                ComputeCanvas produces deterministic estimates based on configurable assumptions and published industry benchmarks. It is designed for architectural comparison, planning, and pre-deployment cost modeling.
+                ComputeCanvas produces deterministic estimates based on configurable assumptions and published provider benchmarks. It is designed for architectural comparison, planning, and pre-deployment cost modeling.
               </p>
             </div>
           </div>
 
           <div className="assumptions-sections">
+            {/* Section 0: Centralized Assumption Registry (Section 10) */}
+            <section className="assumption-card">
+              <div className="card-top-row">
+                <span className="badge badge--primary text-mono">SOURCE OF TRUTH</span>
+                <span className="card-date text-technical-label">16 VERIFIED ASSUMPTIONS</span>
+              </div>
+              <h2 className="card-title">Model Assumption Registry</h2>
+              <p className="card-desc">
+                Centralized registry of all simulation variables, provider unit rates, and network baselines with verifiable citations.
+              </p>
+
+              <div className="table-responsive">
+                <table className="assumptions-data-table text-mono">
+                  <thead>
+                    <tr>
+                      <th>Assumption ID</th>
+                      <th>Parameter Name</th>
+                      <th>Default Value</th>
+                      <th>Unit</th>
+                      <th>Primary Source</th>
+                      <th>Effective Date</th>
+                      <th>Technical Context / Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ASSUMPTION_REGISTRY.map(a => (
+                      <tr key={a.id}>
+                        <td style={{ color: '#A1A1AA', fontWeight: 600 }}>{a.id}</td>
+                        <td style={{ color: '#FFFFFF', fontWeight: 500 }}>{a.name}</td>
+                        <td style={{ color: '#FAFAFA' }}>{a.value}</td>
+                        <td style={{ color: '#71717A' }}>{a.unit}</td>
+                        <td>
+                          {a.sourceUrl ? (
+                            <a href={a.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#FAFAFA', textDecoration: 'underline' }}>
+                              {a.source}
+                            </a>
+                          ) : (
+                            <span style={{ color: '#A1A1AA' }}>{a.source || 'Internal reference assumption'}</span>
+                          )}
+                        </td>
+                        <td style={{ color: '#71717A' }}>{a.effectiveDate || 'March 2026'}</td>
+                        <td style={{ color: '#A1A1AA', fontSize: '0.6875rem' }}>{a.notes}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
             {/* Section 1: Fast Reasoning Models */}
             <section className="assumption-card">
               <div className="card-top-row">
                 <span className="badge badge--neutral text-mono">TIER 1</span>
-                <span className="card-date text-technical-label">UPDATED: Q1 2026</span>
+                <span className="card-date text-technical-label">UPDATED: MARCH 2026</span>
               </div>
               <h2 className="card-title">Fast Reasoning Models (Low Latency / High Volume)</h2>
               <p className="card-desc">
-                Ideal for classification, routing, extraction, and sub-150ms interactive UI workflows. Quality indexed to the Artificial Analysis Intelligence Index.
+                Ideal for classification, routing, extraction, and sub-150ms interactive UI workflows.
               </p>
 
               <div className="table-responsive">
@@ -50,7 +114,7 @@ export default function AssumptionsClient() {
                       <th>Input / 1M</th>
                       <th>Output / 1M</th>
                       <th>Baseline P95</th>
-                      <th>Quality (0–100)</th>
+                      <th>Capability Tier</th>
                       <th>Benchmark Citation</th>
                     </tr>
                   </thead>
@@ -62,7 +126,7 @@ export default function AssumptionsClient() {
                         <td style={{ color: '#FFFFFF' }}>${m.inputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#FFFFFF' }}>${m.outputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#D4D4D8' }}>{m.baselineLatencyMs} ms</td>
-                        <td style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{m.qualityScore}%</td>
+                        <td style={{ color: '#FAFAFA', fontWeight: 600 }}>{m.capabilityTier}</td>
                         <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
                           {m.qualityBenchmark}
                         </td>
@@ -77,11 +141,11 @@ export default function AssumptionsClient() {
             <section className="assumption-card">
               <div className="card-top-row">
                 <span className="badge badge--neutral text-mono">TIER 2</span>
-                <span className="card-date text-technical-label">UPDATED: Q1 2026</span>
+                <span className="card-date text-technical-label">UPDATED: MARCH 2026</span>
               </div>
               <h2 className="card-title">Frontier Reasoning Models (Complex Synthesis &amp; Code)</h2>
               <p className="card-desc">
-                Highest reasoning depth, multi-step problem solving, complex agent workflows, and critical synthesis. Quality indexed to Artificial Analysis &amp; LMSYS Arena.
+                Highest reasoning depth, multi-step problem solving, complex agent workflows, and critical synthesis.
               </p>
 
               <div className="table-responsive">
@@ -93,7 +157,7 @@ export default function AssumptionsClient() {
                       <th>Input / 1M</th>
                       <th>Output / 1M</th>
                       <th>Baseline P95</th>
-                      <th>Quality (0–100)</th>
+                      <th>Capability Tier</th>
                       <th>Benchmark Citation</th>
                     </tr>
                   </thead>
@@ -102,10 +166,10 @@ export default function AssumptionsClient() {
                       <tr key={id}>
                         <td style={{ fontWeight: 600, color: 'var(--color-text)' }}>{m.product}</td>
                         <td>{m.provider}</td>
-                        <td style={{ color: 'var(--color-cost)' }}>${m.inputPricePer1M.toFixed(2)}</td>
-                        <td style={{ color: 'var(--color-cost)' }}>${m.outputPricePer1M.toFixed(2)}</td>
-                        <td style={{ color: 'var(--color-performance)' }}>{m.baselineLatencyMs} ms</td>
-                        <td style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{m.qualityScore}%</td>
+                        <td style={{ color: '#FAFAFA' }}>${m.inputPricePer1M.toFixed(2)}</td>
+                        <td style={{ color: '#FAFAFA' }}>${m.outputPricePer1M.toFixed(2)}</td>
+                        <td style={{ color: '#FAFAFA' }}>{m.baselineLatencyMs} ms</td>
+                        <td style={{ color: '#FAFAFA', fontWeight: 600 }}>{m.capabilityTier}</td>
                         <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
                           {m.qualityBenchmark}
                         </td>
@@ -116,22 +180,22 @@ export default function AssumptionsClient() {
               </div>
             </section>
 
-            {/* Section 3: Quality Scoring Methodology & Citations */}
+            {/* Section 3: Model Capability Tiers & Citations */}
             <section className="assumption-card">
               <div className="card-top-row">
-                <span className="badge badge--neutral text-mono">METHODOLOGY</span>
+                <span className="badge badge--neutral text-mono">TAXONOMY</span>
                 <span className="card-date text-technical-label">CITED BENCHMARKS</span>
               </div>
-              <h2 className="card-title">Model Quality Benchmarks &amp; Grounding Methodology</h2>
+              <h2 className="card-title">Architectural Capability Tiers &amp; Grounding</h2>
               <p className="card-desc" style={{ marginBottom: 'var(--space-4)' }}>
-                ComputeCanvas does not generate subjective or marketing-driven quality ratings. Every quality score displayed in the simulator (e.g. 95% Direct LLM, 97% RAG Pipeline, 86% Router + Cache) is mathematically derived from independent public benchmarks and retrieval grounding principles:
+                ComputeCanvas organizes architectures into discrete qualitative capability tiers rather than arbitrary single-percentage scores:
               </p>
 
               <div className="formula-box text-mono" style={{ marginBottom: 'var(--space-4)' }}>
-                <p>1. Individual Model Quality Score ($Q_i$) = Normalized 0–100 scale based on Artificial Analysis Intelligence Index (composite of MMLU-Pro, GPQA Diamond, MATH-500, HumanEval) and LMSYS Chatbot Arena Elo.</p>
-                <p>2. Multi-Model Traffic-Weighted Composite = ∑ ($Q_i$ × TrafficShare_i) / ∑ (TrafficShare_i)</p>
-                <p>3. RAG Grounding Bonus = +1% when an active Vector Database is connected in the pipeline (grounded retrieval reduces hallucination rates as demonstrated in Stanford RAGBench evaluations).</p>
-                <p>4. Simulated Architecture Quality = Clamp(50..99, Round(WeightedComposite + GroundingBonus))</p>
+                <p>• Frontier Reasoning: Pure frontier model reasoning (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro) with deepest synthesis capacity.</p>
+                <p>• Context-Grounded Frontier: Frontier model paired with active Vector Database retrieval for verifiable ground-truth synthesis.</p>
+                <p>• Blended Routing: Complexity router steering requests between fast models and frontier models to balance cost and capability.</p>
+                <p>• Fast Utility: Pure fast model execution for classification, routing, and low-latency throughput.</p>
               </div>
 
               <div className="table-responsive" style={{ marginTop: 'var(--space-4)' }}>
@@ -232,9 +296,30 @@ export default function AssumptionsClient() {
                 <p>2. Calibration Factor = Actual Bill / Baseline Simulated Spend</p>
                 <p>3. Calibrated Monthly Cost = Raw Simulated Spend × Calibration Factor</p>
               </div>
+            </section>
 
-              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: 'var(--space-4)', lineHeight: 1.6 }}>
-                <strong>Integrity Guarantee:</strong> Calibration scales model token consumption proportionally to match your historical empirical bill. It does <em>not</em> arbitrarily fake individual service rates or invent artificial line items.
+            {/* Section 5: Model Limitations (Section 50) */}
+            <section className="assumption-card" style={{ borderLeft: '3px solid #FFFFFF' }}>
+              <div className="card-top-row">
+                <span className="badge badge--neutral text-mono">DISCLOSURE</span>
+                <span className="card-date text-technical-label">METHODOLOGY SCOPE</span>
+              </div>
+              <h2 className="card-title">Model Limitations &amp; Financial Disclaimer</h2>
+              <p className="card-desc" style={{ marginBottom: 'var(--space-4)' }}>
+                ComputeCanvas is a comparative architecture workbench for engineering trade-off analysis. It is not an invoice prediction guarantee.
+              </p>
+
+              <div className="formula-box text-mono" style={{ lineHeight: 1.8 }}>
+                <p><strong>Actual production spend and latency depend on variables outside this model:</strong></p>
+                <p>• Workload variance and non-uniform token distributions (long-tail outliers)</p>
+                <p>• Real-world cache invalidation dynamics and dynamic prompt entropy</p>
+                <p>• Provider pricing updates, volume commitments, and currency fluctuations</p>
+                <p>• Infrastructure concurrency limits, rate-limit 429 retries, and network jitter</p>
+                <p>• Secondary services outside the modeled graph (evaluators, guardrails, storage)</p>
+              </div>
+
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: 'var(--space-4)', lineHeight: 1.6 }}>
+                Use ComputeCanvas results to compare alternative architectural topologies (e.g. evaluating whether adding a semantic cache amortizes latency and cost), not as legally binding financial invoice guarantees.
               </p>
             </section>
 
@@ -255,7 +340,7 @@ export default function AssumptionsClient() {
       </main>
       <Footer />
 
-      <style jsx>{`
+      <style>{`
         .assumptions-page {
           min-height: 100vh;
           padding-top: calc(var(--nav-height) + 40px);

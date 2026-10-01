@@ -94,57 +94,52 @@ Total Monthly Spend = ModelSpend + InfraSpend`}
                 </code>
               </div>
               <p style={{ marginTop: 'var(--space-4)' }}>
-                <strong>Estimated P95 Latency Model:</strong>
+                <strong>Modeled Tail Latency (Estimated P95):</strong>
               </p>
               <div className="docs-code-block">
                 <code>
-{`CacheHitLatency  = IngressLatency + CacheLookupLatency (~17 ms)
+{`// Critical Path Decomposition
+IngressLatency   = 5 - 12 ms (TLS termination & rate gating)
+CacheHitLatency  = IngressLatency + CacheLookupLatency (~17 ms)
 CacheMissLatency = IngressLatency + CacheLookupLatency + RouterLatency + VectorLookupLatency + ModelInferenceLatency
-Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × CacheMissLatency)`}
+Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × CacheMissLatency)
+
+// Transparency Note:
+// P95 is a model-derived estimate based on configured latency and saturation assumptions,
+// not a telemetry measurement from live production infrastructure.`}
                 </code>
               </div>
             </section>
 
             {/* Section 4: Quality Scoring Methodology */}
             <section className="docs-section">
-              <h2 className="docs-title">4. Model Quality Benchmarking &amp; Grounding</h2>
+              <h2 className="docs-title">4. Model Capability Tiers &amp; Grounding Taxonomy</h2>
               <p>
-                To provide balanced trade-off modeling between price, latency, and model capability, ComputeCanvas models quality scores on a normalized 0–100 scale calibrated against established independent benchmarks:
+                To provide honest, defensible architectural trade-off analysis, ComputeCanvas classifies pipelines into discrete qualitative capability tiers rather than single composite percentages:
               </p>
               <div className="docs-code-block">
                 <code>
-{`// 1. Individual Model Quality Score
-// Calibrated from Artificial Analysis Intelligence Index & LMSYS Chatbot Arena:
-GPT-4o             = 95%  (MMLU-Pro / GPQA Diamond composite, Arena Elo ~1285)
-Claude 3.5 Sonnet  = 96%  (MMLU-Pro / HumanEval composite, Arena Elo ~1290)
-Gemini 2.5 Pro     = 94%  (Deep context & reasoning index, Arena Elo ~1275)
-GPT-4o Mini        = 82%  (Utility reasoning index, Arena Elo ~1215)
-Gemini 2.0 Flash   = 80%  (Sub-100ms ultra-fast reasoning, Arena Elo ~1205)
-Claude 3 Haiku     = 78%  (Rapid reasoning tier, Arena Elo ~1180)
+{`// 1. Frontier Reasoning
+// Pure frontier model execution (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro) for complex synthesis.
 
-// 2. Traffic-Weighted Architecture Quality
-ArchitectureBaseQuality = ∑ (Model_i_Quality × TrafficShare_i) / ∑ (TrafficShare_i)
+// 2. Context-Grounded Frontier
+// Frontier reasoning augmented with active Vector Database retrieval for domain verification.
 
-// 3. RAG Grounding Bonus (Factual Grounding)
-// Modeled after Stanford RAGBench findings on hallucination mitigation via verified retrieval:
-GroundingBonus = ArchitectureHasVectorDB ? +1% : 0%
+// 3. Blended Routing
+// Dynamic complexity routing steering requests across fast utility and frontier models.
 
-// 4. Final Estimated Architecture Quality
-EstimatedQuality = Clamp(50..99, Round(ArchitectureBaseQuality + GroundingBonus))`}
+// 4. Fast Utility
+// Low-latency, high-throughput utility inference (GPT-4o Mini, Gemini 2.0 Flash) for classification & extraction.`}
                 </code>
               </div>
               <p style={{ marginTop: 'var(--space-4)' }}>
-                <strong>Benchmark Citations:</strong> Ratings are referenced directly against{' '}
+                <strong>Benchmark Citations:</strong> Unit rates and baseline performance are cross-referenced with public provider documentation and benchmarks from{' '}
                 <a href="https://artificialanalysis.ai" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}>
                   Artificial Analysis
                 </a>{' '}
                 and the{' '}
                 <a href="https://chat.lmsys.org" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}>
                   LMSYS Chatbot Arena
-                </a>
-                . RAG grounding verification parameters reflect research from{' '}
-                <a href="https://arxiv.org/abs/2407.11005" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}>
-                  Stanford CRFM RAGBench
                 </a>.
               </p>
             </section>
@@ -162,12 +157,15 @@ EstimatedQuality = Clamp(50..99, Round(ArchitectureBaseQuality + GroundingBonus)
 
             {/* Section 6: Zero-Backend Link Sharing */}
             <section className="docs-section">
-              <h2 className="docs-title">6. Zero-Backend State Sharing</h2>
+              <h2 className="docs-title">6. Zero-Backend State Sharing &amp; Privacy</h2>
               <p>
-                ComputeCanvas uses RFC 4648 § 5 Base64URL client serialization. Clicking <strong>Share Architecture</strong> encodes the complete graph topology, workload sliders, and calibration parameters directly into the URL hash or query string (`/simulator?data=...`).
+                ComputeCanvas uses RFC 4648 § 5 Base64URL client serialization. Clicking <strong>Share Architecture</strong> encodes the complete graph topology, workload sliders, and calibration parameters directly into the URL query string (`/simulator?data=...`).
               </p>
               <p>
                 There is <strong>no backend database</strong> and <strong>no account required</strong>. Recipients receive the exact same architecture, components, and economics instantaneously.
+              </p>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: '8px' }}>
+                <em>Notice:</em> Because state is contained entirely in the URL query string, never put proprietary credentials, API keys, or secret infrastructure IP addresses into custom component labels.
               </p>
             </section>
 
@@ -175,8 +173,17 @@ EstimatedQuality = Clamp(50..99, Round(ArchitectureBaseQuality + GroundingBonus)
             <section className="docs-section">
               <h2 className="docs-title">7. Intended Use &amp; Limitations</h2>
               <p>
-                ComputeCanvas is an architecture planning and comparative decision instrument. It models steady-state expected behavior under specified traffic assumptions. It is not an invoice guarantee, an observability APM, or an automated cloud billing sync.
+                ComputeCanvas is an architecture planning and comparative decision instrument. It models steady-state expected behavior under specified traffic assumptions.
               </p>
+              <div className="docs-code-block" style={{ marginTop: '8px' }}>
+                <code>
+{`// Model Limitations Disclosure:
+- Results depend on workload assumptions, token distributions, and provider list pricing.
+- Concurrency spikes, rate-limit 429 retries, and network jitter alter production latency.
+- Secondary infrastructure outside the modeled graph (storage, egress, fine-tuning) is not included.
+- Use results to compare architectures, not as financial invoice guarantees.`}
+                </code>
+              </div>
             </section>
 
             <div className="docs-cta-card">

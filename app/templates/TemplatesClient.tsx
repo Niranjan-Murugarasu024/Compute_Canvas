@@ -47,17 +47,36 @@ export default function TemplatesClient() {
               transition={{ duration: 0.35, delay: i * 0.04 }}
             >
               <Link href={`/simulator?template=${template.id}`} className="template-page-card">
-                <div style={{ marginBottom: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
                   <span className="text-technical-label">
                     {template.category}
+                  </span>
+                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.5625rem' }}>
+                    TEMPLATE DEFAULT
                   </span>
                 </div>
                 <h2 style={{ fontSize: '1.125rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
                   {template.name}
                 </h2>
-                <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)', lineHeight: 1.55 }}>
+                <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)', lineHeight: 1.55 }}>
                   {template.description}
                 </p>
+
+                {/* Structured Architectural Blueprint: When to Use / Optimizes / Tradeoff (Section 29) */}
+                <div className="template-tradeoffs-box text-mono" style={{ margin: '8px 0 16px 0', padding: '10px 12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.6875rem', lineHeight: 1.5 }}>
+                  <div style={{ marginBottom: '4px' }}>
+                    <span style={{ color: '#71717A', fontWeight: 600 }}>WHEN TO USE: </span>
+                    <span style={{ color: '#FAFAFA' }}>{template.whenToUse}</span>
+                  </div>
+                  <div style={{ marginBottom: '4px' }}>
+                    <span style={{ color: '#71717A', fontWeight: 600 }}>OPTIMIZES: </span>
+                    <span style={{ color: '#FFFFFF' }}>{template.whatItOptimizes}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#71717A', fontWeight: 600 }}>KEY TRADEOFF: </span>
+                    <span style={{ color: '#A1A1AA' }}>{template.keyTradeoff}</span>
+                  </div>
+                </div>
 
                 {/* Mini architecture preview */}
                 <div className="template-page-card__nodes">
@@ -76,7 +95,7 @@ export default function TemplatesClient() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-technical-label">P95 LATENCY</span>
+                    <span className="text-technical-label">MODELED P95</span>
                     <span className="text-mono" style={{ color: '#D4D4D8', fontWeight: 500 }}>
                       {formatLatency(result.p95Latency)}
                     </span>
@@ -86,9 +105,9 @@ export default function TemplatesClient() {
                     <span className="text-mono" style={{ color: '#A1A1AA' }}>{template.architecture.nodes.length} NODES</span>
                   </div>
                   <div>
-                    <span className="text-technical-label" title="Artificial Analysis Intelligence Index & LMSYS Chatbot Arena">QUALITY [AA]</span>
-                    <span className="text-mono" style={{ color: '#E4E4E7' }}>
-                      {result.qualityEstimate}%
+                    <span className="text-technical-label">CAPABILITY TIER</span>
+                    <span className="text-mono" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: '0.75rem' }}>
+                      {template.capabilityTier || result.capabilityTier}
                     </span>
                   </div>
                 </div>

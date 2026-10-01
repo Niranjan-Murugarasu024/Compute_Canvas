@@ -24,18 +24,21 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ComputeCanvas — Design AI Architecture. See the Cost Before You Build It.",
-  description: "Interactive AI architecture simulator for modeling estimated cost, latency, bottlenecks, and architecture trade-offs.",
+  title: "ComputeCanvas — AI Architecture & Economics Workbench",
+  description: "Interactive AI architecture and economics workbench. Model topology, simulate deterministic monthly spend, cost per request, modeled tail latency, cache amortizations, and routing tradeoffs before writing deployment code.",
+  icons: {
+    icon: "/icon.svg",
+  },
   openGraph: {
-    title: "ComputeCanvas — Design AI Architecture. See the Cost Before You Build It.",
-    description: "Interactive AI architecture simulator for modeling estimated cost, latency, bottlenecks, and architecture trade-offs.",
+    title: "ComputeCanvas — AI Architecture & Economics Workbench",
+    description: "Interactive AI architecture and economics workbench. Model topology, simulate deterministic monthly spend, cost per request, modeled tail latency, cache amortizations, and routing tradeoffs before writing deployment code.",
     type: "website",
     siteName: "ComputeCanvas",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ComputeCanvas — Design AI Architecture. See the Cost Before You Build It.",
-    description: "Interactive AI architecture simulator for modeling estimated cost, latency, bottlenecks, and architecture trade-offs.",
+    title: "ComputeCanvas — AI Architecture & Economics Workbench",
+    description: "Interactive AI architecture and economics workbench. Model topology, simulate deterministic monthly spend, cost per request, modeled tail latency, cache amortizations, and routing tradeoffs before writing deployment code.",
   },
   robots: {
     index: true,

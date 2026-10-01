@@ -177,6 +177,17 @@ export default function PricingClient() {
             <p className="section-lead">
               ComputeCanvas is completely free while we validate the simulation engine with AI engineers, systems architects, and FinOps practitioners.
             </p>
+
+            {/* Current Status Banner (Section 52) */}
+            <div className="pricing-status-banner text-mono" style={{ margin: '20px 0 16px 0', padding: '14px 18px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.8125rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FFFFFF', display: 'inline-block' }} />
+                <strong style={{ color: '#FFFFFF' }}>CURRENT STATUS: VALIDATION RELEASE</strong>
+              </div>
+              <p style={{ margin: 0, color: '#A1A1AA', fontSize: '0.75rem', lineHeight: 1.5, fontFamily: 'var(--font-ui)' }}>
+                ComputeCanvas is currently available for validation and evaluation. The complete simulation engine, component palette, bill calibration, and URL state sharing are unrestricted. Commercial team plans are planned for a future release.
+              </p>
+            </div>
           </div>
 
           <div className="pricing-grid">
