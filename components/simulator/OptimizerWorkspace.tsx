@@ -147,14 +147,14 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
           </div>
 
           <div className="metric-compare-col">
-            <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>QUALITY BENCHMARK</span>
+            <span className="text-caption" style={{ color: 'var(--color-text-muted)' }} title="Artificial Analysis Intelligence Index & LMSYS Arena">QUALITY BENCHMARK [AA]</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
               <span className="text-mono" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-quality)' }}>
                 {activeCandidate.simulation.qualityEstimate}%
               </span>
             </div>
             <span className="text-caption text-mono" style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-              Frontier reasoning score
+              Artificial Analysis Index
             </span>
           </div>
         </div>

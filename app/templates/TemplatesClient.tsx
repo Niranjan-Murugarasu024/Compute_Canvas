@@ -86,7 +86,7 @@ export default function TemplatesClient() {
                     <span className="text-mono" style={{ color: '#A1A1AA' }}>{template.architecture.nodes.length} NODES</span>
                   </div>
                   <div>
-                    <span className="text-technical-label">QUALITY</span>
+                    <span className="text-technical-label" title="Artificial Analysis Intelligence Index & LMSYS Chatbot Arena">QUALITY [AA]</span>
                     <span className="text-mono" style={{ color: '#E4E4E7' }}>
                       {result.qualityEstimate}%
                     </span>

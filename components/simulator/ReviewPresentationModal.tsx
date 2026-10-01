@@ -113,7 +113,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
                     <span className="kpi-val" style={{ color: 'var(--color-performance)' }}>{formatLatency(sim.p95Latency)}</span>
                   </div>
                   <div className="kpi-item">
-                    <span className="kpi-label">QUALITY ESTIMATE</span>
+                    <span className="kpi-label" title="Benchmarked against Artificial Analysis Intelligence Index & LMSYS Arena">QUALITY ESTIMATE [AA]</span>
                     <span className="kpi-val" style={{ color: 'var(--color-quality)' }}>{sim.qualityEstimate}%</span>
                   </div>
                 </div>

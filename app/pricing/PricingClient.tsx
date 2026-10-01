@@ -115,7 +115,7 @@ export default function PricingClient() {
     setFormError(null);
   };
 
-  const handleWaitlistSubmit = (e: React.FormEvent) => {
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
@@ -127,26 +127,43 @@ export default function PricingClient() {
 
     setIsSubmitting(true);
 
+    const leadData = {
+      email: email.trim(),
+      company: company.trim() || undefined,
+      notes: notes.trim() || undefined,
+      plan: selectedPlanForWaitlist?.name || 'Team Workspaces',
+    };
+
+    // Client localStorage backup for resiliency
     try {
-      // Store locally so validation leads are recorded cleanly
       const existingLeads = JSON.parse(localStorage.getItem('computecanvas_waitlist_leads') || '[]');
       const newLead = {
         id: `lead-${Date.now()}`,
-        plan: selectedPlanForWaitlist?.name || 'Waitlist',
-        email: email.trim(),
-        company: company.trim() || undefined,
-        notes: notes.trim() || undefined,
+        ...leadData,
         timestamp: new Date().toISOString(),
       };
       localStorage.setItem('computecanvas_waitlist_leads', JSON.stringify([...existingLeads, newLead]));
     } catch {
-      // localStorage may fail in private mode; silently proceed
+      // localStorage may fail in private mode
     }
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leadData),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        console.warn('Waitlist API response non-ok:', data);
+      }
+    } catch (err) {
+      console.warn('Waitlist API network issue (saved to local backup):', err);
+    } finally {
       setIsSubmitting(false);
       setIsSubmitted(true);
-    }, 300);
+    }
   };
 
   return (

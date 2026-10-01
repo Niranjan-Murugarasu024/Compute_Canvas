@@ -3,7 +3,7 @@
 import Navigation from '@/components/navigation/Navigation';
 import { Footer } from '@/components/sections/LandingSections';
 import Link from 'next/link';
-import { MODEL_PRICING, INFRA_PRICING } from '@/lib/simulation/engine';
+import { MODEL_PRICING, INFRA_PRICING, QUALITY_BENCHMARK_METHODOLOGY } from '@/lib/simulation/engine';
 
 export default function AssumptionsClient() {
   const fastModels = Object.entries(MODEL_PRICING).filter(([_, m]) => m.category === 'fast');
@@ -18,13 +18,13 @@ export default function AssumptionsClient() {
             <span className="section-label">[TRANSPARENCY_SPECIFICATION]</span>
             <h1 className="section-heading">Pricing &amp; Simulation Assumptions</h1>
             <p className="section-lead">
-              Every formula, unit price, latency expectation, and calibration curve used by ComputeCanvas is deterministic and publicly verifiable.
+              Every formula, unit price, latency expectation, quality score, and calibration curve used by ComputeCanvas is deterministic and publicly verifiable.
             </p>
             <div className="trust-disclaimer-box" role="note" style={{ marginTop: '20px' }}>
               <span className="trust-icon text-mono">[NOTE]</span>
               <p>
                 <strong>Operational Scope: </strong>
-                ComputeCanvas produces deterministic estimates based on configurable assumptions. It is designed for architectural comparison, planning, and pre-deployment cost modeling.
+                ComputeCanvas produces deterministic estimates based on configurable assumptions and published industry benchmarks. It is designed for architectural comparison, planning, and pre-deployment cost modeling.
               </p>
             </div>
           </div>
@@ -38,7 +38,7 @@ export default function AssumptionsClient() {
               </div>
               <h2 className="card-title">Fast Reasoning Models (Low Latency / High Volume)</h2>
               <p className="card-desc">
-                Ideal for classification, routing, extraction, and sub-150ms interactive UI workflows.
+                Ideal for classification, routing, extraction, and sub-150ms interactive UI workflows. Quality indexed to the Artificial Analysis Intelligence Index.
               </p>
 
               <div className="table-responsive">
@@ -47,10 +47,11 @@ export default function AssumptionsClient() {
                     <tr>
                       <th>Model</th>
                       <th>Provider</th>
-                      <th>Input / 1M Tokens</th>
-                      <th>Output / 1M Tokens</th>
-                      <th>Baseline P95 Latency</th>
-                      <th>Source</th>
+                      <th>Input / 1M</th>
+                      <th>Output / 1M</th>
+                      <th>Baseline P95</th>
+                      <th>Quality (0–100)</th>
+                      <th>Benchmark Citation</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -61,7 +62,10 @@ export default function AssumptionsClient() {
                         <td style={{ color: '#FFFFFF' }}>${m.inputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#FFFFFF' }}>${m.outputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#D4D4D8' }}>{m.baselineLatencyMs} ms</td>
-                        <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>{m.source}</td>
+                        <td style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{m.qualityScore}%</td>
+                        <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
+                          {m.qualityBenchmark}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -77,7 +81,7 @@ export default function AssumptionsClient() {
               </div>
               <h2 className="card-title">Frontier Reasoning Models (Complex Synthesis &amp; Code)</h2>
               <p className="card-desc">
-                Highest reasoning depth, multi-step problem solving, complex agent workflows, and critical synthesis.
+                Highest reasoning depth, multi-step problem solving, complex agent workflows, and critical synthesis. Quality indexed to Artificial Analysis &amp; LMSYS Arena.
               </p>
 
               <div className="table-responsive">
@@ -86,10 +90,11 @@ export default function AssumptionsClient() {
                     <tr>
                       <th>Model</th>
                       <th>Provider</th>
-                      <th>Input / 1M Tokens</th>
-                      <th>Output / 1M Tokens</th>
-                      <th>Baseline P95 Latency</th>
-                      <th>Source</th>
+                      <th>Input / 1M</th>
+                      <th>Output / 1M</th>
+                      <th>Baseline P95</th>
+                      <th>Quality (0–100)</th>
+                      <th>Benchmark Citation</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -100,7 +105,59 @@ export default function AssumptionsClient() {
                         <td style={{ color: 'var(--color-cost)' }}>${m.inputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: 'var(--color-cost)' }}>${m.outputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: 'var(--color-performance)' }}>{m.baselineLatencyMs} ms</td>
-                        <td className="text-caption" style={{ color: 'var(--color-text-muted)' }}>{m.source}</td>
+                        <td style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{m.qualityScore}%</td>
+                        <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
+                          {m.qualityBenchmark}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Section 3: Quality Scoring Methodology & Citations */}
+            <section className="assumption-card">
+              <div className="card-top-row">
+                <span className="badge badge--neutral text-mono">METHODOLOGY</span>
+                <span className="card-date text-technical-label">CITED BENCHMARKS</span>
+              </div>
+              <h2 className="card-title">Model Quality Benchmarks &amp; Grounding Methodology</h2>
+              <p className="card-desc" style={{ marginBottom: 'var(--space-4)' }}>
+                ComputeCanvas does not generate subjective or marketing-driven quality ratings. Every quality score displayed in the simulator (e.g. 95% Direct LLM, 97% RAG Pipeline, 86% Router + Cache) is mathematically derived from independent public benchmarks and retrieval grounding principles:
+              </p>
+
+              <div className="formula-box text-mono" style={{ marginBottom: 'var(--space-4)' }}>
+                <p>1. Individual Model Quality Score ($Q_i$) = Normalized 0–100 scale based on Artificial Analysis Intelligence Index (composite of MMLU-Pro, GPQA Diamond, MATH-500, HumanEval) and LMSYS Chatbot Arena Elo.</p>
+                <p>2. Multi-Model Traffic-Weighted Composite = ∑ ($Q_i$ × TrafficShare_i) / ∑ (TrafficShare_i)</p>
+                <p>3. RAG Grounding Bonus = +1% when an active Vector Database is connected in the pipeline (grounded retrieval reduces hallucination rates as demonstrated in Stanford RAGBench evaluations).</p>
+                <p>4. Simulated Architecture Quality = Clamp(50..99, Round(WeightedComposite + GroundingBonus))</p>
+              </div>
+
+              <div className="table-responsive" style={{ marginTop: 'var(--space-4)' }}>
+                <table className="assumptions-data-table text-mono">
+                  <thead>
+                    <tr>
+                      <th>Benchmark / Standard</th>
+                      <th>Evaluated Criteria</th>
+                      <th>Primary Reference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {QUALITY_BENCHMARK_METHODOLOGY.citations.map((c, idx) => (
+                      <tr key={idx}>
+                        <td style={{ fontWeight: 600, color: 'var(--color-text)' }}>{c.name}</td>
+                        <td>{c.metric}</td>
+                        <td>
+                          <a
+                            href={c.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}
+                          >
+                            {c.url.replace(/^https?:\/\//, '')}
+                          </a>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
