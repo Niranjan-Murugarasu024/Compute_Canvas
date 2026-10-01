@@ -61,6 +61,7 @@ export default function PrivacyPage() {
                     href="https://github.com/computecanvas/computecanvas"
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label="ComputeCanvas GitHub Repository"
                     style={{ color: 'var(--color-text)', textDecoration: 'underline' }}
                   >
                     github.com/computecanvas/computecanvas

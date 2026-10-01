@@ -246,37 +246,39 @@ export default function PricingClient() {
           </div>
         </div>
 
-        {/* Waitlist / Early Access Modal */}
-        {selectedPlanForWaitlist && (
-          <div
-            className="waitlist-modal-backdrop"
-            onClick={closeWaitlistModal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="waitlist-title"
-          >
-            <div className="waitlist-modal-content" onClick={e => e.stopPropagation()}>
-              <div className="waitlist-modal-header">
-                <div>
-                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem', marginBottom: '6px', display: 'inline-block' }}>
-                    PRIORITY INTAKE // {selectedPlanForWaitlist.name.toUpperCase()}
-                  </span>
-                  <h3 id="waitlist-title" className="waitlist-modal-title">
-                    Join {selectedPlanForWaitlist.name} Early Access
-                  </h3>
-                  <p className="waitlist-modal-desc">
-                    We are onboarding engineering teams in weekly cohorts. Enter your work credentials below to secure priority workspace provisioning.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeWaitlistModal}
-                  className="waitlist-modal-close"
-                  aria-label="Close modal"
-                >
-                  ✕
-                </button>
+        {/* Waitlist / Early Access Modal — permanently rendered in DOM for SSR inspection, crawler indexing, and immediate access */}
+        <div
+          id="waitlist-modal"
+          className="waitlist-modal-backdrop"
+          style={{ display: selectedPlanForWaitlist ? 'flex' : 'none' }}
+          onClick={closeWaitlistModal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="waitlist-title"
+          aria-hidden={!selectedPlanForWaitlist}
+        >
+          <div className="waitlist-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="waitlist-modal-header">
+              <div>
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem', marginBottom: '6px', display: 'inline-block' }}>
+                  PRIORITY INTAKE // {(selectedPlanForWaitlist?.name || 'Team Workspaces').toUpperCase()}
+                </span>
+                <h3 id="waitlist-title" className="waitlist-modal-title">
+                  Join {selectedPlanForWaitlist?.name || 'Team Workspaces'} Early Access
+                </h3>
+                <p className="waitlist-modal-desc">
+                  We are onboarding engineering teams in weekly cohorts. Enter your work credentials below to secure priority workspace provisioning.
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={closeWaitlistModal}
+                className="waitlist-modal-close"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
 
               {isSubmitted ? (
                 <div className="waitlist-success-state">
@@ -285,7 +287,7 @@ export default function PricingClient() {
                     Priority Access Requested
                   </h4>
                   <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, margin: '0 0 20px 0' }}>
-                    Thank you. We have queued <strong style={{ color: 'var(--color-text)' }}>{email}</strong> for the upcoming {selectedPlanForWaitlist.name} cohort. You will receive an invitation when provisioning opens.
+                    Thank you. We have queued <strong style={{ color: 'var(--color-text)' }}>{email}</strong> for the upcoming {selectedPlanForWaitlist?.name || 'Team Workspaces'} cohort. You will receive an invitation when provisioning opens.
                   </p>
                   <button
                     type="button"
@@ -366,7 +368,6 @@ export default function PricingClient() {
               )}
             </div>
           </div>
-        )}
       </main>
       <Footer />
 

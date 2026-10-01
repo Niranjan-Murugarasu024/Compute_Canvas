@@ -37,8 +37,22 @@ async function runWaitlistTests() {
     throw new Error(`Failed valid submission test: ${JSON.stringify(dataValid)}`);
   }
 
-  // Test 3: Unauthorized GET
-  const reqUnauthorized = new Request('http://localhost:3000/api/waitlist');
+  // Test 3: Unconfigured ADMIN_SECRET returns 503
+  delete process.env.ADMIN_SECRET;
+  const reqUnconfigured = new Request('http://localhost:3000/api/waitlist?secret=any');
+  const resUnconfigured = await GET(reqUnconfigured);
+  if (resUnconfigured.status === 503) {
+    console.log('✅ PASSED: Unconfigured ADMIN_SECRET rejected with 503 locked');
+  } else {
+    throw new Error('Failed unconfigured ADMIN_SECRET test');
+  }
+
+  // Setup dynamic test secret
+  const dynamicSecret = `test_secret_${Date.now()}`;
+  process.env.ADMIN_SECRET = dynamicSecret;
+
+  // Test 4: Unauthorized GET (wrong secret)
+  const reqUnauthorized = new Request('http://localhost:3000/api/waitlist?secret=wrong');
   const resUnauthorized = await GET(reqUnauthorized);
   if (resUnauthorized.status === 401) {
     console.log('✅ PASSED: Unauthorized GET rejected with 401');
@@ -46,8 +60,8 @@ async function runWaitlistTests() {
     throw new Error('Failed unauthorized test');
   }
 
-  // Test 4: Authorized GET (JSON)
-  const reqAuthorized = new Request('http://localhost:3000/api/waitlist?secret=computecanvas2026');
+  // Test 5: Authorized GET (JSON)
+  const reqAuthorized = new Request(`http://localhost:3000/api/waitlist?secret=${dynamicSecret}`);
   const resAuthorized = await GET(reqAuthorized);
   const dataAuthorized = await resAuthorized.json();
   if (resAuthorized.status === 200 && dataAuthorized.total > 0 && Array.isArray(dataAuthorized.leads)) {
@@ -62,8 +76,8 @@ async function runWaitlistTests() {
     throw new Error('Failed authorized GET test');
   }
 
-  // Test 5: Authorized CSV export
-  const reqCsv = new Request('http://localhost:3000/api/waitlist?secret=computecanvas2026&format=csv');
+  // Test 6: Authorized CSV export
+  const reqCsv = new Request(`http://localhost:3000/api/waitlist?secret=${dynamicSecret}&format=csv`);
   const resCsv = await GET(reqCsv);
   const csvText = await resCsv.text();
   if (resCsv.status === 200 && csvText.includes('ID,Email,Plan,Company,Notes,CreatedAt') && csvText.includes(testEmail)) {

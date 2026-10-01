@@ -111,12 +111,21 @@ export async function GET(request: Request) {
   const secret = searchParams.get('secret');
   const format = searchParams.get('format');
 
-  // Security check: builder admin key (configurable via env ADMIN_SECRET, defaults to computecanvas2026)
-  const expectedSecret = process.env.ADMIN_SECRET || 'computecanvas2026';
-  if (secret !== expectedSecret) {
+  // Security check: builder admin key (must be configured via ADMIN_SECRET environment variable)
+  const expectedSecret = process.env.ADMIN_SECRET;
+  if (!expectedSecret) {
     return NextResponse.json(
       {
-        error: 'Unauthorized. Provide valid ?secret= query parameter to access registered waitlist leads.',
+        error: 'Admin endpoint access is locked. ADMIN_SECRET environment variable must be configured.',
+      },
+      { status: 503 }
+    );
+  }
+
+  if (!secret || secret !== expectedSecret) {
+    return NextResponse.json(
+      {
+        error: 'Unauthorized. Valid secret parameter is required to access waitlist records.',
       },
       { status: 401 }
     );
