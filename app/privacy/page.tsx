@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   description: 'ComputeCanvas client-side architecture simulation privacy policy. Zero server storage, zero cookies.',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function PrivacyPage() {
   return (
     <>
@@ -21,7 +24,7 @@ export default function PrivacyPage() {
                 Privacy Policy
               </h1>
               <p className="text-caption text-mono" style={{ color: 'var(--color-text-muted)', marginTop: 'var(--space-2)' }}>
-                LAST REVISED: Q1 2026 // VERSION 1.2
+                LAST REVISED: Q1 2026 // VERSION 1.3 (PRODUCTION SPECIFICATION)
               </p>
             </div>
 
