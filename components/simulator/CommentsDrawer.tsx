@@ -179,7 +179,7 @@ export default function CommentsDrawer({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .comments-drawer {
           display: flex;
           flex-direction: column;

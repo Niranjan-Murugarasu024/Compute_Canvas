@@ -15,10 +15,10 @@ export default function TemplatesClient() {
   return (
     <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + 40px)', paddingBottom: 'var(--space-16)' }}>
       <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
-        <span className="section-label">[CANONICAL_BLUEPRINTS]</span>
-        <h1 className="section-heading">Start from proven architectures.</h1>
+        <span className="section-label">CANONICAL BLUEPRINTS</span>
+        <h1 className="section-heading">Canonical architecture blueprints.</h1>
         <p className="section-lead">
-          Each template is a functional architectural topology with deterministic simulation outputs. Open in the simulator to adjust workload assumptions.
+          Each blueprint is a functional architectural topology with deterministic simulation outputs. Open in the workbench to adjust workload assumptions.
         </p>
       </div>
 
@@ -117,7 +117,7 @@ export default function TemplatesClient() {
         })}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .templates-page-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));

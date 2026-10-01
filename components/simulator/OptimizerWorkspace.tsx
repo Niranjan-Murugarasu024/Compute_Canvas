@@ -186,7 +186,7 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .optimizer-workspace {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);

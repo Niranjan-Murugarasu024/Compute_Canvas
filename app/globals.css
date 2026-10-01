@@ -90,7 +90,7 @@
   /* ── Global Page Grid (Normalized Left Edge) ── */
   --grid-max-width: 1480px;
   --grid-gutter: 48px;
-  --nav-height: 58px;
+  --nav-height: 54px;
 }
 
 @media (max-width: 1024px) {
@@ -364,11 +364,22 @@ body {
   font-family: var(--font-mono);
   font-size: 0.6875rem; /* 11px */
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.section-label::before {
+  content: '';
   display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--color-border);
+  flex-shrink: 0;
 }
 
 .section-heading {

@@ -86,7 +86,7 @@ export default class SimulatorErrorBoundary extends Component<Props, State> {
             </div>
           </div>
 
-          <style jsx>{`
+          <style>{`
             .simulator-error-fallback {
               min-height: 100vh;
               display: flex;

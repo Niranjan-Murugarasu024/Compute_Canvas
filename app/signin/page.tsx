@@ -192,7 +192,7 @@ export default function SignInPage() {
         </div>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .signin-page {
           min-height: 100vh;
           padding-top: calc(var(--nav-height) + 40px);

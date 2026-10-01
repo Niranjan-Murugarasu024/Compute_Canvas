@@ -294,7 +294,7 @@ export default function WhatIfPanel({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .what-if-panel {
           background: var(--color-bg-elevated);
           border: 1px solid var(--color-border);

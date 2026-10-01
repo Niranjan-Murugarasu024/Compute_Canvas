@@ -192,7 +192,7 @@ export function EveryRequestSection() {
     <Section id="every-request">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">[ARCHITECTURAL_DECOMPOSITION]</span>
+          <span className="section-label">01 ARCHITECTURE</span>
           <h2 className="section-heading">Every AI request is a system.</h2>
           <p className="section-lead">
             What appears to be a single API call hides an entire multi-tier pipeline. Every layer introduces token spend, latency penalty, and operational failure modes. Select any subsystem to inspect its telemetry and economics.
@@ -354,14 +354,14 @@ export function EveryRequestSection() {
             {/* Single Primary Action Footer */}
             <div className="console-footer-bar">
               <Link href="/simulator" className="btn btn-primary btn-sm">
-                OPEN IN WORKSTATION &rarr;
+                OPEN IN WORKBENCH &rarr;
               </Link>
             </div>
           </motion.div>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .request-system {
           display: grid;
           grid-template-columns: 310px minmax(0, 1fr);
@@ -940,7 +940,7 @@ export function CostDecompositionSection() {
     <Section id="cost-decomposition">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">[ECONOMIC_DECOMPOSITION]</span>
+          <span className="section-label">02 ECONOMICS</span>
           <h2 className="section-heading">Cost is not just model pricing.</h2>
           <p className="section-lead">
             Every layer of your architecture contributes to total monthly spend. Adjust workload parameters to see how traffic scale and cache hit rate reshape the economic profile.
@@ -1031,7 +1031,7 @@ export function CostDecompositionSection() {
             </div>
 
             <button onClick={handleOpenSimulator} className="btn btn-primary" style={{ marginTop: 'var(--space-4)', width: '100%' }}>
-              LOAD IN SPATIAL SIMULATOR &rarr;
+              OPEN IN WORKBENCH &rarr;
             </button>
           </div>
 
@@ -1104,7 +1104,7 @@ export function CostDecompositionSection() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .cost-instrument {
           display: grid;
           grid-template-columns: 340px 1fr;
@@ -1395,7 +1395,7 @@ export function ScaleSection() {
     <Section id="scale">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">[SCALE_TRANSITIONS]</span>
+          <span className="section-label">03 SCALE</span>
           <h2 className="section-heading">Scale changes the architecture.</h2>
           <p className="section-lead">
             What functions at 100K requests breaks at 10M. Watch components emerge, routing bifurcate, and economics shift across four orders of magnitude.
@@ -1556,14 +1556,14 @@ export function ScaleSection() {
               </div>
 
               <button onClick={handleOpenScale} className="btn btn-secondary" style={{ width: '100%', marginTop: 'auto' }}>
-                OPEN IN SIMULATOR &rarr;
+                OPEN IN WORKBENCH &rarr;
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .scale-living {
           background: #101012;
           border: 1px solid var(--color-border);
@@ -1842,7 +1842,7 @@ export function WhatWouldYouBuildSection() {
     <Section id="what-would-you-build">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">[ARCHITECTURAL_TRADEOFFS]</span>
+          <span className="section-label">04 TRADEOFFS</span>
           <h2 className="section-heading">What would you optimize for?</h2>
           <p className="section-lead">
             Every AI architecture decision is an explicit engineering tradeoff. Select an objective to inspect how component topologies alter cost, latency, and capability.
@@ -1892,7 +1892,7 @@ export function WhatWouldYouBuildSection() {
               </div>
 
               <button onClick={handleLoad} className="btn btn-primary" style={{ flexShrink: 0 }}>
-                LOAD IN SIMULATOR &rarr;
+                OPEN IN WORKBENCH &rarr;
               </button>
             </div>
 
@@ -1934,7 +1934,7 @@ export function WhatWouldYouBuildSection() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .objectives-wrap {
           display: flex;
           flex-direction: column;
@@ -2076,7 +2076,7 @@ export function StoryFlowSection() {
     <Section id="story-flow">
       <div className="container">
         <div className="story-flow-block">
-          <span className="section-label">[SYSTEM_THESIS]</span>
+          <span className="section-label">05 METHODOLOGY</span>
           <div className="story-flow">
             {STORY_LINES.map((line, i) => (
               <StoryLine key={i} text={line.text} muted={line.muted} />
@@ -2096,7 +2096,7 @@ export function StoryFlowSection() {
             </p>
             <div className="story-flow__btn-group">
               <Link href="/simulator" className="btn btn-primary story-btn-main">
-                OPEN SIMULATOR &rarr;
+                OPEN WORKBENCH &rarr;
               </Link>
               <Link href="/templates" className="btn btn-secondary story-btn-sec">
                 EXPLORE TEMPLATES
@@ -2106,7 +2106,7 @@ export function StoryFlowSection() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .story-flow-block {
           max-width: 840px;
           display: flex;
@@ -2175,7 +2175,7 @@ export function TemplatesPreviewSection() {
       <div className="container">
         <div className="section-header-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px' }}>
           <div>
-            <span className="section-label">[CANONICAL_BLUEPRINTS]</span>
+            <span className="section-label">06 BLUEPRINTS</span>
             <h2 className="section-heading">Start from proven architectures.</h2>
             <p className="section-lead">Pre-modeled topologies with verified cost functions and empirical latency baselines.</p>
           </div>
@@ -2227,7 +2227,7 @@ export function TemplatesPreviewSection() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .templates-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -2243,7 +2243,7 @@ export function TemplatesPreviewSection() {
           }
         }
       `}</style>
-      <style jsx global>{`
+      <style>{`
         .template-card {
           display: flex;
           flex-direction: column;
@@ -2294,7 +2294,7 @@ export function Footer() {
               <span className="footer__version text-mono">/ V1.2</span>
             </div>
             <p className="footer__desc">
-              Deterministic interactive AI architecture and economics simulator.
+              Architecture economics before deployment.
             </p>
             <div className="footer__signature text-mono">
               ARCHITECTURE // ECONOMICS // LATENCY
@@ -2306,13 +2306,13 @@ export function Footer() {
             <h3 className="footer__col-label text-mono">PRODUCT</h3>
             <ul className="footer__nav-list">
               <li>
-                <Link href="/simulator" className="footer__link">Simulator</Link>
+                <Link href="/simulator" className="footer__link">Workbench</Link>
               </li>
               <li>
-                <Link href="/templates" className="footer__link">Templates</Link>
+                <Link href="/templates" className="footer__link">Blueprints</Link>
               </li>
               <li>
-                <Link href="/assumptions" className="footer__link">Assumptions</Link>
+                <Link href="/assumptions" className="footer__link">Model Registry</Link>
               </li>
               <li>
                 <Link href="/pricing" className="footer__link">Pricing</Link>
@@ -2361,7 +2361,7 @@ export function Footer() {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .footer {
           border-top: 1px solid #242428;
           padding: 64px 0 28px;

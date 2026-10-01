@@ -193,7 +193,7 @@ export default function AIAssistantPanel({ onClose }: { onClose?: () => void }) 
         )}
       </AnimatePresence>
 
-      <style jsx>{`
+      <style>{`
         .ai-assistant {
           padding: var(--space-4);
           background: var(--color-bg);

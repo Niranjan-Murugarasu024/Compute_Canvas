@@ -399,13 +399,13 @@ export default function SimulatorClient({
       <header className="simulator-header-bar">
         <div className="simulator-header-left">
           <div className="simulator-title-group">
-            <span className="badge badge--primary text-mono">SIMULATOR V1</span>
-            <h1 className="simulator-app-title">AI Architecture &amp; Economics</h1>
+            <span className="badge badge--primary text-mono">WORKBENCH v1</span>
+            <h1 className="simulator-app-title">Architecture Workbench</h1>
           </div>
 
           {/* Canonical Template Selector */}
           <div className="template-selector-group">
-            <span className="template-label text-caption">TEMPLATE:</span>
+            <span className="template-label text-caption">BLUEPRINT:</span>
             <select
               className="template-select-dropdown text-mono"
               value={selectedTemplateId}
@@ -427,7 +427,7 @@ export default function SimulatorClient({
             className="btn btn-secondary btn-sm"
             title="View transparent pricing & latency formulas"
           >
-            Assumptions
+            Model Registry
           </Link>
 
           <button
@@ -1401,7 +1401,7 @@ export default function SimulatorClient({
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .simulator-v1-root {
           height: 100vh;
           max-height: 100vh;

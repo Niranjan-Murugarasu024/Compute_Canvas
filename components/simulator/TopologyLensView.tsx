@@ -330,7 +330,7 @@ export default function TopologyLensView() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .topology-lens {
           display: flex;
           flex-direction: column;

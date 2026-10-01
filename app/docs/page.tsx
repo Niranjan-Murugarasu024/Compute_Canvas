@@ -187,12 +187,12 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
             </section>
 
             <div className="docs-cta-card">
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Evaluate your system in the simulator</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Evaluate your system in the workbench</h3>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
                 Open the interactive canvas to build an architecture and see its economics update in real time.
               </p>
               <Link href="/simulator" className="btn btn-primary" style={{ marginTop: 'var(--space-4)', display: 'inline-flex' }}>
-                Open Simulator &rarr;
+                Open Workbench &rarr;
               </Link>
             </div>
           </div>
@@ -200,7 +200,7 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
       </main>
       <Footer />
 
-      <style jsx>{`
+      <style>{`
         .docs-page {
           min-height: 100vh;
           padding-top: calc(var(--nav-height) + 40px);

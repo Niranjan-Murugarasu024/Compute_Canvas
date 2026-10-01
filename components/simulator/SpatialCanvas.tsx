@@ -931,7 +931,7 @@ export default function SpatialCanvas({
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .spatial-canvas-container {
           position: relative;
           width: 100%;

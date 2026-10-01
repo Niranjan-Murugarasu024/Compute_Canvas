@@ -32,12 +32,12 @@ const PLANS: Plan[] = [
       'All 6 primary components (API, Cache, Router, Vector DB, Fast & Frontier Models)',
       'Deterministic monthly cost & P95 latency models',
       'Real-time token and cache workload controls',
-      'Anchor to My Bill invoice calibration',
+      'Historical Bill Calibration (optional)',
       'Zero-backend Base64URL architecture sharing',
       'All 3 canonical architecture templates',
       'JSON architecture specification export',
     ],
-    cta: 'Open Simulator Now',
+    cta: 'Open Workbench',
     ctaLink: '/simulator',
     ctaStyle: 'btn-primary',
     status: 'available',
@@ -382,7 +382,7 @@ export default function PricingClient() {
       </main>
       <Footer />
 
-      <style jsx>{`
+      <style>{`
         .pricing-page {
           min-height: 100vh;
           padding-top: calc(var(--nav-height) + 40px);

@@ -389,7 +389,7 @@ export default function DashboardPage() {
         </AnimatePresence>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .dashboard-page {
           padding-top: calc(var(--nav-height) + 40px);
           padding-bottom: var(--space-16);

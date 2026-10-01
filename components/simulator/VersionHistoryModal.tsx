@@ -268,7 +268,7 @@ export default function VersionHistoryModal({ onClose }: { onClose: () => void }
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .version-modal-backdrop {
           position: fixed;
           inset: 0;

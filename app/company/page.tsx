@@ -67,7 +67,7 @@ export default function CompanyPage() {
       </main>
       <Footer />
 
-      <style jsx>{`
+      <style>{`
         .company-page {
           min-height: 100vh;
           padding-top: calc(var(--nav-height) + 40px);

@@ -207,7 +207,7 @@ export default function CommandPalette({
         </motion.div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .cmd-backdrop {
           position: fixed;
           top: 0;

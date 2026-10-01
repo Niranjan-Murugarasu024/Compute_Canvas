@@ -239,7 +239,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         </div>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .share-page {
           min-height: 100vh;
           padding-top: calc(var(--nav-height) + 40px);

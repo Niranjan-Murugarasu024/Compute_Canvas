@@ -142,7 +142,7 @@ export default function ExploreClient() {
         })}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .explore-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));

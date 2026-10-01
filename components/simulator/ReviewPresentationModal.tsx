@@ -428,7 +428,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
         </footer>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .presentation-backdrop {
           position: fixed;
           inset: 0;
