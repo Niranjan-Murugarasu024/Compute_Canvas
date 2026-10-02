@@ -32,6 +32,14 @@ import {
   decodeArchitectureState,
   type V1ShareState,
 } from '@/lib/simulation/sharing';
+import {
+  generateSimulationSnapshotId,
+  computeBaselineDeltas,
+  getComponentCausalRole,
+  formatCalculationTraceAsText,
+  buildExportSpecification,
+  type ParameterDeltaItem,
+} from '@/lib/simulation/workbenchInstrument';
 
 export interface SimulatorClientProps {
   initialTemplateId?: string;
@@ -172,54 +180,154 @@ export default function SimulatorClient({
     setSelectedEdge,
   } = store;
 
+  // Selected template & Toast messaging
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(initialTemplateId || 'router-cache');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastMessage(msg);
+    toastTimerRef.current = setTimeout(() => setToastMessage(null), 3500);
+  }, []);
+
+  // Baseline state tracking (Sections 6, 7, 8, 9)
+  const [baselineSnapshot, setBaselineSnapshot] = useState<{
+    arch: Architecture;
+    workload: Workload;
+    calibration: BillCalibration;
+    templateId: string;
+  }>(() => ({
+    arch: initialArchitecture || store.architecture,
+    workload: initialWorkload || store.workload,
+    calibration: initialCalibration || store.calibration,
+    templateId: initialTemplateId || 'router-cache',
+  }));
+
+  // Session change history and deterministic undo / redo stacks (Sections 10, 11)
+  const [historyPast, setHistoryPast] = useState<Array<{ arch: Architecture; workload: Workload; calibration: BillCalibration }>>([]);
+  const [historyFuture, setHistoryFuture] = useState<Array<{ arch: Architecture; workload: Workload; calibration: BillCalibration }>>([]);
+  const [sessionChangeLog, setSessionChangeLog] = useState<Array<{ id: string; label: string; change: string; timestamp: number }>>([]);
+
+  // Command palette, comparison modal, and formula view states (Sections 12, 13, 24, 52)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteQuery, setCommandPaletteQuery] = useState('');
+  const [commandPaletteSelectedIndex, setCommandPaletteSelectedIndex] = useState(0);
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [showTraceFormulas, setShowTraceFormulas] = useState(false);
+  const [sharedErrorNotice, setSharedErrorNotice] = useState<string | null>(null);
+
+  const recordForUndo = useCallback((actionLabel?: string) => {
+    setHistoryPast(past => [...past.slice(-25), { arch: architecture, workload: workload, calibration: calibration }]);
+    setHistoryFuture([]);
+    if (actionLabel) {
+      setSessionChangeLog(log => [
+        { id: `log-${Date.now()}`, label: actionLabel, change: actionLabel, timestamp: Date.now() },
+        ...log.slice(0, 19),
+      ]);
+    }
+  }, [architecture, workload, calibration]);
+
   const setWorkload = useCallback((wl: Partial<Workload>) => {
+    recordForUndo('Workload parameters updated');
     setHasUserModified(true);
     store.setWorkload(wl);
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const applyCalibration = useCallback((bill: number, reqs: number, simCost: number) => {
+    recordForUndo('Calibration applied');
     setHasUserModified(true);
     store.applyCalibration(bill, reqs, simCost);
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const clearCalibration = useCallback(() => {
+    recordForUndo('Calibration cleared');
     setHasUserModified(true);
     store.clearCalibration();
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const addNode = useCallback((type: ArchNode['type'], label: string, x?: number, y?: number) => {
+    recordForUndo(`Added ${label || type}`);
     setHasUserModified(true);
     return store.addNode(type, label, x, y);
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const removeNode = useCallback((id: string) => {
+    recordForUndo('Removed component');
     setHasUserModified(true);
     store.removeNode(id);
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const updateNodeModel = useCallback((id: string, modelId: string) => {
+    recordForUndo('Target model updated');
     setHasUserModified(true);
     store.updateNodeModel(id, modelId);
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const updateEdgeShare = useCallback((source: string, target: string, share: number) => {
+    recordForUndo(`Routing allocation: ${Math.round(share * 100)}%`);
     setHasUserModified(true);
     store.updateEdgeShare(source, target, share);
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const removeEdge = useCallback((source: string, target: string) => {
+    recordForUndo('Connection removed');
     setHasUserModified(true);
     store.removeEdge(source, target);
-  }, [store]);
+  }, [store, recordForUndo]);
 
   const loadArchitecture = useCallback((arch: Architecture, wl?: Workload, cal?: BillCalibration) => {
     setHasUserModified(true);
     store.loadArchitecture(arch, wl, cal);
   }, [store]);
 
+  // Deterministic baseline deltas & identity calculation (Sections 6, 7, 8, 31)
+  const baselineDeltas = useMemo(() => {
+    return computeBaselineDeltas(baselineSnapshot.workload, workload, baselineSnapshot.arch, architecture);
+  }, [baselineSnapshot, workload, architecture]);
+
+  const isModified = baselineDeltas.modifiedCount > 0;
+
+  const baselineSim = useMemo(() => {
+    return simulate(baselineSnapshot.workload, baselineSnapshot.arch);
+  }, [baselineSnapshot]);
+
+  const simulationSnapshotId = useMemo(() => {
+    return generateSimulationSnapshotId(architecture.name || selectedTemplateId);
+  }, [architecture.name, selectedTemplateId]);
+
+  // Undo / Redo / Reset handlers
+  const handleUndo = useCallback(() => {
+    if (historyPast.length === 0) return;
+    const prev = historyPast[historyPast.length - 1];
+    setHistoryPast(past => past.slice(0, -1));
+    setHistoryFuture(future => [{ arch: architecture, workload: workload, calibration: calibration }, ...future]);
+    store.loadArchitecture(prev.arch, prev.workload, prev.calibration);
+    setHasUserModified(true);
+    showToast('Undo parameter change');
+  }, [historyPast, architecture, workload, calibration, store, showToast]);
+
+  const handleRedo = useCallback(() => {
+    if (historyFuture.length === 0) return;
+    const next = historyFuture[0];
+    setHistoryFuture(future => future.slice(1));
+    setHistoryPast(past => [...past, { arch: architecture, workload: workload, calibration: calibration }]);
+    store.loadArchitecture(next.arch, next.workload, next.calibration);
+    setHasUserModified(true);
+    showToast('Redo parameter change');
+  }, [historyFuture, architecture, workload, calibration, store, showToast]);
+
+  const handleResetToBaseline = useCallback(() => {
+    if (!isModified) return;
+    setHistoryPast(past => [...past.slice(-25), { arch: architecture, workload: workload, calibration: calibration }]);
+    setHistoryFuture([]);
+    store.loadArchitecture(baselineSnapshot.arch, baselineSnapshot.workload, baselineSnapshot.calibration);
+    setHasUserModified(false);
+    showToast('Reset to exact baseline state.');
+  }, [isModified, baselineSnapshot, architecture, workload, calibration, store, showToast]);
+
   // Local UI states
   const [leftTab, setLeftTab] = useState<'all' | 'components' | 'workload' | 'calibration'>('all');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calBillInput, setCalBillInput] = useState(calibration.actualBill ? String(calibration.actualBill) : '4500');
   const [calReqInput, setCalReqInput] = useState(calibration.actualRequests ? String(calibration.actualRequests) : '1200000');
@@ -228,15 +336,7 @@ export default function SimulatorClient({
   const [isLatencyModalOpen, setIsLatencyModalOpen] = useState(false);
   const [isCalculationModalOpen, setIsCalculationModalOpen] = useState(false);
   const [shareModalUrl, setShareModalUrl] = useState<string | null>(null);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(initialTemplateId || 'router-cache');
   const [calibrationError, setCalibrationError] = useState<string | null>(null);
-
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const showToast = useCallback((msg: string) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToastMessage(msg);
-    toastTimerRef.current = setTimeout(() => setToastMessage(null), 3500);
-  }, []);
 
   // 1. Authoritative deterministic simulation
   const result: SimulationResult = useMemo(
@@ -321,42 +421,44 @@ export default function SimulatorClient({
     }
   }, [architecture, workload, calibration, showToast]);
 
-  // Export JSON specification
+  // Export JSON specification (Section 32)
   const handleExport = useCallback(() => {
-    const payload = {
-      specVersion: 1,
-      name: architecture.name || 'AI Architecture Spec',
-      timestamp: new Date().toISOString(),
+    const payload = buildExportSpecification(
       architecture,
       workload,
-      calibration: calibration.enabled ? calibration : undefined,
-      simulation: {
-        monthlySpend: result.monthlyCost,
-        costPerRequest: result.costPerRequest,
-        estimatedP95LatencyMs: result.p95Latency,
-        bottleneck: result.bottleneck,
-        costBreakdown: result.costBreakdown,
-      },
-    };
+      calibration,
+      result,
+      architecture.name || selectedTemplateId,
+      simulationSnapshotId
+    );
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `computecanvas-${(architecture.name || 'architecture').toLowerCase().replace(/\s+/g, '-')}.json`;
+    a.download = `computecanvas-${(architecture.name || selectedTemplateId).toLowerCase().replace(/\s+/g, '-')}-spec.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Architecture JSON exported.');
-  }, [architecture, workload, calibration, result, showToast]);
+    showToast('Architecture specification exported.');
+  }, [architecture, workload, calibration, result, selectedTemplateId, simulationSnapshotId, showToast]);
 
-  // Template switch handler
-  const handleSelectTemplate = (templateId: string) => {
+  // Template switch handler — establishes new baseline
+  const handleSelectTemplate = useCallback((templateId: string) => {
     const template = TEMPLATES.find(t => t.id === templateId);
     if (!template) return;
     setSelectedTemplateId(template.id);
     loadArchitecture(template.architecture, template.defaultWorkload);
+    setBaselineSnapshot({
+      arch: template.architecture,
+      workload: template.defaultWorkload,
+      calibration: { enabled: false, actualBill: 4500, actualRequests: 1200000, baselineSimulatedCost: 0 },
+      templateId: template.id,
+    });
+    setHistoryPast([]);
+    setHistoryFuture([]);
+    setHasUserModified(false);
     showToast(`Loaded ${template.name}`);
-  };
+  }, [loadArchitecture, showToast]);
 
   // Calibration submit
   const handleApplyCalibration = (e: React.FormEvent) => {
@@ -382,21 +484,107 @@ export default function SimulatorClient({
 
   const handleLoadShare = useCallback((data: V1ShareState) => {
     loadArchitecture(data.architecture, data.workload, data.calibration);
+    setBaselineSnapshot({
+      arch: data.architecture,
+      workload: data.workload,
+      calibration: data.calibration || { enabled: false, actualBill: 4500, actualRequests: 1200000, baselineSimulatedCost: 0 },
+      templateId: data.architecture.id || 'custom-shared',
+    });
+    setHistoryPast([]);
+    setHistoryFuture([]);
+    setHasUserModified(false);
     showToast('Shared architecture restored.');
   }, [loadArchitecture, showToast]);
 
   const handleLoadTemplate = useCallback((id: string) => {
     const match = TEMPLATES.find(t => t.id === id || t.id.includes(id));
     if (match) {
-      loadArchitecture(match.architecture, match.defaultWorkload);
-      setSelectedTemplateId(match.id);
-      showToast(`Template loaded: ${match.name}`);
+      handleSelectTemplate(match.id);
     }
-  }, [loadArchitecture, showToast]);
+  }, [handleSelectTemplate]);
 
   const handleSyncError = useCallback((msg: string) => {
-    showToast(msg);
-  }, [showToast]);
+    setSharedErrorNotice(msg);
+  }, []);
+
+  // Global Keyboard Shortcuts (Section 13)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName);
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        setIsCommandPaletteOpen(false);
+        setIsCompareModalOpen(false);
+        setIsShortcutsOpen(false);
+        setIsCalculationModalOpen(false);
+        setIsCostModalOpen(false);
+        setIsLatencyModalOpen(false);
+        setShareModalUrl(null);
+        setSharedErrorNotice(null);
+        setSelectedNode(null);
+        return;
+      }
+
+      if (!isInput && e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsOpen(prev => !prev);
+        return;
+      }
+
+      if (!isInput && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        handleResetToBaseline();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo, handleResetToBaseline, setSelectedNode]);
+
+  // Command Palette Items (Section 12)
+  const commandPaletteItems = useMemo(() => [
+    { id: 'workbench', label: 'Open Workbench', shortcut: 'Esc', action: () => setIsCommandPaletteOpen(false) },
+    { id: 'baseline', label: 'Load Blueprint: Router + Cache', shortcut: '', action: () => { handleSelectTemplate('router-cache'); setIsCommandPaletteOpen(false); } },
+    { id: 'rag', label: 'Load Blueprint: RAG Pipeline', shortcut: '', action: () => { handleSelectTemplate('rag-pipeline'); setIsCommandPaletteOpen(false); } },
+    { id: 'direct', label: 'Load Blueprint: Direct LLM', shortcut: '', action: () => { handleSelectTemplate('direct-llm'); setIsCommandPaletteOpen(false); } },
+    { id: 'reset', label: 'Reset to Baseline Architecture', shortcut: 'R', action: () => { handleResetToBaseline(); setIsCommandPaletteOpen(false); } },
+    { id: 'compare', label: 'Compare Architectures (Baseline vs Current)', shortcut: '', action: () => { setIsCompareModalOpen(true); setIsCommandPaletteOpen(false); } },
+    { id: 'trace', label: 'Show Calculation Trace', shortcut: '', action: () => { setIsCalculationModalOpen(true); setIsCommandPaletteOpen(false); } },
+    { id: 'formulas', label: 'Toggle Calculation Formulas View', shortcut: '', action: () => { setShowTraceFormulas(f => !f); setIsCalculationModalOpen(true); setIsCommandPaletteOpen(false); } },
+    { id: 'registry', label: 'Open Model Registry (/assumptions)', shortcut: '', action: () => { window.location.href = '/assumptions'; } },
+    { id: 'export', label: 'Export Architecture Spec (JSON)', shortcut: '', action: () => { handleExport(); setIsCommandPaletteOpen(false); } },
+    { id: 'share', label: 'Share Architecture URL', shortcut: '', action: () => { handleShare(); setIsCommandPaletteOpen(false); } },
+    { id: 'shortcuts', label: 'Show Keyboard Shortcuts', shortcut: '?', action: () => { setIsShortcutsOpen(true); setIsCommandPaletteOpen(false); } },
+  ], [handleSelectTemplate, handleResetToBaseline, handleExport, handleShare]);
+
+  const filteredCommands = useMemo(() => {
+    if (!commandPaletteQuery.trim()) return commandPaletteItems;
+    const q = commandPaletteQuery.toLowerCase();
+    return commandPaletteItems.filter(item => item.label.toLowerCase().includes(q));
+  }, [commandPaletteItems, commandPaletteQuery]);
 
   return (
     <div className="simulator-v1-root">
@@ -467,6 +655,96 @@ export default function SimulatorClient({
           </button>
         </div>
       </header>
+
+      {/* Simulation Identity & Engineering Baseline Strip (Sections 6, 7, 8, 9, 10, 11) */}
+      <div className="simulator-sub-header-strip" role="region" aria-label="Simulation State & Baseline Identity">
+        <div className="simulator-state-identity-badge text-mono" title={`Snapshot Identity: ${simulationSnapshotId}`}>
+          <span className="state-identity-bp">{selectedTemplateId.toUpperCase()} / {(architecture.name || 'CUSTOM').toUpperCase()}</span>
+          <span className="state-identity-sep">·</span>
+          <span className="state-identity-stat">{formatNumber(workload.requestsPerMonth)} REQ/MO</span>
+          <span className="state-identity-sep">·</span>
+          <span className="state-identity-stat">{Math.round(workload.cacheHitRate * 100)}% CACHE</span>
+          <span className="state-identity-sep">·</span>
+          <span className="state-identity-id">{simulationSnapshotId}</span>
+        </div>
+
+        <div className="simulator-baseline-controls">
+          {isModified ? (
+            <div className="baseline-indicator-group">
+              <span className="badge badge--warning text-mono" style={{ fontSize: '0.625rem' }}>
+                MODIFIED FROM BASELINE ({baselineDeltas.modifiedCount} PARAMETERS CHANGED)
+              </span>
+              <button
+                onClick={handleResetToBaseline}
+                className="btn btn-secondary btn-sm text-mono"
+                style={{ fontSize: '0.6875rem', padding: '2px 8px' }}
+                title="Restore exact baseline architecture and workload"
+              >
+                ↺ RESET TO BASELINE
+              </button>
+            </div>
+          ) : (
+            <div className="baseline-indicator-group">
+              <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                BASELINE (CLEAN)
+              </span>
+              <button
+                disabled
+                className="btn btn-secondary btn-sm text-mono"
+                style={{ fontSize: '0.6875rem', padding: '2px 8px', opacity: 0.5, cursor: 'not-allowed' }}
+              >
+                BASELINE
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => setIsCompareModalOpen(true)}
+            className="btn btn-secondary btn-sm text-mono"
+            style={{ fontSize: '0.6875rem', padding: '2px 8px' }}
+            title="Open side-by-side analytical comparison: Baseline vs Current"
+          >
+            COMPARE
+          </button>
+
+          <div className="undo-redo-btn-group">
+            <button
+              onClick={handleUndo}
+              disabled={historyPast.length === 0}
+              title="Undo parameter change (Ctrl+Z)"
+              aria-label="Undo"
+            >
+              ↺
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={historyFuture.length === 0}
+              title="Redo parameter change (Ctrl+Shift+Z)"
+              aria-label="Redo"
+            >
+              ↻
+            </button>
+          </div>
+
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="btn btn-ghost btn-sm text-mono"
+            style={{ fontSize: '0.6875rem', padding: '2px 6px', border: '1px solid var(--color-border)' }}
+            title="Open Command Palette (⌘K / Ctrl+K)"
+          >
+            ⌘K
+          </button>
+
+          <button
+            onClick={() => setIsShortcutsOpen(true)}
+            className="btn btn-ghost btn-sm text-mono"
+            style={{ fontSize: '0.6875rem', padding: '2px 6px', border: '1px solid var(--color-border)' }}
+            title="Keyboard Shortcuts (?)"
+          >
+            ?
+          </button>
+        </div>
+      </div>
 
       {/* Validation Banner (if architecture cannot be simulated reliably) */}
       {!result.validation.isValid && (
@@ -860,13 +1138,19 @@ export default function SimulatorClient({
 
         {/* ── RIGHT COLUMN: Modeled Economics & Inspection Panel ── */}
         <aside className="simulator-sidebar-right">
-          {/* Subsystem Inspection Card (Sections 20, 28) */}
+          {/* Subsystem Inspection Card (Sections 14, 15, 16, 17, 30, 38) */}
           {(selectedNode && selectedNodeTrafficInfo) ? (() => {
+            const causalInfo = getComponentCausalRole(selectedNode, workload, architecture, result);
             const modelRecord = selectedNodeTrafficInfo.isModel
               ? ((selectedNode.modelId && MODEL_PRICING[selectedNode.modelId])
                   ? MODEL_PRICING[selectedNode.modelId]
                   : (selectedNode.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']))
               : null;
+
+            const costSharePct = selectedNodeMetrics?.costPercentage ?? 0;
+            const criticalSegments = result.latencies.criticalPathSegments || [];
+            const segIndex = criticalSegments.findIndex(s => s.componentId === selectedNode.id || s.componentName.toLowerCase().includes(selectedNode.label.toLowerCase()));
+            const pathPositionText = segIndex >= 0 ? `${segIndex + 1} / ${criticalSegments.length}` : 'MODEL-DERIVED';
 
             return (
               <div className="sidebar-card" style={{ borderColor: '#FFFFFF', background: '#0D0D10' }}>
@@ -892,21 +1176,52 @@ export default function SimulatorClient({
                     <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#FFFFFF' }}>{selectedNode.label}</span>
                     {selectedNodeMetrics?.isBottleneck && (
                       <span className="badge badge--warning text-mono" style={{ fontSize: '0.625rem' }}>
-                        BOTTLENECK
+                        PRIMARY BOTTLENECK
                       </span>
                     )}
                   </div>
 
+                  {/* Cost Contribution Bar (Section 16, 22) */}
+                  <div style={{ marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+                      <span>COST CONTRIBUTION</span>
+                      <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{costSharePct}% OF MODELED COST</span>
+                    </div>
+                    <div className="cost-contribution-bar-track">
+                      <div className="cost-contribution-bar-fill" style={{ width: `${Math.min(100, costSharePct)}%` }} />
+                    </div>
+                  </div>
+
                   <div className="inspection-matrix-grid text-mono">
                     <div className="inspection-matrix-item">
-                      <span className="insp-lbl">TYPE</span>
-                      <span className="insp-val">{selectedNodeTrafficInfo.isModel ? 'MODEL' : 'INFRASTRUCTURE'}</span>
+                      <span className="insp-lbl">ROLE</span>
+                      <span className="insp-val" style={{ color: '#FAFAFA' }}>{causalInfo.role}</span>
+                    </div>
+
+                    <div className="inspection-matrix-item">
+                      <span className="insp-lbl">TRAFFIC</span>
+                      <span className="insp-val">{formatNumber(selectedNodeTrafficInfo.routedReqs)} req/mo</span>
+                    </div>
+
+                    <div className="inspection-matrix-item">
+                      <span className="insp-lbl">MODELED COST</span>
+                      <span className="insp-val" style={{ color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(selectedNodeMetrics?.monthlyCost ?? 0)} / mo</span>
+                    </div>
+
+                    <div className="inspection-matrix-item">
+                      <span className="insp-lbl">LATENCY CONTRIB</span>
+                      <span className="insp-val" style={{ color: 'var(--color-performance)' }}>{formatLatency(selectedNodeMetrics?.latencyMs ?? 0)}</span>
+                    </div>
+
+                    <div className="inspection-matrix-item">
+                      <span className="insp-lbl">PATH POSITION</span>
+                      <span className="insp-val">{pathPositionText}</span>
                     </div>
 
                     {modelRecord ? (
                       <>
                         <div className="inspection-matrix-item">
-                          <span className="insp-lbl">MODEL</span>
+                          <span className="insp-lbl">MODEL TARGET</span>
                           <span className="insp-val" style={{ color: '#FFFFFF' }}>{modelRecord.product}</span>
                         </div>
                         <div className="inspection-matrix-item">
@@ -914,40 +1229,20 @@ export default function SimulatorClient({
                           <span className="insp-val">{modelRecord.provider}</span>
                         </div>
                         <div className="inspection-matrix-item">
-                          <span className="insp-lbl">TRAFFIC SHARE</span>
-                          <span className="insp-val">{selectedNodeTrafficInfo.shareText}</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">MONTHLY REQS</span>
-                          <span className="insp-val">{formatNumber(selectedNodeTrafficInfo.routedReqs)}</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">INPUT TOKENS</span>
-                          <span className="insp-val">{formatNumber(workload.avgInputTokens)} / req</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">OUTPUT TOKENS</span>
-                          <span className="insp-val">{formatNumber(workload.avgOutputTokens)} / req</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">INPUT RATE</span>
+                          <span className="insp-lbl">INPUT PRICE</span>
                           <span className="insp-val">${modelRecord.inputPricePer1M.toFixed(2)} / 1M</span>
                         </div>
                         <div className="inspection-matrix-item">
-                          <span className="insp-lbl">OUTPUT RATE</span>
+                          <span className="insp-lbl">OUTPUT PRICE</span>
                           <span className="insp-val">${modelRecord.outputPricePer1M.toFixed(2)} / 1M</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">MODELED COST</span>
-                          <span className="insp-val" style={{ color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(selectedNodeMetrics?.monthlyCost ?? 0)} / mo</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">COST SHARE</span>
-                          <span className="insp-val">{selectedNodeMetrics?.costPercentage ?? 0}%</span>
                         </div>
                         <div className="inspection-matrix-item">
                           <span className="insp-lbl">LATENCY BASE</span>
                           <span className="insp-val" style={{ color: 'var(--color-performance)' }}>{modelRecord.baselineLatencyMs} ms</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">CAPABILITY TIER</span>
+                          <span className="insp-val">{modelRecord.capabilityTier || 'FRONTIER'}</span>
                         </div>
                         <div className="inspection-matrix-item">
                           <span className="insp-lbl">SOURCE TYPE</span>
@@ -958,46 +1253,26 @@ export default function SimulatorClient({
                           <span className="insp-val">{modelRecord.registryVersion || 'v1.4'}</span>
                         </div>
                         <div className="inspection-matrix-item">
-                          <span className="insp-lbl">SNAPSHOT</span>
-                          <span className="insp-val">{modelRecord.pricingSnapshot || 'March 2026'}</span>
+                          <span className="insp-lbl">PRICING SNAPSHOT</span>
+                          <span className="insp-val">{modelRecord.pricingSnapshot || '2026-03'}</span>
                         </div>
                         <div className="inspection-matrix-item">
                           <span className="insp-lbl">STATUS</span>
-                          <span className="insp-val" style={{ color: 'var(--color-success, #4ADE80)' }}>{modelRecord.status || 'ACTIVE'}</span>
+                          <span className="insp-val" style={{ color: 'var(--color-success, #4ADE80)' }}>ACTIVE</span>
                         </div>
                       </>
                     ) : (
                       <>
                         <div className="inspection-matrix-item">
-                          <span className="insp-lbl">NODE ID</span>
-                          <span className="insp-val">{selectedNode.id}</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">TRAFFIC</span>
-                          <span className="insp-val">{selectedNodeTrafficInfo.shareText}</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">MONTHLY REQS</span>
-                          <span className="insp-val">{formatNumber(selectedNodeTrafficInfo.routedReqs)}</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">MODELED COST</span>
-                          <span className="insp-val" style={{ color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(selectedNodeMetrics?.monthlyCost ?? 0)} / mo</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">COST SHARE</span>
-                          <span className="insp-val">{selectedNodeMetrics?.costPercentage ?? 0}%</span>
-                        </div>
-                        <div className="inspection-matrix-item">
-                          <span className="insp-lbl">LATENCY</span>
-                          <span className="insp-val" style={{ color: 'var(--color-performance)' }}>{formatLatency(selectedNodeMetrics?.latencyMs ?? 0)}</span>
-                        </div>
-                        <div className="inspection-matrix-item">
                           <span className="insp-lbl">SOURCE TYPE</span>
                           <span className="insp-val">INTERNAL REFERENCE</span>
                         </div>
                         <div className="inspection-matrix-item">
-                          <span className="insp-lbl">SNAPSHOT</span>
+                          <span className="insp-lbl">REGISTRY VER</span>
+                          <span className="insp-val">v1.4</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">PRICING SNAPSHOT</span>
                           <span className="insp-val">2026-03</span>
                         </div>
                         <div className="inspection-matrix-item">
@@ -1007,6 +1282,24 @@ export default function SimulatorClient({
                       </>
                     )}
                   </div>
+
+                  {/* Deterministic "Why it matters" explanation (Section 14, 29) */}
+                  <div style={{ marginTop: '10px', padding: '8px 10px', background: '#141418', border: '1px solid var(--color-border)', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                      WHY IT MATTERS
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.75rem', lineHeight: 1.45, color: '#D4D4D8' }}>
+                      {causalInfo.whyItMatters}
+                    </p>
+                    <Link
+                      href="/assumptions"
+                      className="text-mono"
+                      style={{ fontSize: '0.6875rem', color: '#FFFFFF', textDecoration: 'underline', marginTop: '6px', display: 'inline-block' }}
+                      title="Inspect model and infrastructure unit rate formulas in Model Registry"
+                    >
+                      VIEW ASSUMPTION IN REGISTRY →
+                    </Link>
+                  </div>
                 </div>
               </div>
             );
@@ -1014,10 +1307,10 @@ export default function SimulatorClient({
             <div className="sidebar-card">
               <div className="sidebar-card-header">
                 <h2 className="sidebar-section-title">PROPERTIES INSPECTOR</h2>
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>CANVAS IDLE</span>
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>SELECT A COMPONENT</span>
               </div>
-              <div style={{ padding: '8px 2px', color: 'var(--color-text-muted)', fontSize: '0.75rem', lineHeight: 1.5 }}>
-                Select any node on the canvas to inspect its configuration parameters, model registry provenance, token rates, and capacity allocation.
+              <div style={{ padding: '12px 4px', color: 'var(--color-text-muted)', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                Choose a node in the architecture to inspect its traffic, cost, latency, path position, and dependencies.
               </div>
             </div>
           )}
@@ -1213,54 +1506,67 @@ export default function SimulatorClient({
             </div>
 
             {(causalDelta.parameterChanges.length > 0 || causalDelta.costDelta !== 0) ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {/* Parameter diffs */}
-                {causalDelta.parameterChanges.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* 1. CHANGE (Section 26) */}
+                <div>
+                  <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                    1. ARCHITECTURAL CHANGE
+                  </div>
                   <div className="causal-param-changes text-mono" style={{ background: '#141417', padding: '8px 10px', borderRadius: '3px', border: '1px solid var(--color-border)' }}>
-                    <div style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '6px' }}>
-                      CHANGED PARAMETERS
-                    </div>
-                    {causalDelta.parameterChanges.map((ch, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6875rem', marginBottom: '3px' }}>
-                        <span style={{ color: 'var(--color-text-muted)' }}>{ch.label}</span>
-                        <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{ch.baseline} → {ch.current}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Economics diff grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', background: '#141417', padding: '8px', borderRadius: '3px', border: '1px solid var(--color-border)' }} className="text-mono">
-                  <div>
-                    <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>BASELINE</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{formatCurrency(causalDelta.baselineCost)}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>CURRENT</span>
-                    <span style={{ fontSize: '0.75rem', color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(causalDelta.currentCost)}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>Δ COST</span>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: causalDelta.costDelta < 0 ? 'var(--color-success, #4ADE80)' : causalDelta.costDelta > 0 ? '#F87171' : 'var(--color-text-muted)' }}>
-                      {causalDelta.costDelta > 0 ? `+${formatCurrency(causalDelta.costDelta)}` : causalDelta.costDelta < 0 ? `−${formatCurrency(Math.abs(causalDelta.costDelta))}` : '$0'}
-                    </span>
+                    {causalDelta.parameterChanges.length > 0 ? (
+                      causalDelta.parameterChanges.map((ch, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6875rem', marginBottom: '3px' }}>
+                          <span style={{ color: 'var(--color-text-muted)' }}>{ch.label}</span>
+                          <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{ch.baseline} → {ch.current}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: '0.6875rem', color: '#A1A1AA' }}>Workload fine-tuning within topology</span>
+                    )}
                   </div>
                 </div>
 
-                {/* Primary Cause */}
-                <div className="why-changed-box">
+                {/* 2. CAUSE (Section 26, 27, 28) */}
+                <div>
                   <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
-                    PRIMARY CAUSE
+                    2. DETERMINISTIC CAUSE
                   </div>
-                  <p className="why-changed-text" style={{ fontSize: '0.75rem', lineHeight: 1.5, margin: 0 }}>
-                    {causalDelta.primaryCause || deltaExplanation}
-                  </p>
+                  <div className="why-changed-box" style={{ background: '#141417', padding: '8px 10px', borderRadius: '3px', border: '1px solid var(--color-border)' }}>
+                    <p className="why-changed-text" style={{ fontSize: '0.75rem', lineHeight: 1.5, margin: 0 }}>
+                      {causalDelta.parameterChanges.length > 1
+                        ? `Under the current deterministic model, multiple variables changed simultaneously. Primary economic driver: ${causalDelta.primaryCause || deltaExplanation}`
+                        : `Under the current deterministic model, ${causalDelta.primaryCause || deltaExplanation}`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. CONSEQUENCE (Section 26) */}
+                <div>
+                  <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                    3. ECONOMIC & LATENCY CONSEQUENCE
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', background: '#141417', padding: '8px', borderRadius: '3px', border: '1px solid var(--color-border)' }} className="text-mono">
+                    <div>
+                      <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>BASELINE</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{formatCurrency(causalDelta.baselineCost)}</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>CURRENT</span>
+                      <span style={{ fontSize: '0.75rem', color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(causalDelta.currentCost)}</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>DELTA</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: causalDelta.costDelta < 0 ? 'var(--color-success, #4ADE80)' : causalDelta.costDelta > 0 ? '#F87171' : 'var(--color-text-muted)' }}>
+                        {causalDelta.costDelta > 0 ? `+${formatCurrency(causalDelta.costDelta)}` : causalDelta.costDelta < 0 ? `−${formatCurrency(Math.abs(causalDelta.costDelta))}` : '$0'}/mo
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="why-changed-box">
                 <p className="why-changed-text">
-                  {deltaExplanation}
+                  Baseline architecture loaded. Modify workload parameters or topology to inspect causal economic deltas.
                 </p>
               </div>
             )}
@@ -1494,10 +1800,38 @@ export default function SimulatorClient({
             <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '740px' }}>
               <div className="dialog-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="badge badge--primary text-mono">CALCULATION TRACE</span>
+                  <span className="badge badge--primary text-mono">CALCULATION TRACE 2.0</span>
                   <h3 className="dialog-title" style={{ margin: 0 }}>Deterministic Economic Trace</h3>
                 </div>
-                <button onClick={() => setIsCalculationModalOpen(false)} className="btn btn-ghost btn-sm" aria-label="Close dialog">✕</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    onClick={() => setShowTraceFormulas(!showTraceFormulas)}
+                    className={`btn btn-sm text-mono ${showTraceFormulas ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ fontSize: '0.6875rem', padding: '3px 8px' }}
+                    title="Toggle explicit mathematical formula expressions"
+                  >
+                    {showTraceFormulas ? 'HIDE FORMULAS' : 'SHOW FORMULAS'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const text = formatCalculationTraceAsText(
+                        trace,
+                        architecture.name || selectedTemplateId,
+                        simulationSnapshotId,
+                        result,
+                        calibrated
+                      );
+                      navigator.clipboard.writeText(text);
+                      showToast('Calculation trace copied as plain text.');
+                    }}
+                    className="btn btn-secondary btn-sm text-mono"
+                    style={{ fontSize: '0.6875rem', padding: '3px 8px' }}
+                    title="Copy full trace to clipboard as plain text markdown for PRs & tickets"
+                  >
+                    COPY TRACE
+                  </button>
+                  <button onClick={() => setIsCalculationModalOpen(false)} className="btn btn-ghost btn-sm" aria-label="Close dialog">✕</button>
+                </div>
               </div>
 
               <div className="dialog-content">
@@ -1553,6 +1887,22 @@ export default function SimulatorClient({
                   <div className="text-caption text-mono" style={{ color: '#A1A1AA', marginBottom: '8px', fontWeight: 600 }}>
                     COMPUTATIONAL DERIVATION
                   </div>
+
+                  {showTraceFormulas && (
+                    <div style={{ background: '#111115', border: '1px solid #3F3F46', borderRadius: '3px', padding: '10px 12px', marginBottom: '14px' }} className="text-mono">
+                      <div style={{ fontSize: '0.625rem', color: '#A1A1AA', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>
+                        MATHEMATICAL FORMULAS (DETERMINISTIC INVARIANTS)
+                      </div>
+                      <div style={{ fontSize: '0.6875rem', lineHeight: 1.6, color: '#FFFFFF' }}>
+                        <div>• <strong>Model Cost</strong> = ∑ [requests × (1 − cacheHitRate) × share × ((inTokens × inPrice + outTokens × outPrice) / 1,000,000)]</div>
+                        <div>• <strong>Cache Cost</strong> = baseRAM ($65/mo) + memoryCapacity</div>
+                        <div>• <strong>Ingress Cost</strong> = requests × ($0.60 / 1,000,000 requests)</div>
+                        <div>• <strong>Total Monthly Cost</strong> = Model Cost + Cache Cost + Ingress Cost + Router Cost + VectorDB Cost</div>
+                        <div>• <strong>Cost Per Request</strong> = Total Monthly Cost / Ingress Requests</div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="assumptions-table-wrapper">
                     <table className="assumptions-table text-mono" style={{ fontSize: '0.75rem' }}>
                       <thead>
@@ -1760,6 +2110,338 @@ export default function SimulatorClient({
             <div className="dialog-footer">
               <button onClick={() => setIsAssumptionsOpen(false)} className="btn btn-primary btn-sm">
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section 12: Command Palette Modal */}
+      {isCommandPaletteOpen && (
+        <div
+          className="cmd-palette-backdrop"
+          onClick={() => setIsCommandPaletteOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Command Palette"
+        >
+          <div className="cmd-palette-container" onClick={e => e.stopPropagation()}>
+            <div className="cmd-palette-search-row">
+              <span className="cmd-palette-icon">⌘</span>
+              <input
+                type="text"
+                className="cmd-palette-input"
+                placeholder="Search commands (e.g. baseline, trace, compare, export)..."
+                value={commandPaletteQuery}
+                onChange={e => {
+                  setCommandPaletteQuery(e.target.value);
+                  setCommandPaletteSelectedIndex(0);
+                }}
+                onKeyDown={e => {
+                  const filtered = commandPaletteItems.filter(item =>
+                    item.label.toLowerCase().includes(commandPaletteQuery.toLowerCase())
+                  );
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setCommandPaletteSelectedIndex(idx => (idx + 1) % Math.max(1, filtered.length));
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setCommandPaletteSelectedIndex(idx => (idx - 1 + filtered.length) % Math.max(1, filtered.length));
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (filtered[commandPaletteSelectedIndex]) {
+                      filtered[commandPaletteSelectedIndex].action();
+                    }
+                  } else if (e.key === 'Escape') {
+                    setIsCommandPaletteOpen(false);
+                  }
+                }}
+                autoFocus
+              />
+              <span className="cmd-palette-esc">ESC</span>
+            </div>
+            <div className="cmd-palette-results">
+              {commandPaletteItems
+                .filter(item => item.label.toLowerCase().includes(commandPaletteQuery.toLowerCase()))
+                .map((item, index) => (
+                  <button
+                    key={item.id}
+                    className={`cmd-palette-item ${index === commandPaletteSelectedIndex ? 'active' : ''}`}
+                    onClick={() => item.action()}
+                    onMouseEnter={() => setCommandPaletteSelectedIndex(index)}
+                  >
+                    <span className="cmd-palette-item-label">{item.label}</span>
+                    {item.shortcut && <kbd className="cmd-palette-item-shortcut">{item.shortcut}</kbd>}
+                  </button>
+                ))}
+              {commandPaletteItems.filter(item => item.label.toLowerCase().includes(commandPaletteQuery.toLowerCase())).length === 0 && (
+                <div className="cmd-palette-empty">No matching commands found.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sections 52 & 53: Architecture Comparison Modal (Baseline vs Current) */}
+      {isCompareModalOpen && (
+        <div
+          className="dialog-backdrop"
+          onClick={() => setIsCompareModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="compare-modal-title"
+        >
+          <div className="dialog-window dialog-lg" onClick={e => e.stopPropagation()}>
+            <div className="dialog-header">
+              <div>
+                <h3 id="compare-modal-title" className="dialog-title">ARCHITECTURAL COMPARISON: BASELINE VS CURRENT</h3>
+                <p className="dialog-subtitle">Deterministic analytical delta across simulation parameters and modeled consequences.</p>
+              </div>
+              <button
+                onClick={() => setIsCompareModalOpen(false)}
+                className="dialog-close-btn"
+                aria-label="Close Comparison"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="dialog-body">
+              <div className="table-responsive">
+                <table className="comparison-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '28%' }}>PARAMETER / METRIC</th>
+                      <th style={{ width: '24%' }}>BASELINE</th>
+                      <th style={{ width: '24%' }}>CURRENT</th>
+                      <th style={{ width: '24%' }}>DELTA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Monthly Requests</td>
+                      <td>{formatNumber(baselineSnapshot.workload.requestsPerMonth)} req</td>
+                      <td>{formatNumber(workload.requestsPerMonth)} req</td>
+                      <td className={baselineDeltas.requestsDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
+                        {baselineDeltas.requestsDeltaText}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Cache Hit Rate</td>
+                      <td>{Math.round(baselineSnapshot.workload.cacheHitRate * 100)}%</td>
+                      <td>{Math.round(workload.cacheHitRate * 100)}%</td>
+                      <td className={baselineDeltas.cacheDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
+                        {baselineDeltas.cacheDeltaText}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Routing Distribution</td>
+                      <td>{baselineDeltas.baselineRoutingSummary}</td>
+                      <td>{baselineDeltas.currentRoutingSummary}</td>
+                      <td className={baselineDeltas.routingDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
+                        {baselineDeltas.routingDeltaText}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Topology Nodes</td>
+                      <td>{baselineSnapshot.arch.nodes.length} nodes</td>
+                      <td>{architecture.nodes.length} nodes</td>
+                      <td className={baselineDeltas.topologyDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
+                        {baselineDeltas.topologyDeltaText}
+                      </td>
+                    </tr>
+                    <tr className="comparison-section-divider">
+                      <td colSpan={4}>MODELED CONSEQUENCES (DETERMINISTIC SIMULATION)</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Modeled Monthly Cost</strong></td>
+                      <td><strong>{formatCurrency(baselineSim.monthlyCost)}</strong></td>
+                      <td><strong>{formatCurrency(result.monthlyCost)}</strong></td>
+                      <td className="delta-cost">
+                        <strong>
+                          {result.monthlyCost - baselineSim.monthlyCost > 0 ? '+' : ''}
+                          {formatCurrency(result.monthlyCost - baselineSim.monthlyCost)}
+                        </strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Modeled Tail Latency</strong></td>
+                      <td>{formatLatency(baselineSim.p95Latency)}</td>
+                      <td>{formatLatency(result.p95Latency)}</td>
+                      <td>
+                        {result.p95Latency - baselineSim.p95Latency > 0 ? '+' : ''}
+                        {Math.round(result.p95Latency - baselineSim.p95Latency)} ms
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Primary Bottleneck</td>
+                      <td>{baselineSim.bottleneck.componentName}</td>
+                      <td>{result.bottleneck.componentName}</td>
+                      <td>
+                        {baselineSim.bottleneck.componentName === result.bottleneck.componentName ? (
+                          <span className="badge-tag">UNALTERED</span>
+                        ) : (
+                          <span className="badge-tag-shifted">SHIFTED</span>
+                        )}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="comparison-notes">
+                <p>
+                  <strong>Analytical Guarantee:</strong> In ComputeCanvas, baseline comparisons are computed purely from deterministic graph evaluations. No stochastic simulation, mock averages, or random iterations are utilized.
+                </p>
+              </div>
+            </div>
+
+            <div className="dialog-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                {isModified && (
+                  <button
+                    onClick={() => {
+                      handleResetToBaseline();
+                      setIsCompareModalOpen(false);
+                    }}
+                    className="btn btn-outline btn-sm"
+                  >
+                    ↺ Reset to Baseline State
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handleExport}
+                  className="btn btn-outline btn-sm"
+                >
+                  Export Specification
+                </button>
+                <button
+                  onClick={() => setIsCompareModalOpen(false)}
+                  className="btn btn-primary btn-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section 13: Keyboard Shortcuts Modal */}
+      {isShortcutsOpen && (
+        <div
+          className="dialog-backdrop"
+          onClick={() => setIsShortcutsOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="shortcuts-modal-title"
+        >
+          <div className="dialog-window dialog-md" onClick={e => e.stopPropagation()}>
+            <div className="dialog-header">
+              <h3 id="shortcuts-modal-title" className="dialog-title">KEYBOARD SHORTCUTS</h3>
+              <button
+                onClick={() => setIsShortcutsOpen(false)}
+                className="dialog-close-btn"
+                aria-label="Close Shortcuts"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="dialog-body">
+              <div className="shortcuts-table-container">
+                <table className="shortcuts-table">
+                  <tbody>
+                    <tr>
+                      <td><kbd>⌘ K</kbd> / <kbd>Ctrl K</kbd></td>
+                      <td>Open Command Palette</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>⌘ Z</kbd> / <kbd>Ctrl Z</kbd></td>
+                      <td>Undo Parameter Change</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>⌘ ⇧ Z</kbd> / <kbd>Ctrl Y</kbd></td>
+                      <td>Redo Parameter Change</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>R</kbd></td>
+                      <td>Reset to Baseline Architecture (when focus is outside inputs)</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>?</kbd></td>
+                      <td>Show Keyboard Shortcuts</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Esc</kbd></td>
+                      <td>Close Active Inspector, Modal, or Command Palette</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="dialog-footer">
+              <button onClick={() => setIsShortcutsOpen(false)} className="btn btn-primary btn-sm">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sections 35 & 36: Shared State Error Recovery Modal */}
+      {sharedErrorNotice && (
+        <div
+          className="dialog-backdrop"
+          onClick={() => setSharedErrorNotice(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="error-recovery-title"
+        >
+          <div className="dialog-window dialog-md" onClick={e => e.stopPropagation()}>
+            <div className="dialog-header" style={{ borderBottomColor: '#3F3F46' }}>
+              <div>
+                <span className="badge-tag" style={{ background: '#27272A', color: '#FFFFFF', marginBottom: '4px', display: 'inline-block' }}>RECOVERY</span>
+                <h3 id="error-recovery-title" className="dialog-title">INVALID ARCHITECTURE STATE</h3>
+              </div>
+              <button
+                onClick={() => setSharedErrorNotice(null)}
+                className="dialog-close-btn"
+                aria-label="Dismiss Error"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="dialog-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="alert-error-box">
+                <p style={{ margin: 0, fontSize: '0.8125rem', lineHeight: '1.4' }}>
+                  {sharedErrorNotice}
+                </p>
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#A1A1AA', lineHeight: '1.5' }}>
+                <strong>Recovery Options:</strong>
+                <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                  <li>Load standard baseline architecture (Router + Semantic Cache).</li>
+                  <li>Check that the entire share URL was copied without truncation.</li>
+                </ul>
+              </div>
+            </div>
+            <div className="dialog-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  handleSelectTemplate('router-cache');
+                  setSharedErrorNotice(null);
+                }}
+                className="btn btn-primary btn-sm"
+              >
+                Load Baseline Architecture
+              </button>
+              <button
+                onClick={() => setSharedErrorNotice(null)}
+                className="btn btn-outline btn-sm"
+              >
+                Dismiss
               </button>
             </div>
           </div>

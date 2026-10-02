@@ -185,6 +185,36 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
               </div>
             </section>
 
+            {/* Section 8: Engineering Decision Instrument & Reproducibility */}
+            <section className="docs-section">
+              <h2 className="docs-title">8. Decision Instrument &amp; Reproducibility (CC 3.2)</h2>
+              <p>
+                ComputeCanvas 3.2 elevates the workspace from a simulation tool into an <strong>engineering decision instrument</strong>. It answers not just &ldquo;What is the cost?&rdquo; but &ldquo;Why did it change, which component dominates, and how can the analysis be reproduced?&rdquo;
+              </p>
+              <div className="docs-components-grid" style={{ marginTop: 'var(--space-4)' }}>
+                <div className="doc-component-card">
+                  <span className="doc-pill text-mono">BASELINE VS CURRENT</span>
+                  <h3>State Comparison</h3>
+                  <p>Tracks active parameter modifications against the template baseline. Inspect deltas across requests, hit rates, routing splits, and economics without memorizing previous states.</p>
+                </div>
+                <div className="doc-component-card">
+                  <span className="doc-pill text-mono">CAUSAL DELTA 2.0</span>
+                  <h3>Structured Causality</h3>
+                  <p>Deconstructs every parameter change into <em>Architectural Change</em>, <em>Deterministic Cause</em>, and <em>Modeled Consequence</em> without stochastic or hallucinated explanations.</p>
+                </div>
+                <div className="doc-component-card">
+                  <span className="doc-pill text-mono">TRACE 2.0</span>
+                  <h3>Calculation Sheet &amp; Formulas</h3>
+                  <p>Displays line-by-line discrete arithmetic for every token and dollar. Includes formula mode toggle and 1-click plain text markdown export for pull requests and architecture reviews.</p>
+                </div>
+                <div className="doc-component-card">
+                  <span className="doc-pill text-mono">PROVENANCE</span>
+                  <h3>Registry &amp; Snapshot IDs</h3>
+                  <p>Every simulation is tagged with an immutable deterministic snapshot ID (e.g. <code>CC-ROUTING-2026-03-V1.4</code>) cross-referenced with registry versions and pricing snapshot dates.</p>
+                </div>
+              </div>
+            </section>
+
             <div className="docs-cta-card">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Evaluate your system in the workbench</h3>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>

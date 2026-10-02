@@ -426,6 +426,61 @@ export default function SpatialCanvas({
     return { left, top };
   }, [selectedEdge, nodeMap, zoom, pan, canvasDimensions]);
 
+  // Path Analysis: Compute full upstream & downstream transitive closure for selected node (Section 18)
+  const { upstreamNodeIds, downstreamNodeIds, activePathNodeIds, activePathEdgeIndices } = useMemo(() => {
+    if (!selectedNodeId) {
+      return {
+        upstreamNodeIds: new Set<string>(),
+        downstreamNodeIds: new Set<string>(),
+        activePathNodeIds: new Set<string>(),
+        activePathEdgeIndices: new Set<number>(),
+      };
+    }
+
+    const upstream = new Set<string>();
+    const downstream = new Set<string>();
+    const activeEdges = new Set<number>();
+
+    // Traverse upstream (backwards)
+    const queueUp = [selectedNodeId];
+    while (queueUp.length > 0) {
+      const curr = queueUp.shift()!;
+      architecture.edges.forEach((edge, idx) => {
+        if (edge.target === curr) {
+          activeEdges.add(idx);
+          if (!upstream.has(edge.source) && edge.source !== selectedNodeId) {
+            upstream.add(edge.source);
+            queueUp.push(edge.source);
+          }
+        }
+      });
+    }
+
+    // Traverse downstream (forwards)
+    const queueDown = [selectedNodeId];
+    while (queueDown.length > 0) {
+      const curr = queueDown.shift()!;
+      architecture.edges.forEach((edge, idx) => {
+        if (edge.source === curr) {
+          activeEdges.add(idx);
+          if (!downstream.has(edge.target) && edge.target !== selectedNodeId) {
+            downstream.add(edge.target);
+            queueDown.push(edge.target);
+          }
+        }
+      });
+    }
+
+    const allPathNodes = new Set<string>([selectedNodeId, ...upstream, ...downstream]);
+
+    return {
+      upstreamNodeIds: upstream,
+      downstreamNodeIds: downstream,
+      activePathNodeIds: allPathNodes,
+      activePathEdgeIndices: activeEdges,
+    };
+  }, [selectedNodeId, architecture.edges]);
+
   return (
     <div
       ref={containerRef}
@@ -549,18 +604,15 @@ export default function SpatialCanvas({
             const pathData = `M ${fromX} ${fromY} C ${fromX} ${fromY + dy}, ${toX} ${toY - dy}, ${toX} ${toY}`;
 
             const isDirectlySelected = selectedEdgeIndex === idx;
-            const isIncomingToSelected = selectedNodeId !== null && edge.target === selectedNodeId;
-            const isOutgoingFromSelected = selectedNodeId !== null && edge.source === selectedNodeId;
-            const isConnectedToSelected = isIncomingToSelected || isOutgoingFromSelected;
-
-            const isHighlighted = isDirectlySelected || isConnectedToSelected;
-            const isDimmed = selectedNodeId !== null && !isConnectedToSelected && !isDirectlySelected;
+            const isInActiveCausalPath = selectedNodeId !== null && activePathEdgeIndices.has(idx);
+            const isHighlighted = isDirectlySelected || isInActiveCausalPath;
+            const isDimmed = selectedNodeId !== null && !isHighlighted;
 
             return (
               <g
                 key={`edge-${edge.source}-${edge.target}-${idx}`}
                 className="canvas-edge-group"
-                style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.2s' }}
+                style={{ opacity: isDimmed ? 0.2 : 1, transition: 'opacity 0.2s' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedEdge(idx);
@@ -579,37 +631,42 @@ export default function SpatialCanvas({
                   style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
                 />
 
-                {/* Traffic share percentage badge */}
-                {edge.trafficShare !== undefined && (
-                  <g transform={`translate(${(fromX + toX) / 2}, ${(fromY + toY) / 2})`}>
-                    <rect
-                      x="-26"
-                      y="-10"
-                      width="52"
-                      height="20"
-                      rx="2"
-                      fill="#111114"
-                      stroke={isHighlighted ? '#FFFFFF' : 'var(--color-border-strong)'}
-                      strokeWidth={isHighlighted ? 1.5 : 1}
-                    />
-                    <text
-                      x="0"
-                      y="4"
-                      textAnchor="middle"
-                      fill="#FAFAFA"
-                      fontSize="9.5"
-                      fontFamily="var(--font-mono)"
-                      fontWeight="600"
-                    >
-                      {Math.round(edge.trafficShare * 100)}% route
-                    </text>
-                  </g>
-                )}
+                {/* Traffic share percentage badge — Static Engineering Visualization (Section 19) */}
+                {edge.trafficShare !== undefined && (() => {
+                  let badgeText = `${Math.round(edge.trafficShare * 100)}% ROUTE`;
+                  if (to.type === 'fast-model') badgeText = `${Math.round(edge.trafficShare * 100)}% FAST`;
+                  else if (to.type === 'frontier-model') badgeText = `${Math.round(edge.trafficShare * 100)}% FRONTIER`;
+                  else if (from.type === 'cache') badgeText = `${Math.round(edge.trafficShare * 100)}% MISS`;
+                  else if (to.label) badgeText = `${Math.round(edge.trafficShare * 100)}% ${to.label.toUpperCase()}`;
 
-                {/* Subtle animated traffic particle */}
-                <circle r={2.5} fill={isHighlighted ? '#FFFFFF' : 'var(--color-accent)'}>
-                  <animateMotion dur="2.4s" repeatCount="indefinite" path={pathData} />
-                </circle>
+                  const badgeWidth = Math.max(54, badgeText.length * 6.8 + 14);
+                  return (
+                    <g transform={`translate(${(fromX + toX) / 2}, ${(fromY + toY) / 2})`}>
+                      <rect
+                        x={-badgeWidth / 2}
+                        y="-10"
+                        width={badgeWidth}
+                        height="20"
+                        rx="2"
+                        fill="#111114"
+                        stroke={isHighlighted ? '#FFFFFF' : 'var(--color-border-strong)'}
+                        strokeWidth={isHighlighted ? 1.5 : 1}
+                      />
+                      <text
+                        x="0"
+                        y="4"
+                        textAnchor="middle"
+                        fill={isHighlighted ? '#FFFFFF' : '#D4D4D8'}
+                        fontSize="9"
+                        fontFamily="var(--font-mono)"
+                        fontWeight="600"
+                        letterSpacing="0.02em"
+                      >
+                        {badgeText}
+                      </text>
+                    </g>
+                  );
+                })()}
               </g>
             );
           })}
@@ -637,10 +694,10 @@ export default function SpatialCanvas({
             const isBottleneck = metric?.isBottleneck || simulation.bottleneck?.nodeId === node.id;
             const styling = getTypeStyling(node.type);
 
-            const isConnectedNeighbor = selectedNodeId !== null && architecture.edges.some(
-              e => (e.source === selectedNodeId && e.target === node.id) || (e.target === selectedNodeId && e.source === node.id)
-            );
-            const isUnrelatedNode = selectedNodeId !== null && !isSelected && !isConnectedNeighbor;
+            const isUpstream = upstreamNodeIds.has(node.id);
+            const isDownstream = downstreamNodeIds.has(node.id);
+            const isInCausalPath = isSelected || isUpstream || isDownstream;
+            const isDimmed = selectedNodeId !== null && !isInCausalPath;
 
             const costText = metric && metric.monthlyCost > 0 ? `${formatCurrency(metric.monthlyCost)}/mo` : '$0/mo';
             const latencyText = metric ? formatLatency(metric.latencyMs) : '0 ms';
@@ -676,7 +733,7 @@ export default function SpatialCanvas({
                 style={{
                   cursor: isDraggingThis ? 'grabbing' : 'grab',
                   outline: 'none',
-                  opacity: isUnrelatedNode ? 0.45 : 1,
+                  opacity: isDimmed ? 0.28 : 1,
                   transition: 'opacity 0.2s',
                 }}
               >
