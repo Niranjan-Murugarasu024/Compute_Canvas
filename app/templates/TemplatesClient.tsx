@@ -47,22 +47,22 @@ export default function TemplatesClient() {
             >
               <Link href={`/simulator?template=${template.id}`} className="template-page-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
-                  <span className="text-technical-label">
+                  <span className="text-technical-label" style={{ fontSize: '0.8125rem' }}>
                     {template.category}
                   </span>
-                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.5625rem' }}>
+                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                     CANONICAL PATTERN
                   </span>
                 </div>
-                <h2 style={{ fontSize: '1.125rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
+                <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
                   {template.name}
                 </h2>
-                <p style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)', lineHeight: 1.55 }}>
+                <p style={{ fontSize: '0.875rem', fontFamily: 'var(--font-ui)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)', lineHeight: 1.55 }}>
                   {template.description}
                 </p>
 
                 {/* Structured Architectural Blueprint: When to Use / Optimizes / Tradeoff (Section 29) */}
-                <div className="template-tradeoffs-box text-mono" style={{ margin: '8px 0 12px 0', padding: '10px 12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.6875rem', lineHeight: 1.5 }}>
+                <div className="template-tradeoffs-box text-mono" style={{ margin: '8px 0 12px 0', padding: '10px 12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.78125rem', lineHeight: 1.5 }}>
                   <div style={{ marginBottom: '4px' }}>
                     <span style={{ color: '#71717A', fontWeight: 600 }}>WHEN TO USE: </span>
                     <span style={{ color: '#FAFAFA' }}>{template.whenToUse}</span>
@@ -78,12 +78,12 @@ export default function TemplatesClient() {
                 </div>
 
                 {/* Reference Configuration Matrix (Section 38) */}
-                <div className="template-ref-config text-mono" style={{ margin: '0 0 14px 0', padding: '8px 10px', background: '#0D0D10', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                <div className="template-ref-config text-mono" style={{ margin: '0 0 14px 0', padding: '10px 12px', background: '#0D0D10', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span>REFERENCE WORKLOAD:</span>
                     <span style={{ color: '#FAFAFA' }}>{(template.defaultWorkload.requestsPerMonth / 1_000_000).toFixed(1)}M REQS/MO</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span>TOKENS (IN / OUT):</span>
                     <span style={{ color: '#FAFAFA' }}>{template.defaultWorkload.avgInputTokens} / {template.defaultWorkload.avgOutputTokens}</span>
                   </div>
@@ -105,23 +105,23 @@ export default function TemplatesClient() {
                 <div className="template-page-card__metrics">
                   <div>
                     <span className="text-technical-label">MODELED MONTHLY COST</span>
-                    <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 600 }}>
+                    <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '1.0625rem' }}>
                       {formatCurrency(result.monthlyCost, true)}/MO
                     </span>
                   </div>
                   <div>
                     <span className="text-technical-label">MODELED TAIL LATENCY</span>
-                    <span className="text-mono" style={{ color: '#D4D4D8', fontWeight: 500 }}>
+                    <span className="text-mono" style={{ color: '#D4D4D8', fontWeight: 500, fontSize: '1.0625rem' }}>
                       {formatLatency(result.p95Latency)}
                     </span>
                   </div>
                   <div>
                     <span className="text-technical-label">COMPONENTS</span>
-                    <span className="text-mono" style={{ color: '#A1A1AA' }}>{template.architecture.nodes.length} NODES</span>
+                    <span className="text-mono" style={{ color: '#A1A1AA', fontSize: '0.875rem' }}>{template.architecture.nodes.length} NODES</span>
                   </div>
                   <div>
                     <span className="text-technical-label">TRADEOFF TIER</span>
-                    <span className="text-mono" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: '0.75rem' }}>
+                    <span className="text-mono" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: '0.8125rem' }}>
                       {template.capabilityTier || result.capabilityTier}
                     </span>
                   </div>
@@ -135,7 +135,7 @@ export default function TemplatesClient() {
       <style>{`
         .templates-page-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
           gap: var(--space-4);
         }
         .template-page-card {
@@ -158,15 +158,15 @@ export default function TemplatesClient() {
         .template-page-card__nodes {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--space-1);
+          gap: 6px;
           margin-bottom: var(--space-4);
         }
         .template-page-card__node {
-          padding: 2px 6px;
+          padding: 3px 8px;
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border-subtle);
           border-radius: 2px;
-          font-size: 0.625rem;
+          font-size: 0.75rem;
           color: var(--color-text-secondary);
         }
         .template-page-card__metrics {

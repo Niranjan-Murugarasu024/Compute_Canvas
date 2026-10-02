@@ -29,8 +29,8 @@ interface WireDraft {
   currentY: number;
 }
 
-const NODE_WIDTH = 204;
-const NODE_HEIGHT = 82;
+const NODE_WIDTH = 224;
+const NODE_HEIGHT = 86;
 
 export default function SpatialCanvas({
   simulation,
@@ -517,7 +517,7 @@ export default function SpatialCanvas({
         <div className="canvas-tool-divider" />
         <button
           className="canvas-tool-btn text-mono"
-          style={{ fontSize: '0.75rem' }}
+          style={{ fontSize: '0.8125rem' }}
           title="Reset Zoom (0)"
           onClick={resetView}
         >
@@ -525,7 +525,7 @@ export default function SpatialCanvas({
         </button>
         <button
           className="canvas-tool-btn text-mono"
-          style={{ fontSize: '0.75rem' }}
+          style={{ fontSize: '0.8125rem' }}
           title="Fit Architecture (F)"
           onClick={fitToView}
         >
@@ -533,7 +533,7 @@ export default function SpatialCanvas({
         </button>
         <button
           className="canvas-tool-btn text-mono"
-          style={{ fontSize: '0.75rem', color: 'var(--color-accent)' }}
+          style={{ fontSize: '0.8125rem', color: 'var(--color-accent)' }}
           title="Auto Arrange Layout"
           onClick={autoArrange}
         >
@@ -639,25 +639,25 @@ export default function SpatialCanvas({
                   else if (from.type === 'cache') badgeText = `${Math.round(edge.trafficShare * 100)}% MISS`;
                   else if (to.label) badgeText = `${Math.round(edge.trafficShare * 100)}% ${to.label.toUpperCase()}`;
 
-                  const badgeWidth = Math.max(54, badgeText.length * 6.8 + 14);
+                  const badgeWidth = Math.max(68, badgeText.length * 7.8 + 20);
                   return (
                     <g transform={`translate(${(fromX + toX) / 2}, ${(fromY + toY) / 2})`}>
                       <rect
                         x={-badgeWidth / 2}
-                        y="-10"
+                        y="-12"
                         width={badgeWidth}
-                        height="20"
-                        rx="2"
+                        height="24"
+                        rx="3"
                         fill="#111114"
                         stroke={isHighlighted ? '#FFFFFF' : 'var(--color-border-strong)'}
                         strokeWidth={isHighlighted ? 1.5 : 1}
                       />
                       <text
                         x="0"
-                        y="4"
+                        y="5"
                         textAnchor="middle"
-                        fill={isHighlighted ? '#FFFFFF' : '#D4D4D8'}
-                        fontSize="9"
+                        fill={isHighlighted ? '#FFFFFF' : '#FFFFFF'}
+                        fontSize="12.5"
                         fontFamily="var(--font-mono)"
                         fontWeight="600"
                         letterSpacing="0.02em"
@@ -769,11 +769,11 @@ export default function SpatialCanvas({
                 {/* Top Header: Category Tag */}
                 <text
                   x="12"
-                  y="18"
-                  fill="#71717A"
-                  fontSize="8"
+                  y="20"
+                  fill="#A1A1AA"
+                  fontSize="11"
                   fontFamily="var(--font-mono)"
-                  letterSpacing="0.1em"
+                  letterSpacing="0.08em"
                   fontWeight="700"
                 >
                   {styling.icon} {styling.tag}
@@ -781,9 +781,9 @@ export default function SpatialCanvas({
 
                 {/* Monochrome Inverted Bottleneck Badge */}
                 {isBottleneck && (
-                  <g transform={`translate(${NODE_WIDTH - 76}, 6)`}>
-                    <rect x="0" y="0" width="68" height="15" rx="1" fill="#FFFFFF" />
-                    <text x="34" y="11" textAnchor="middle" fill="#09090B" fontSize="7.5" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">
+                  <g transform={`translate(${NODE_WIDTH - 86}, 7)`}>
+                    <rect x="0" y="0" width="76" height="18" rx="2" fill="#FFFFFF" />
+                    <text x="38" y="13" textAnchor="middle" fill="#09090B" fontSize="10" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">
                       BOTTLENECK
                     </text>
                   </g>
@@ -792,11 +792,11 @@ export default function SpatialCanvas({
                 {/* Component Name */}
                 <text
                   x="12"
-                  y="38"
-                  fill="#F4F4F5"
-                  fontSize="12"
+                  y="45"
+                  fill="#FFFFFF"
+                  fontSize="14.5"
                   fontFamily="var(--font-ui)"
-                  fontWeight="500"
+                  fontWeight="600"
                 >
                   {node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label}
                 </text>
@@ -804,23 +804,23 @@ export default function SpatialCanvas({
                 {/* Metrics Row: Cost / Latency / Share */}
                 <text
                   x="12"
-                  y="62"
+                  y="70"
                   fill="#FFFFFF"
-                  fontSize="11"
+                  fontSize="13"
                   fontFamily="var(--font-mono)"
-                  fontWeight="500"
+                  fontWeight="600"
                 >
                   {costText}
                 </text>
 
                 <text
                   x={NODE_WIDTH - 12}
-                  y="62"
+                  y="70"
                   textAnchor="end"
-                  fill="#A1A1AA"
-                  fontSize="10"
+                  fill="#D4D4D8"
+                  fontSize="12"
                   fontFamily="var(--font-mono)"
-                  fontWeight="400"
+                  fontWeight="500"
                 >
                   {latencyText}{costPctText ? ` · ${costPctText}` : ''}
                 </text>
@@ -1052,14 +1052,14 @@ export default function SpatialCanvas({
           background: none;
           border: none;
           color: #A1A1AA;
-          width: 26px;
-          height: 26px;
+          width: 30px;
+          height: 30px;
           border-radius: 2px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          font-size: 0.875rem;
+          font-size: 0.9375rem;
           font-family: var(--font-mono);
           transition: background-color 0.15s, color 0.15s;
         }
@@ -1072,18 +1072,18 @@ export default function SpatialCanvas({
           cursor: not-allowed;
         }
         .canvas-zoom-label {
-          font-size: 0.6875rem;
+          font-size: 0.8125rem;
           color: #D4D4D8;
           padding: 0 4px;
-          min-width: 36px;
+          min-width: 42px;
           text-align: center;
           font-variant-numeric: tabular-nums;
         }
         .canvas-tool-divider {
           width: 1px;
-          height: 16px;
+          height: 18px;
           background: #252529;
-          margin: 0 2px;
+          margin: 0 3px;
         }
         .spatial-node-rect {
           transition: stroke 0.15s, fill 0.15s;
@@ -1113,7 +1113,7 @@ export default function SpatialCanvas({
           background: #0E0E12;
           border: 1px solid #3F3F46;
           border-radius: 4px;
-          padding: 5px 10px;
+          padding: 6px 12px;
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
           pointer-events: auto;
           user-select: none;
@@ -1125,20 +1125,20 @@ export default function SpatialCanvas({
           gap: 6px;
         }
         .contextual-type-badge {
-          font-size: 0.625rem;
+          font-size: 0.6875rem;
           font-weight: 700;
           color: #09090B;
           background: #FFFFFF;
-          padding: 1px 5px;
+          padding: 2px 6px;
           border-radius: 2px;
           letter-spacing: 0.05em;
         }
         .contextual-node-title {
           font-family: var(--font-ui);
-          font-size: 0.75rem;
+          font-size: 0.875rem;
           font-weight: 600;
           color: #FFFFFF;
-          max-width: 140px;
+          max-width: 160px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1148,8 +1148,8 @@ export default function SpatialCanvas({
           border: 1px solid #3F3F46;
           border-radius: 2px;
           color: #FFFFFF;
-          font-size: 0.6875rem;
-          padding: 3px 6px;
+          font-size: 0.8125rem;
+          padding: 4px 8px;
           outline: none;
           cursor: pointer;
         }
@@ -1162,19 +1162,19 @@ export default function SpatialCanvas({
           gap: 6px;
         }
         .contextual-traffic-label {
-          font-size: 0.6875rem;
+          font-size: 0.78125rem;
           color: #A1A1AA;
         }
         .contextual-slider {
-          width: 70px;
+          width: 76px;
           accent-color: #FFFFFF;
           cursor: pointer;
         }
         .contextual-traffic-val {
-          font-size: 0.75rem;
+          font-size: 0.875rem;
           font-weight: 600;
           color: #FFFFFF;
-          min-width: 32px;
+          min-width: 36px;
           font-variant-numeric: tabular-nums;
         }
         .contextual-btn-delete {
@@ -1183,9 +1183,9 @@ export default function SpatialCanvas({
           border-radius: 2px;
           color: #F43F5E;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-weight: 600;
-          padding: 3px 8px;
+          padding: 4px 10px;
           cursor: pointer;
           transition: all 0.15s ease;
           white-space: nowrap;
@@ -1201,8 +1201,8 @@ export default function SpatialCanvas({
           border-radius: 2px;
           color: #E4E4E7;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
-          padding: 3px 8px;
+          font-size: 0.75rem;
+          padding: 4px 10px;
           cursor: pointer;
           transition: all 0.15s ease;
           white-space: nowrap;
@@ -1224,36 +1224,36 @@ export default function SpatialCanvas({
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 10px;
-          padding: 28px 36px;
+          gap: 12px;
+          padding: 32px 40px;
           background: #0B0B0D;
           border: 1px solid #27272A;
           border-radius: 4px;
-          max-width: 480px;
+          max-width: 520px;
           box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
         }
         .empty-state-badge {
-          font-size: 0.625rem;
+          font-size: 0.75rem;
           font-weight: 700;
           letter-spacing: 0.12em;
-          color: #71717A;
+          color: #A1A1AA;
           background: #18181B;
-          padding: 2px 8px;
+          padding: 3px 10px;
           border-radius: 2px;
           border: 1px solid #27272A;
         }
         .empty-state-title {
           font-family: var(--font-display);
-          font-size: 0.875rem;
+          font-size: 0.9375rem;
           font-weight: 700;
           letter-spacing: 0.08em;
           color: #FFFFFF;
         }
         .empty-state-subtitle {
           font-family: var(--font-ui);
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
           color: #A1A1AA;
-          line-height: 1.4;
+          line-height: 1.45;
           margin-bottom: 4px;
         }
         .empty-state-actions {
@@ -1266,10 +1266,10 @@ export default function SpatialCanvas({
           background: #18181B;
           border: 1px solid #3F3F46;
           color: #FFFFFF;
-          font-size: 0.6875rem;
+          font-size: 0.78125rem;
           font-weight: 600;
           letter-spacing: 0.04em;
-          padding: 6px 12px;
+          padding: 7px 14px;
           border-radius: 2px;
           cursor: pointer;
           transition: all 0.15s ease;

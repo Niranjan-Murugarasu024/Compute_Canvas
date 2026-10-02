@@ -59,7 +59,7 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
               onClick={() => setSelectedCandidateId(c.id)}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>{c.badge}</span>
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>{c.badge}</span>
                 <span className="text-caption text-mono" style={{ color: c.deltaCost <= 0 ? 'var(--color-success)' : 'var(--color-cost)' }}>
                   {c.deltaCost >= 0 ? '+' : ''}{formatCurrency(c.deltaCost)}
                 </span>

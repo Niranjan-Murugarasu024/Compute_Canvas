@@ -671,13 +671,13 @@ export default function SimulatorClient({
         <div className="simulator-baseline-controls">
           {isModified ? (
             <div className="baseline-indicator-group">
-              <span className="badge badge--warning text-mono" style={{ fontSize: '0.625rem' }}>
+              <span className="badge badge--warning text-mono" style={{ fontSize: '0.75rem' }}>
                 MODIFIED FROM BASELINE ({baselineDeltas.modifiedCount} PARAMETERS CHANGED)
               </span>
               <button
                 onClick={handleResetToBaseline}
                 className="btn btn-secondary btn-sm text-mono"
-                style={{ fontSize: '0.6875rem', padding: '2px 8px' }}
+                style={{ fontSize: '0.78125rem', padding: '3px 10px' }}
                 title="Restore exact baseline architecture and workload"
               >
                 ↺ RESET TO BASELINE
@@ -685,13 +685,13 @@ export default function SimulatorClient({
             </div>
           ) : (
             <div className="baseline-indicator-group">
-              <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+              <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                 BASELINE (CLEAN)
               </span>
               <button
                 disabled
                 className="btn btn-secondary btn-sm text-mono"
-                style={{ fontSize: '0.6875rem', padding: '2px 8px', opacity: 0.5, cursor: 'not-allowed' }}
+                style={{ fontSize: '0.78125rem', padding: '3px 10px', opacity: 0.5, cursor: 'not-allowed' }}
               >
                 BASELINE
               </button>
@@ -701,7 +701,7 @@ export default function SimulatorClient({
           <button
             onClick={() => setIsCompareModalOpen(true)}
             className="btn btn-secondary btn-sm text-mono"
-            style={{ fontSize: '0.6875rem', padding: '2px 8px' }}
+            style={{ fontSize: '0.78125rem', padding: '3px 10px' }}
             title="Open side-by-side analytical comparison: Baseline vs Current"
           >
             COMPARE
@@ -729,7 +729,7 @@ export default function SimulatorClient({
           <button
             onClick={() => setIsCommandPaletteOpen(true)}
             className="btn btn-ghost btn-sm text-mono"
-            style={{ fontSize: '0.6875rem', padding: '2px 6px', border: '1px solid var(--color-border)' }}
+            style={{ fontSize: '0.78125rem', padding: '3px 8px', border: '1px solid var(--color-border)' }}
             title="Open Command Palette (⌘K / Ctrl+K)"
           >
             ⌘K
@@ -738,7 +738,7 @@ export default function SimulatorClient({
           <button
             onClick={() => setIsShortcutsOpen(true)}
             className="btn btn-ghost btn-sm text-mono"
-            style={{ fontSize: '0.6875rem', padding: '2px 6px', border: '1px solid var(--color-border)' }}
+            style={{ fontSize: '0.78125rem', padding: '3px 8px', border: '1px solid var(--color-border)' }}
             title="Keyboard Shortcuts (?)"
           >
             ?
@@ -822,10 +822,10 @@ export default function SimulatorClient({
             <span className="telemetry-cell-label">CAPABILITY / TRADEOFF</span>
             <span className="telemetry-mode-tag text-mono mode-neutral">BALANCED</span>
           </div>
-          <div className="telemetry-cell-value text-mono" style={{ fontSize: '1.05rem', letterSpacing: '0.01em' }}>
+          <div className="telemetry-cell-value text-mono" style={{ fontSize: '1.25rem', letterSpacing: '0.01em' }}>
             {result.capabilityTier || 'BALANCED'}
           </div>
-          <div className="telemetry-cell-subtext text-mono" style={{ fontSize: '0.6875rem' }}>
+          <div className="telemetry-cell-subtext text-mono" style={{ fontSize: '0.75rem' }}>
             {result.capabilityDescription || 'Architectural tradeoff tier'}
           </div>
         </div>
@@ -1047,13 +1047,13 @@ export default function SimulatorClient({
                   </div>
 
                   <div style={{ padding: '8px', background: '#18181B', borderRadius: '3px', border: '1px solid var(--color-border)', marginTop: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78125rem' }}>
                       <span style={{ color: 'var(--color-text-muted)' }} className="text-mono">CALIBRATED ESTIMATE</span>
-                      <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.875rem' }}>
+                      <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.9375rem' }}>
                         {formatCurrency(calibrated.calibratedMonthlyCost)}/mo
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.625rem', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '4px' }}>
                       <span style={{ color: 'var(--color-text-muted)' }} className="text-mono">CONFIDENCE:</span>
                       <span className="text-mono" style={{ color: calibrated.confidenceLevel === 'High Confidence' ? '#FAFAFA' : '#A1A1AA' }}>
                         {calibrated.confidenceLevel}
@@ -1061,8 +1061,8 @@ export default function SimulatorClient({
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '8px', padding: '8px 10px', background: '#09090B', border: '1px solid #27272A', borderRadius: '3px', fontSize: '0.625rem', color: '#71717A', lineHeight: 1.4 }}>
-                    <strong style={{ color: '#A1A1AA' }}>IMPORTANT: </strong>
+                  <div style={{ marginTop: '8px', padding: '8px 10px', background: '#09090B', border: '1px solid #27272A', borderRadius: '3px', fontSize: '0.75rem', color: '#A1A1AA', lineHeight: 1.45 }}>
+                    <strong style={{ color: '#FFFFFF' }}>IMPORTANT: </strong>
                     Calibration adjusts the model to your historical baseline. It does not reproduce provider invoices and does not guarantee future spend.
                   </div>
                 </div>
@@ -1157,14 +1157,14 @@ export default function SimulatorClient({
                 <div className="sidebar-card-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <h2 className="sidebar-section-title">PROPERTIES INSPECTOR</h2>
-                    <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                    <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                       {selectedNode.type.toUpperCase()}
                     </span>
                   </div>
                   <button
                     onClick={() => setSelectedNode(null)}
                     className="btn btn-ghost btn-sm text-mono"
-                    style={{ fontSize: '0.6875rem', padding: '2px 6px', height: 'auto', minHeight: 'unset' }}
+                    style={{ fontSize: '0.75rem', padding: '3px 8px', height: 'auto', minHeight: 'unset' }}
                     title="Close inspection"
                   >
                     ✕
@@ -1173,9 +1173,9 @@ export default function SimulatorClient({
 
                 <div style={{ padding: '4px 0 2px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#FFFFFF' }}>{selectedNode.label}</span>
+                    <span style={{ fontWeight: 600, fontSize: '0.9375rem', color: '#FFFFFF' }}>{selectedNode.label}</span>
                     {selectedNodeMetrics?.isBottleneck && (
-                      <span className="badge badge--warning text-mono" style={{ fontSize: '0.625rem' }}>
+                      <span className="badge badge--warning text-mono" style={{ fontSize: '0.75rem' }}>
                         PRIMARY BOTTLENECK
                       </span>
                     )}
@@ -1183,7 +1183,7 @@ export default function SimulatorClient({
 
                   {/* Cost Contribution Bar (Section 16, 22) */}
                   <div style={{ marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
                       <span>COST CONTRIBUTION</span>
                       <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{costSharePct}% OF MODELED COST</span>
                     </div>
@@ -1284,17 +1284,17 @@ export default function SimulatorClient({
                   </div>
 
                   {/* Deterministic "Why it matters" explanation (Section 14, 29) */}
-                  <div style={{ marginTop: '10px', padding: '8px 10px', background: '#141418', border: '1px solid var(--color-border)', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                  <div style={{ marginTop: '10px', padding: '10px 12px', background: '#141418', border: '1px solid var(--color-border)', borderRadius: '3px' }}>
+                    <div style={{ fontSize: '0.6875rem', fontFamily: 'var(--font-mono)', color: '#A1A1AA', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
                       WHY IT MATTERS
                     </div>
-                    <p style={{ margin: 0, fontSize: '0.75rem', lineHeight: 1.45, color: '#D4D4D8' }}>
+                    <p style={{ margin: 0, fontSize: '0.8125rem', lineHeight: 1.5, color: '#D4D4D8' }}>
                       {causalInfo.whyItMatters}
                     </p>
                     <Link
                       href="/assumptions"
                       className="text-mono"
-                      style={{ fontSize: '0.6875rem', color: '#FFFFFF', textDecoration: 'underline', marginTop: '6px', display: 'inline-block' }}
+                      style={{ fontSize: '0.75rem', color: '#FFFFFF', textDecoration: 'underline', marginTop: '6px', display: 'inline-block' }}
                       title="Inspect model and infrastructure unit rate formulas in Model Registry"
                     >
                       VIEW ASSUMPTION IN REGISTRY →
@@ -1307,9 +1307,9 @@ export default function SimulatorClient({
             <div className="sidebar-card">
               <div className="sidebar-card-header">
                 <h2 className="sidebar-section-title">PROPERTIES INSPECTOR</h2>
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>SELECT A COMPONENT</span>
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>SELECT A COMPONENT</span>
               </div>
-              <div style={{ padding: '12px 4px', color: 'var(--color-text-muted)', fontSize: '0.75rem', lineHeight: 1.5 }}>
+              <div style={{ padding: '12px 4px', color: 'var(--color-text-muted)', fontSize: '0.8125rem', lineHeight: 1.5 }}>
                 Choose a node in the architecture to inspect its traffic, cost, latency, path position, and dependencies.
               </div>
             </div>
@@ -1500,39 +1500,39 @@ export default function SimulatorClient({
           <div className="sidebar-card">
             <div className="sidebar-card-header">
               <h2 className="sidebar-section-title">WHY DID THIS CHANGE?</h2>
-              <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
+              <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                 CAUSAL DELTA
               </span>
             </div>
 
             {(causalDelta.parameterChanges.length > 0 || causalDelta.costDelta !== 0) ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {/* 1. CHANGE (Section 26) */}
                 <div>
-                  <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#A1A1AA', letterSpacing: '0.06em', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 700 }}>
                     1. ARCHITECTURAL CHANGE
                   </div>
                   <div className="causal-param-changes text-mono" style={{ background: '#141417', padding: '8px 10px', borderRadius: '3px', border: '1px solid var(--color-border)' }}>
                     {causalDelta.parameterChanges.length > 0 ? (
                       causalDelta.parameterChanges.map((ch, idx) => (
-                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6875rem', marginBottom: '3px' }}>
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: '3px' }}>
                           <span style={{ color: 'var(--color-text-muted)' }}>{ch.label}</span>
                           <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{ch.baseline} → {ch.current}</span>
                         </div>
                       ))
                     ) : (
-                      <span style={{ fontSize: '0.6875rem', color: '#A1A1AA' }}>Workload fine-tuning within topology</span>
+                      <span style={{ fontSize: '0.8125rem', color: '#A1A1AA' }}>Workload fine-tuning within topology</span>
                     )}
                   </div>
                 </div>
 
                 {/* 2. CAUSE (Section 26, 27, 28) */}
                 <div>
-                  <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#A1A1AA', letterSpacing: '0.06em', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 700 }}>
                     2. DETERMINISTIC CAUSE
                   </div>
-                  <div className="why-changed-box" style={{ background: '#141417', padding: '8px 10px', borderRadius: '3px', border: '1px solid var(--color-border)' }}>
-                    <p className="why-changed-text" style={{ fontSize: '0.75rem', lineHeight: 1.5, margin: 0 }}>
+                  <div className="why-changed-box" style={{ background: '#141417', padding: '10px 12px', borderRadius: '3px', border: '1px solid var(--color-border)' }}>
+                    <p className="why-changed-text" style={{ fontSize: '0.84375rem', lineHeight: 1.5, margin: 0, color: '#D4D4D8' }}>
                       {causalDelta.parameterChanges.length > 1
                         ? `Under the current deterministic model, multiple variables changed simultaneously. Primary economic driver: ${causalDelta.primaryCause || deltaExplanation}`
                         : `Under the current deterministic model, ${causalDelta.primaryCause || deltaExplanation}`}
@@ -1542,21 +1542,21 @@ export default function SimulatorClient({
 
                 {/* 3. CONSEQUENCE (Section 26) */}
                 <div>
-                  <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
-                    3. ECONOMIC & LATENCY CONSEQUENCE
+                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#A1A1AA', letterSpacing: '0.06em', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 700 }}>
+                    3. ECONOMIC &amp; LATENCY CONSEQUENCE
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', background: '#141417', padding: '8px', borderRadius: '3px', border: '1px solid var(--color-border)' }} className="text-mono">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: '#141417', padding: '10px', borderRadius: '3px', border: '1px solid var(--color-border)' }} className="text-mono">
                     <div>
-                      <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>BASELINE</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{formatCurrency(causalDelta.baselineCost)}</span>
+                      <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>BASELINE</span>
+                      <span style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>{formatCurrency(causalDelta.baselineCost)}</span>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>CURRENT</span>
-                      <span style={{ fontSize: '0.75rem', color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(causalDelta.currentCost)}</span>
+                      <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>CURRENT</span>
+                      <span style={{ fontSize: '0.9375rem', color: '#FFFFFF', fontWeight: 700 }}>{formatCurrency(causalDelta.currentCost)}</span>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>DELTA</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: causalDelta.costDelta < 0 ? 'var(--color-success, #4ADE80)' : causalDelta.costDelta > 0 ? '#F87171' : 'var(--color-text-muted)' }}>
+                      <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>DELTA</span>
+                      <span style={{ fontSize: '1rem', fontWeight: 700, color: causalDelta.costDelta < 0 ? 'var(--color-success, #4ADE80)' : causalDelta.costDelta > 0 ? '#F87171' : 'var(--color-text-muted)' }}>
                         {causalDelta.costDelta > 0 ? `+${formatCurrency(causalDelta.costDelta)}` : causalDelta.costDelta < 0 ? `−${formatCurrency(Math.abs(causalDelta.costDelta))}` : '$0'}/mo
                       </span>
                     </div>
@@ -1836,11 +1836,11 @@ export default function SimulatorClient({
 
               <div className="dialog-content">
                 {/* Top Provenance & Snapshot Banner */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', marginBottom: '16px' }} className="text-mono">
-                  <span style={{ fontSize: '0.6875rem', color: '#A1A1AA' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', marginBottom: '16px' }} className="text-mono">
+                  <span style={{ fontSize: '0.78125rem', color: '#A1A1AA' }}>
                     ENGINE: <strong style={{ color: '#FFFFFF' }}>v1.4</strong> · SNAPSHOT: <strong style={{ color: '#FFFFFF' }}>MARCH 2026</strong>
                   </span>
-                  <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#A1A1AA' }}>
                     NOT LIVE PROVIDER PRICING · DETERMINISTIC
                   </span>
                 </div>
@@ -1866,18 +1866,18 @@ export default function SimulatorClient({
 
                 {/* Calibrated Transparency Stack (Section 33) */}
                 {calibrated.isCalibrated && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', padding: '10px', background: '#18181B', border: '1px solid var(--color-border)', borderRadius: '4px', marginBottom: '16px' }} className="text-mono">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px', background: '#18181B', border: '1px solid var(--color-border)', borderRadius: '4px', marginBottom: '16px' }} className="text-mono">
                     <div>
-                      <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', display: 'block' }}>RAW MODELED COST</span>
-                      <strong style={{ fontSize: '0.875rem', color: '#FAFAFA' }}>{formatCurrency(trace.totalCost)}</strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>RAW MODELED COST</span>
+                      <strong style={{ fontSize: '1rem', color: '#FAFAFA' }}>{formatCurrency(trace.totalCost)}</strong>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', display: 'block' }}>CALIBRATION FACTOR</span>
-                      <strong style={{ fontSize: '0.875rem', color: 'var(--color-success, #4ADE80)' }}>{calibrated.calibrationFactor.toFixed(2)}×</strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>CALIBRATION FACTOR</span>
+                      <strong style={{ fontSize: '1rem', color: 'var(--color-success, #4ADE80)' }}>{calibrated.calibrationFactor.toFixed(2)}×</strong>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', display: 'block' }}>HISTORICAL BILL</span>
-                      <strong style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>{formatCurrency(calibrated.actualHistoricalBill)}</strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>HISTORICAL BILL</span>
+                      <strong style={{ fontSize: '1rem', color: '#FFFFFF' }}>{formatCurrency(calibrated.actualHistoricalBill)}</strong>
                     </div>
                   </div>
                 )}
@@ -1889,11 +1889,11 @@ export default function SimulatorClient({
                   </div>
 
                   {showTraceFormulas && (
-                    <div style={{ background: '#111115', border: '1px solid #3F3F46', borderRadius: '3px', padding: '10px 12px', marginBottom: '14px' }} className="text-mono">
-                      <div style={{ fontSize: '0.625rem', color: '#A1A1AA', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>
+                    <div style={{ background: '#111115', border: '1px solid #3F3F46', borderRadius: '3px', padding: '12px 14px', marginBottom: '14px' }} className="text-mono">
+                      <div style={{ fontSize: '0.75rem', color: '#A1A1AA', letterSpacing: '0.06em', marginBottom: '8px', fontWeight: 700 }}>
                         MATHEMATICAL FORMULAS (DETERMINISTIC INVARIANTS)
                       </div>
-                      <div style={{ fontSize: '0.6875rem', lineHeight: 1.6, color: '#FFFFFF' }}>
+                      <div style={{ fontSize: '0.8125rem', lineHeight: 1.65, color: '#FFFFFF' }}>
                         <div>• <strong>Model Cost</strong> = ∑ [requests × (1 − cacheHitRate) × share × ((inTokens × inPrice + outTokens × outPrice) / 1,000,000)]</div>
                         <div>• <strong>Cache Cost</strong> = baseRAM ($65/mo) + memoryCapacity</div>
                         <div>• <strong>Ingress Cost</strong> = requests × ($0.60 / 1,000,000 requests)</div>
@@ -1999,7 +1999,7 @@ export default function SimulatorClient({
                       MODEL TIER ITEMIZATION
                     </div>
                     <div className="assumptions-table-wrapper">
-                      <table className="assumptions-table text-mono" style={{ fontSize: '0.6875rem' }}>
+                      <table className="assumptions-table text-mono" style={{ fontSize: '0.8125rem' }}>
                         <thead>
                           <tr>
                             <th>Model Target</th>
@@ -2014,10 +2014,10 @@ export default function SimulatorClient({
                           {trace.models.map((m, idx) => (
                             <tr key={idx}>
                               <td style={{ fontWeight: 600, color: '#FFFFFF' }}>{m.modelName}</td>
-                              <td style={{ color: '#A1A1AA' }}>{Math.round(m.trafficShare * 100)}%</td>
-                              <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatNumber(m.routedRequests)}</td>
-                              <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatCurrency(m.inputCost)}</td>
-                              <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatCurrency(m.outputCost)}</td>
+                              <td style={{ color: '#D4D4D8' }}>{Math.round(m.trafficShare * 100)}%</td>
+                              <td style={{ textAlign: 'right', color: '#D4D4D8' }}>{formatNumber(m.routedRequests)}</td>
+                              <td style={{ textAlign: 'right', color: '#D4D4D8' }}>{formatCurrency(m.inputCost)}</td>
+                              <td style={{ textAlign: 'right', color: '#D4D4D8' }}>{formatCurrency(m.outputCost)}</td>
                               <td style={{ textAlign: 'right', color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(m.totalCost)}</td>
                             </tr>
                           ))}
@@ -2027,7 +2027,7 @@ export default function SimulatorClient({
                   </div>
                 )}
 
-                <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.6875rem', color: '#A1A1AA', lineHeight: 1.5 }}>
+                <div style={{ marginTop: '16px', padding: '12px 14px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.78125rem', color: '#A1A1AA', lineHeight: 1.55 }}>
                   <strong style={{ color: '#FFFFFF' }}>Deterministic Engine Methodology: </strong>
                   Every metric is computed directly from active graph topology and workload variables without stochastic simulation or statistical regression. Pricing records represent list prices snapshot as of March 2026.
                 </div>
@@ -2604,17 +2604,17 @@ export default function SimulatorClient({
 
         .telemetry-cell-label {
           font-family: var(--font-display);
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-weight: 700;
           letter-spacing: 0.08em;
-          color: #71717A;
+          color: #A1A1AA;
         }
 
         .telemetry-mode-tag {
-          font-size: 0.5625rem;
+          font-size: 0.6875rem;
           font-weight: 700;
           letter-spacing: 0.06em;
-          padding: 1px 4px;
+          padding: 2px 5px;
           border-radius: 2px;
         }
 
@@ -2644,7 +2644,7 @@ export default function SimulatorClient({
 
         .telemetry-cell-value {
           font-family: var(--font-mono);
-          font-size: 1.1875rem;
+          font-size: 1.375rem;
           font-weight: 700;
           color: #FFFFFF;
           display: flex;
@@ -2656,15 +2656,15 @@ export default function SimulatorClient({
         }
 
         .telemetry-unit {
-          font-size: 0.75rem;
-          font-weight: 400;
-          color: #71717A;
+          font-size: 0.8125rem;
+          font-weight: 500;
+          color: #A1A1AA;
         }
 
         .telemetry-cell-subtext {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
-          color: #A1A1AA;
+          font-size: 0.75rem;
+          color: #D4D4D8;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2754,9 +2754,9 @@ export default function SimulatorClient({
           flex: 1;
           background: none;
           border: none;
-          padding: 4px 6px;
+          padding: 5px 8px;
           border-radius: 3px;
-          font-size: 0.6875rem;
+          font-size: 0.78125rem;
           font-family: var(--font-mono);
           color: var(--color-text-muted);
           cursor: pointer;
@@ -2801,7 +2801,7 @@ export default function SimulatorClient({
         }
 
         .sidebar-section-title {
-          font-size: 0.8125rem;
+          font-size: 0.875rem;
           font-family: var(--font-display);
           letter-spacing: 0.05em;
           font-weight: 600;
@@ -2821,8 +2821,8 @@ export default function SimulatorClient({
           grid-template-columns: 22px minmax(0, 1fr) auto;
           align-items: center;
           gap: 10px;
-          min-height: 60px;
-          padding: 10px 12px;
+          min-height: 64px;
+          padding: 10px 14px;
           background: var(--color-bg-surface);
           border: 1px solid var(--color-border-subtle);
           border-radius: var(--radius-sm);
@@ -2838,7 +2838,7 @@ export default function SimulatorClient({
         }
 
         .palette-item-icon {
-          font-size: 1rem;
+          font-size: 1.125rem;
           width: 22px;
           height: 22px;
           display: flex;
@@ -2857,31 +2857,31 @@ export default function SimulatorClient({
 
         .palette-item-name {
           font-family: var(--font-ui);
-          font-size: 0.8125rem;
+          font-size: 0.875rem;
           font-weight: 600;
           color: #FFFFFF;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          line-height: 1.2;
+          line-height: 1.25;
         }
 
         .palette-item-desc {
           font-family: var(--font-ui);
-          font-size: 0.6875rem;
-          color: var(--color-text-muted);
+          font-size: 0.78125rem;
+          color: #A1A1AA;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          line-height: 1.2;
+          line-height: 1.25;
         }
 
         .palette-item-badge {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.6875rem;
           font-weight: 600;
           letter-spacing: 0.04em;
-          padding: 2px 6px;
+          padding: 2px 7px;
           border-radius: 2px;
           border: 1px solid var(--color-border-strong);
           color: var(--color-text-secondary);
@@ -3071,13 +3071,13 @@ export default function SimulatorClient({
         }
 
         .insp-lbl {
-          font-size: 0.625rem;
-          color: var(--color-text-muted);
+          font-size: 0.75rem;
+          color: #A1A1AA;
           letter-spacing: 0.04em;
         }
 
         .insp-val {
-          font-size: 0.8125rem;
+          font-size: 0.875rem;
           font-weight: 600;
           color: var(--color-text);
           font-variant-numeric: tabular-nums;
@@ -3093,23 +3093,23 @@ export default function SimulatorClient({
         .metric-box {
           background: var(--color-bg-surface);
           border-radius: var(--radius-sm);
-          padding: 10px 12px;
+          padding: 12px 14px;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 3px;
         }
 
         .metric-label {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-family: var(--font-mono);
           letter-spacing: 0.05em;
-          color: var(--color-text-muted);
-          font-weight: 500;
+          color: #A1A1AA;
+          font-weight: 600;
         }
 
         .metric-huge-value {
-          font-size: 1.75rem;
-          font-weight: 500;
+          font-size: 2.125rem;
+          font-weight: 600;
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           color: var(--color-text);
@@ -3117,15 +3117,15 @@ export default function SimulatorClient({
         }
 
         .metric-unit {
-          font-size: 0.8125rem;
-          color: var(--color-text-muted);
+          font-size: 0.875rem;
+          color: #A1A1AA;
           font-weight: 400;
         }
 
         .metric-sub-detail {
-          font-size: 0.6875rem;
-          color: var(--color-text-muted);
-          margin-top: 2px;
+          font-size: 0.75rem;
+          color: #A1A1AA;
+          margin-top: 3px;
         }
 
         .metric-dual-row {
@@ -3137,15 +3137,15 @@ export default function SimulatorClient({
         .metric-sub-box {
           background: var(--color-bg-surface);
           border-radius: var(--radius-sm);
-          padding: 8px 10px;
+          padding: 10px 12px;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 3px;
         }
 
         .metric-val {
-          font-size: 1.0625rem;
-          font-weight: 500;
+          font-size: 1.1875rem;
+          font-weight: 600;
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           color: var(--color-text);
@@ -3156,10 +3156,10 @@ export default function SimulatorClient({
           background: #141417;
           border: 1px solid #FFFFFF;
           border-radius: var(--radius-sm);
-          padding: 8px 10px;
+          padding: 10px 12px;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 6px;
         }
 
         .bottleneck-head-row {
@@ -3171,24 +3171,24 @@ export default function SimulatorClient({
         .bottleneck-component-name {
           font-family: var(--font-ui);
           font-weight: 600;
-          font-size: 0.875rem;
+          font-size: 0.9375rem;
           color: #FFFFFF;
         }
 
         .bottleneck-impact-badge {
-          font-size: 0.6875rem;
+          font-size: 0.71875rem;
           background: #FFFFFF;
           color: #09090B;
           font-weight: 700;
-          padding: 1px 6px;
+          padding: 2px 7px;
           border-radius: 2px;
         }
 
         .bottleneck-explanation-text {
           font-family: var(--font-ui);
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
           color: var(--color-text-secondary);
-          line-height: 1.35;
+          line-height: 1.45;
           margin: 0;
         }
 
@@ -3215,7 +3215,7 @@ export default function SimulatorClient({
         .breakdown-legend-list {
           display: flex;
           flex-direction: column;
-          gap: 5px;
+          gap: 6px;
           margin-top: 4px;
         }
 
@@ -3224,7 +3224,7 @@ export default function SimulatorClient({
           grid-template-columns: 8px 1fr auto;
           align-items: center;
           gap: 8px;
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
         }
 
         .legend-indicator {
@@ -3253,13 +3253,13 @@ export default function SimulatorClient({
         .why-changed-box {
           background: var(--color-bg-surface);
           border-radius: var(--radius-sm);
-          padding: 8px 10px;
+          padding: 10px 12px;
         }
 
         .why-changed-text {
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
           color: var(--color-text-secondary);
-          line-height: 1.4;
+          line-height: 1.45;
           margin: 0;
         }
 

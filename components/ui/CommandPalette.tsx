@@ -246,15 +246,15 @@ export default function CommandPalette({
           border: none;
           outline: none;
           color: var(--color-text);
-          font-size: 0.9375rem;
+          font-size: 1rem;
           font-family: var(--font-sans);
         }
         .cmd-badge {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
-          padding: 2px 6px;
-          font-size: 0.6875rem;
+          padding: 3px 8px;
+          font-size: 0.75rem;
         }
         .cmd-list {
           max-height: 380px;
@@ -271,7 +271,7 @@ export default function CommandPalette({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 10px 14px;
+          padding: 11px 16px;
           border-radius: var(--radius-md);
           cursor: pointer;
           transition: background var(--duration-fast);
@@ -286,30 +286,31 @@ export default function CommandPalette({
           overflow: hidden;
         }
         .cmd-cat {
-          font-size: 0.625rem;
+          font-size: 0.71875rem;
           color: var(--color-text-muted);
-          width: 80px;
+          width: 86px;
           flex-shrink: 0;
           text-transform: uppercase;
+          font-weight: 600;
         }
         .cmd-label {
-          font-size: 0.875rem;
+          font-size: 0.9375rem;
           font-weight: 500;
           color: var(--color-text);
         }
         .cmd-detail {
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
           color: var(--color-text-secondary);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .cmd-shortcut {
-          font-size: 0.6875rem;
+          font-size: 0.78125rem;
           color: var(--color-text-muted);
           background: var(--color-bg);
           border: 1px solid var(--color-border-subtle);
-          padding: 2px 6px;
+          padding: 3px 8px;
           border-radius: var(--radius-sm);
           flex-shrink: 0;
         }
@@ -320,7 +321,7 @@ export default function CommandPalette({
           padding: var(--space-3) var(--space-5);
           background: var(--color-bg-surface);
           border-top: 1px solid var(--color-border-subtle);
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           color: var(--color-text-muted);
         }
       `}</style>

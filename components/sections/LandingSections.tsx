@@ -593,10 +593,11 @@ export function EveryRequestSection() {
 
         .metric-cell-tag {
           font-family: var(--font-mono);
-          font-size: 0.625rem;
-          color: #71717A;
-          letter-spacing: 0.08em;
+          font-size: 0.75rem;
+          color: #A1A1AA;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
+          font-weight: 600;
         }
 
         .metric-cell-val {
@@ -621,9 +622,10 @@ export function EveryRequestSection() {
 
         .flow-strip-label {
           font-family: var(--font-mono);
-          font-size: 0.625rem;
-          color: #71717A;
-          letter-spacing: 0.08em;
+          font-size: 0.75rem;
+          color: #A1A1AA;
+          letter-spacing: 0.06em;
+          font-weight: 600;
         }
 
         .flow-nodes-row {
@@ -682,15 +684,16 @@ export function EveryRequestSection() {
 
         .diagnostic-badge {
           font-family: var(--font-mono);
-          font-size: 0.625rem;
-          letter-spacing: 0.08em;
-          color: #71717A;
+          font-size: 0.75rem;
+          letter-spacing: 0.06em;
+          color: #A1A1AA;
+          font-weight: 600;
         }
 
         .diagnostic-sep {
           font-family: var(--font-mono);
-          font-size: 0.625rem;
-          color: #3F3F46;
+          font-size: 0.75rem;
+          color: #52525B;
         }
 
         .diagnostic-subject {
@@ -750,7 +753,7 @@ export function EveryRequestSection() {
           padding: 6px 12px;
           color: #A1A1AA;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: 0.78125rem;
           cursor: pointer;
           transition: all var(--duration-fast);
         }
@@ -761,8 +764,8 @@ export function EveryRequestSection() {
         }
 
         .tradeoff-toggle-count {
-          color: #71717A;
-          font-size: 0.625rem;
+          color: #A1A1AA;
+          font-size: 0.75rem;
         }
 
         .tradeoff-table-wrap {
@@ -775,7 +778,7 @@ export function EveryRequestSection() {
         .tradeoff-table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
         }
 
         .tradeoff-table th,
@@ -787,9 +790,9 @@ export function EveryRequestSection() {
 
         .tradeoff-table th {
           background: var(--color-bg);
-          color: var(--color-text-muted);
-          font-size: 0.625rem;
-          font-weight: 500;
+          color: var(--color-text-secondary);
+          font-size: 0.75rem;
+          font-weight: 600;
           letter-spacing: 0.04em;
           text-transform: uppercase;
         }
@@ -2197,20 +2200,20 @@ export function TemplatesPreviewSection() {
                 </p>
                 <div className="template-card__metrics">
                   <div>
-                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>MODELED COST</span>
-                    <span className="text-mono" style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
+                    <span className="text-mono" style={{ fontSize: '0.75rem', color: '#A1A1AA', letterSpacing: '0.06em' }}>MODELED COST</span>
+                    <span className="text-mono" style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                       {formatCurrency(result.monthlyCost, true)}/MO
                     </span>
                   </div>
                   <div>
-                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>MODELED TAIL</span>
-                    <span className="text-mono" style={{ color: '#D4D4D8', fontSize: '0.875rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
+                    <span className="text-mono" style={{ fontSize: '0.75rem', color: '#A1A1AA', letterSpacing: '0.06em' }}>MODELED TAIL</span>
+                    <span className="text-mono" style={{ color: '#D4D4D8', fontSize: '0.9375rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
                       {formatLatency(result.p95Latency)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>NODES</span>
-                    <span className="text-mono" style={{ fontSize: '0.875rem', color: '#A1A1AA', fontVariantNumeric: 'tabular-nums' }}>
+                    <span className="text-mono" style={{ fontSize: '0.75rem', color: '#A1A1AA', letterSpacing: '0.06em' }}>NODES</span>
+                    <span className="text-mono" style={{ fontSize: '0.9375rem', color: '#FFFFFF', fontVariantNumeric: 'tabular-nums' }}>
                       {template.architecture.nodes.length}
                     </span>
                   </div>
@@ -2420,9 +2423,9 @@ export function Footer() {
 
         .footer__signature {
           font-family: var(--font-mono);
-          font-size: 0.625rem;
-          letter-spacing: 0.10em;
-          color: #707078;
+          font-size: 0.75rem;
+          letter-spacing: 0.08em;
+          color: #A1A1AA;
           margin: 0;
           font-variant-numeric: tabular-nums;
         }

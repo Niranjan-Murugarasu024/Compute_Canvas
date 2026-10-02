@@ -77,7 +77,7 @@ export default function AssumptionsClient() {
                         <td style={{ color: '#FAFAFA' }}>{a.value}</td>
                         <td style={{ color: '#71717A' }}>{a.unit}</td>
                         <td>
-                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                             {a.sourceType || 'INTERNAL REFERENCE'}
                           </span>
                         </td>
@@ -91,7 +91,7 @@ export default function AssumptionsClient() {
                           )}
                         </td>
                         <td style={{ color: '#71717A' }}>{a.snapshot || a.effectiveDate || '2026-03'}</td>
-                        <td style={{ color: '#A1A1AA', fontSize: '0.6875rem' }}>{a.notes}</td>
+                        <td style={{ color: '#A1A1AA', fontSize: '0.75rem' }}>{a.notes}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -110,7 +110,7 @@ export default function AssumptionsClient() {
                 Ideal for classification, routing, extraction, and sub-150ms interactive UI workflows.
               </p>
 
-              <div className="text-mono" style={{ fontSize: '0.6875rem', color: '#A1A1AA', background: '#141417', padding: '6px 10px', borderRadius: '3px', border: '1px solid var(--color-border)', margin: '10px 0 14px' }}>
+              <div className="text-mono" style={{ fontSize: '0.78125rem', color: '#A1A1AA', background: '#141417', padding: '8px 12px', borderRadius: '3px', border: '1px solid var(--color-border)', margin: '10px 0 14px' }}>
                 PRICING SNAPSHOT: <strong style={{ color: '#FFFFFF' }}>MARCH 2026</strong> · NOT LIVE PROVIDER PRICING · REGISTRY: <strong style={{ color: '#FFFFFF' }}>v1.4</strong> · STATUS: <span style={{ color: 'var(--color-success, #4ADE80)' }}>ACTIVE</span>
               </div>
 
@@ -139,7 +139,7 @@ export default function AssumptionsClient() {
                         <td style={{ color: '#FFFFFF' }}>${m.outputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#D4D4D8' }}>{m.baselineLatencyMs} ms</td>
                         <td>
-                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.5625rem' }}>
+                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                             {m.sourceType || 'PROVIDER'}
                           </span>
                         </td>
@@ -194,7 +194,7 @@ export default function AssumptionsClient() {
                         <td style={{ color: '#FAFAFA' }}>${m.outputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#FAFAFA' }}>{m.baselineLatencyMs} ms</td>
                         <td>
-                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.5625rem' }}>
+                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                             {m.sourceType || 'PROVIDER'}
                           </span>
                         </td>
@@ -439,7 +439,7 @@ export default function AssumptionsClient() {
         .assumptions-data-table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 0.8125rem;
+          font-size: 0.875rem;
         }
         .assumptions-data-table th,
         .assumptions-data-table td {

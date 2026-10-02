@@ -134,17 +134,17 @@ export default function HeroInteractive() {
 
             {/* SVG Architecture diagram */}
             <div className="instrument__diagram" role="img" aria-label="Router + Cache architecture: API Ingress → Semantic Cache → Complexity Router → Fast Model (70%) / Frontier Model (30%)">
-              <svg viewBox="0 0 640 130" className="instrument__svg" aria-hidden="true">
+              <svg viewBox="0 0 680 176" className="instrument__svg" aria-hidden="true">
                 <defs>
                   {/* Engineering grid */}
                   <pattern id="hgrid" width="20" height="20" patternUnits="userSpaceOnUse">
                     <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1E1E22" strokeWidth="0.5" />
                   </pattern>
-                  <marker id="harrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-                    <polygon points="0 0, 5 2.5, 0 5" fill="#3F3F46" />
+                  <marker id="harrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <polygon points="0 0, 6 3, 0 6" fill="#3F3F46" />
                   </marker>
-                  <marker id="harrow-active" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-                    <polygon points="0 0, 5 2.5, 0 5" fill="#A1A1AA" />
+                  <marker id="harrow-active" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <polygon points="0 0, 6 3, 0 6" fill="#A1A1AA" />
                   </marker>
                 </defs>
 
@@ -152,68 +152,60 @@ export default function HeroInteractive() {
                 <rect width="100%" height="100%" fill="url(#hgrid)" />
 
                 {/* Connection lines */}
-                <line x1="112" y1="65" x2="170" y2="65" stroke="#2A2A2A" strokeWidth="1" markerEnd="url(#harrow)" />
-                <line x1="272" y1="65" x2="330" y2="65" stroke="#2A2A2A" strokeWidth="1" markerEnd="url(#harrow)" />
+                <line x1="130" y1="88" x2="164" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
+                <line x1="288" y1="88" x2="322" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
                 {/* Router → Fast */}
-                <path d="M 432 65 C 460 65, 460 32, 488 32" stroke="#3F3F46" strokeWidth="1" fill="none" markerEnd="url(#harrow-active)" />
+                <path d="M 456 88 C 476 88, 484 46, 506 46" stroke="#52525B" strokeWidth="1.5" fill="none" markerEnd="url(#harrow-active)" />
                 {/* Router → Frontier */}
-                <path d="M 432 65 C 460 65, 460 98, 488 98" stroke="#3F3F46" strokeWidth="1" fill="none" markerEnd="url(#harrow-active)" />
+                <path d="M 456 88 C 476 88, 484 130, 506 130" stroke="#FFFFFF" strokeWidth="2" fill="none" markerEnd="url(#harrow-active)" />
 
-                {/* Traffic % labels */}
-                <text x="462" y="28" fill="#71717A" fontSize="7.5" fontFamily="var(--font-mono)" fontWeight="500">{fastRouting}%</text>
-                <text x="462" y="108" fill="#71717A" fontSize="7.5" fontFamily="var(--font-mono)" fontWeight="500">{frontierRouting}%</text>
+                {/* Traffic % badge labels */}
+                <g transform="translate(458, 36)">
+                  <rect x="-4" y="-12" width="76" height="22" rx="3" fill="#111114" stroke="#3F3F46" strokeWidth="1" />
+                  <text x="34" y="3" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600">{fastRouting}% FAST</text>
+                </g>
+                <g transform="translate(458, 120)">
+                  <rect x="-4" y="-12" width="94" height="22" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="1.5" />
+                  <text x="43" y="3" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700">{frontierRouting}% FRONTIER</text>
+                </g>
 
                 {/* Node: API Ingress */}
-                <g transform="translate(12, 47)">
-                  <rect width="100" height="36" rx="1" fill="#111114" stroke="#27272A" strokeWidth="1" />
-                  <text x="8" y="13" fill="#52525B" fontSize="6.5" fontFamily="var(--font-mono)" letterSpacing="0.08em">GATEWAY</text>
-                  <text x="8" y="26" fill="#D4D4D8" fontSize="9.5" fontFamily="var(--font-ui)" fontWeight="500">API Ingress</text>
+                <g transform="translate(14, 60)">
+                  <rect width="116" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                  <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">GATEWAY</text>
+                  <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">API Ingress</text>
                 </g>
 
                 {/* Node: Semantic Cache */}
-                <g transform="translate(170, 47)">
-                  <rect width="100" height="36" rx="1" fill="#111114" stroke="#27272A" strokeWidth="1" />
-                  <text x="8" y="13" fill="#52525B" fontSize="6.5" fontFamily="var(--font-mono)" letterSpacing="0.08em">CACHE</text>
-                  <text x="8" y="26" fill="#D4D4D8" fontSize="9.5" fontFamily="var(--font-ui)" fontWeight="500">Semantic Cache</text>
+                <g transform="translate(164, 60)">
+                  <rect width="124" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                  <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">CACHE</text>
+                  <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Semantic Cache</text>
                 </g>
 
                 {/* Node: Complexity Router */}
-                <g transform="translate(330, 47)">
-                  <rect width="102" height="36" rx="1" fill="#111114" stroke="#27272A" strokeWidth="1" />
-                  <text x="8" y="13" fill="#52525B" fontSize="6.5" fontFamily="var(--font-mono)" letterSpacing="0.08em">ROUTER</text>
-                  <text x="8" y="26" fill="#D4D4D8" fontSize="9.5" fontFamily="var(--font-ui)" fontWeight="500">Complexity Router</text>
+                <g transform="translate(322, 60)">
+                  <rect width="134" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                  <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">ROUTER</text>
+                  <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Complexity Router</text>
                 </g>
 
                 {/* Node: Fast Model */}
-                <g transform="translate(488, 14)">
-                  <rect width="110" height="36" rx="1" fill="#111114" stroke="#27272A" strokeWidth="1" />
-                  <text x="8" y="13" fill="#52525B" fontSize="6.5" fontFamily="var(--font-mono)" letterSpacing="0.08em">FAST TIER</text>
-                  <text x="8" y="26" fill="#D4D4D8" fontSize="9.5" fontFamily="var(--font-ui)" fontWeight="500">Fast Model</text>
+                <g transform="translate(506, 18)">
+                  <rect width="158" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                  <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">FAST TIER</text>
+                  <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Fast Model</text>
                 </g>
 
                 {/* Node: Frontier Model (bottleneck) */}
-                <g transform="translate(488, 80)">
-                  <rect width="110" height="36" rx="1" fill="#111114" stroke="#FFFFFF" strokeWidth="1.5" />
+                <g transform="translate(506, 102)">
+                  <rect width="158" height="56" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="2" />
                   {/* Bottleneck indicator */}
-                  <rect x="68" y="3" width="38" height="10" rx="1" fill="#FFFFFF" />
-                  <text x="87" y="10.5" textAnchor="middle" fill="#09090B" fontSize="6" fontFamily="var(--font-mono)" fontWeight="700" letterSpacing="0.04em">BOTTLENECK</text>
-                  <text x="8" y="20" fill="#52525B" fontSize="6.5" fontFamily="var(--font-mono)" letterSpacing="0.08em">FRONTIER</text>
-                  <text x="8" y="31" fill="#F4F4F5" fontSize="9.5" fontFamily="var(--font-ui)" fontWeight="500">Frontier Model</text>
+                  <rect x="76" y="7" width="74" height="16" rx="2" fill="#FFFFFF" />
+                  <text x="113" y="19" textAnchor="middle" fill="#09090B" fontSize="10" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">BOTTLENECK</text>
+                  <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">FRONTIER</text>
+                  <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Frontier Model</text>
                 </g>
-
-                {/* Traffic flow dots (subtle) */}
-                <circle r="1.5" fill="#3F3F46" opacity="0.8">
-                  <animateMotion dur="2.2s" repeatCount="indefinite" path="M 112 65 L 170 65" />
-                </circle>
-                <circle r="1.5" fill="#3F3F46" opacity="0.8">
-                  <animateMotion dur="2.2s" repeatCount="indefinite" path="M 272 65 L 330 65" />
-                </circle>
-                <circle r="1.5" fill="#52525B">
-                  <animateMotion dur="2.6s" repeatCount="indefinite" path="M 432 65 C 460 65, 460 32, 488 32" />
-                </circle>
-                <circle r="1.5" fill="#52525B">
-                  <animateMotion dur="2.6s" repeatCount="indefinite" path="M 432 65 C 460 65, 460 98, 488 98" />
-                </circle>
               </svg>
             </div>
 
@@ -471,46 +463,48 @@ export default function HeroInteractive() {
 
         .instrument__arch-label {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: 0.8125rem; /* 13px */
           color: #A1A1AA;
-          letter-spacing: 0.06em;
-          font-weight: 500;
+          letter-spacing: 0.04em;
+          font-weight: 600;
         }
 
         .instrument__sep {
           color: var(--color-border-strong);
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
         }
 
         .instrument__arch-name {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: 0.875rem; /* 14px */
           color: #FFFFFF;
-          letter-spacing: 0.06em;
-          font-weight: 600;
+          letter-spacing: 0.04em;
+          font-weight: 700;
         }
 
         .instrument__open {
-          background: none;
-          border: 1px solid var(--color-border);
-          border-radius: 2px;
-          padding: 3px 9px;
-          font-size: 0.5625rem;
-          letter-spacing: 0.08em;
-          color: var(--color-text-muted);
+          background: #18181B;
+          border: 1px solid var(--color-border-strong);
+          border-radius: 3px;
+          padding: 5px 12px;
+          font-size: 0.75rem; /* 12px */
+          letter-spacing: 0.04em;
+          color: #FAFAFA;
+          font-weight: 600;
           cursor: pointer;
-          transition: color 0.1s, border-color 0.1s;
+          transition: background 0.12s, border-color 0.12s;
         }
 
         .instrument__open:hover {
-          color: var(--color-text-secondary);
-          border-color: var(--color-border-strong);
+          color: #FFFFFF;
+          background: #27272A;
+          border-color: #FFFFFF;
         }
 
         /* ── Diagram ── */
         .instrument__diagram {
           background: var(--color-bg);
-          padding: 14px 18px;
+          padding: 16px 20px;
           border-bottom: 1px solid var(--color-border);
         }
 
@@ -520,7 +514,7 @@ export default function HeroInteractive() {
           display: block;
         }
 
-        /* ── Controls (Prominent 18px Hierarchy) ── */
+        /* ── Controls (Prominent 18-20px Hierarchy) ── */
         .instrument__controls {
           padding: 18px 20px;
           background: #0D0D10;
@@ -544,25 +538,25 @@ export default function HeroInteractive() {
 
         .control-label {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
-          letter-spacing: 0.08em;
-          color: var(--color-text-muted);
+          font-size: 0.78125rem; /* 12.5px */
+          letter-spacing: 0.05em;
+          color: #A1A1AA;
           text-transform: uppercase;
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .control-value {
           font-family: var(--font-mono);
-          font-size: 1.125rem;
+          font-size: 1.25rem; /* 20px */
           color: #FFFFFF;
-          font-weight: 600;
+          font-weight: 700;
           font-variant-numeric: tabular-nums;
           letter-spacing: -0.01em;
         }
 
         .control-unit {
-          font-size: 0.75rem;
-          color: var(--color-text-muted);
+          font-size: 0.8125rem; /* 13px */
+          color: #A1A1AA;
           font-weight: 400;
         }
 
@@ -570,17 +564,27 @@ export default function HeroInteractive() {
           -webkit-appearance: none;
           appearance: none;
           width: 100%;
-          height: 3px;
-          background: #24242A;
+          height: 44px; /* 44px effective touch target */
+          background: transparent;
           outline: none;
-          border-radius: 1px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+        }
+
+        .hero-slider::-webkit-slider-runnable-track {
+          width: 100%;
+          height: 4px;
+          background: #24242A;
+          border-radius: 2px;
         }
 
         .hero-slider::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
+          margin-top: -5px;
           background: #FFFFFF;
           cursor: pointer;
           border-radius: 2px;
@@ -588,9 +592,16 @@ export default function HeroInteractive() {
           box-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
+        .hero-slider::-moz-range-track {
+          width: 100%;
+          height: 4px;
+          background: #24242A;
+          border-radius: 2px;
+        }
+
         .hero-slider::-moz-range-thumb {
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
           background: #FFFFFF;
           cursor: pointer;
           border-radius: 2px;
@@ -614,19 +625,19 @@ export default function HeroInteractive() {
 
         .readout-label {
           font-family: var(--font-mono);
-          font-size: 0.625rem;
-          letter-spacing: 0.08em;
-          color: var(--color-text-muted);
+          font-size: 0.75rem; /* 12px */
+          letter-spacing: 0.05em;
+          color: #A1A1AA;
           text-transform: uppercase;
           display: block;
           margin-bottom: 4px;
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .readout-primary {
           padding: 16px 18px;
           background: #141418;
-          border: 1px solid #27272A;
+          border: 1px solid var(--color-border);
           border-radius: 3px;
           display: flex;
           flex-direction: column;
@@ -640,24 +651,25 @@ export default function HeroInteractive() {
         }
 
         .readout-primary__badge {
-          font-size: 0.5625rem;
-          letter-spacing: 0.08em;
-          color: #71717A;
-          border: 1px solid #27272A;
-          padding: 2px 6px;
+          font-size: 0.6875rem; /* 11px */
+          letter-spacing: 0.05em;
+          color: #A1A1AA;
+          border: 1px solid var(--color-border-strong);
+          padding: 3px 8px;
           border-radius: 2px;
+          font-weight: 500;
         }
 
         .readout-primary__main {
           display: flex;
           align-items: baseline;
-          gap: 6px;
+          gap: 8px;
         }
 
         .readout-primary__value {
           font-family: var(--font-mono);
-          font-size: clamp(2.25rem, 3.8vw, 2.75rem);
-          font-weight: 600;
+          font-size: clamp(2.5rem, 4vw, 3rem); /* 40-48px */
+          font-weight: 700;
           font-variant-numeric: tabular-nums;
           letter-spacing: -0.03em;
           color: #FFFFFF;
@@ -665,8 +677,8 @@ export default function HeroInteractive() {
         }
 
         .readout-primary__unit {
-          font-size: 0.875rem;
-          color: #A1A1AA;
+          font-size: 0.9375rem; /* 15px */
+          color: #D4D4D8;
           font-weight: 500;
         }
 
@@ -680,13 +692,13 @@ export default function HeroInteractive() {
         .readout-cell {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
         }
 
         .readout-cell-value {
           font-family: var(--font-mono);
-          font-size: 1.0625rem;
-          font-weight: 600;
+          font-size: 1.375rem; /* 22px */
+          font-weight: 700;
           font-variant-numeric: tabular-nums;
           color: #FFFFFF;
           display: flex;
@@ -695,21 +707,21 @@ export default function HeroInteractive() {
         }
 
         .readout-cell-sub {
-          font-size: 0.6875rem;
-          color: #71717A;
-          font-weight: 400;
-          letter-spacing: 0.04em;
+          font-size: 0.75rem; /* 12px */
+          color: #A1A1AA;
+          font-weight: 500;
+          letter-spacing: 0.02em;
         }
 
         /* ── Causal Impact Bar ── */
         .readout-causal {
           padding: 12px 14px;
           background: #111114;
-          border-left: 2px solid #52525B;
-          border-radius: 0 2px 2px 0;
+          border-left: 3px solid #71717A;
+          border-radius: 0 3px 3px 0;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 5px;
         }
 
         .causal-row {
@@ -721,22 +733,23 @@ export default function HeroInteractive() {
         }
 
         .causal-tag {
-          font-size: 0.5625rem;
-          letter-spacing: 0.1em;
-          color: #A1A1AA;
-          font-weight: 600;
+          font-size: 0.6875rem; /* 11px */
+          letter-spacing: 0.08em;
+          color: #FFFFFF;
+          font-weight: 700;
         }
 
         .causal-bottleneck {
-          font-size: 0.625rem;
-          color: #71717A;
-          letter-spacing: 0.04em;
+          font-size: 0.75rem; /* 12px */
+          color: #FFFFFF;
+          letter-spacing: 0.02em;
+          font-weight: 600;
         }
 
         .causal-text {
-          font-size: 0.75rem;
-          color: #D4D4D8;
-          line-height: 1.45;
+          font-size: 0.84375rem; /* 13.5px */
+          color: #E4E4E7;
+          line-height: 1.5;
         }
 
         /* ── Responsive ── */

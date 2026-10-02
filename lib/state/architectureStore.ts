@@ -486,8 +486,8 @@ export const useArchitectureStore = create<ArchitectureState>()(
           type === 'fast-model' ? 'Fast Model' :
           type === 'frontier-model' ? 'Frontier Model' : 'Component';
 
-        const NODE_WIDTH = 204;
-        const NODE_HEIGHT = 82;
+        const NODE_WIDTH = 224;
+        const NODE_HEIGHT = 86;
 
         let targetX: number = 0;
         let targetY: number = 0;
@@ -906,8 +906,8 @@ export const useArchitectureStore = create<ArchitectureState>()(
           return;
         }
 
-        const NODE_WIDTH = 204;
-        const NODE_HEIGHT = 82;
+        const NODE_WIDTH = 224;
+        const NODE_HEIGHT = 86;
         const padding = 50;
 
         const minX = Math.min(...nodes.map(n => n.x ?? 100));

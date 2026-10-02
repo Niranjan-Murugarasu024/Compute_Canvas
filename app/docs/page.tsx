@@ -281,13 +281,13 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
         }
         .doc-pill {
           font-family: var(--font-mono);
-          font-size: 0.625rem;
-          font-weight: 500;
+          font-size: 0.75rem;
+          font-weight: 600;
           border: 1px solid var(--color-border);
           background: #141418;
           color: #A1A1AA;
           border-radius: 2px;
-          padding: 2px 6px;
+          padding: 3px 8px;
           display: inline-block;
           letter-spacing: 0.06em;
         }

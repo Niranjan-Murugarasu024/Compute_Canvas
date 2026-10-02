@@ -94,7 +94,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
                 <div className="slide-nodes-strip">
                   {architecture.nodes.map(n => (
                     <div key={n.id} className="review-node-card">
-                      <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>{n.type}</span>
+                      <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>{n.type}</span>
                       <h4 style={{ fontSize: '0.9375rem', margin: '4px 0', fontWeight: 600 }}>{n.label}</h4>
                       <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
                         {n.modelId || 'Managed Infra'}
@@ -373,7 +373,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span className="comment-avatar">{c.avatar}</span>
                           <strong style={{ fontSize: '0.875rem' }}>{c.author}</strong>
-                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>on {c.targetLabel}</span>
+                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>on {c.targetLabel}</span>
                         </div>
                         <span className={`badge ${c.resolved ? 'badge--success' : 'badge--warning'}`}>
                           {c.resolved ? 'RESOLVED' : 'OPEN'}

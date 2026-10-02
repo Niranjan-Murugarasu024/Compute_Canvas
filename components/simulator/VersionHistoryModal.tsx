@@ -206,7 +206,7 @@ export default function VersionHistoryModal({ onClose }: { onClose: () => void }
                       <div className="diff-cards-grid">
                         {diff.addedNodes.map(n => (
                           <div key={n.id} className="diff-node-card diff-node-card--added">
-                            <span className="badge badge--success text-mono" style={{ fontSize: '0.625rem' }}>+{n.type}</span>
+                            <span className="badge badge--success text-mono" style={{ fontSize: '0.75rem' }}>+{n.type}</span>
                             <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{n.label}</span>
                             <span className="text-caption text-mono">{n.modelId || 'Node'}</span>
                           </div>
@@ -226,7 +226,7 @@ export default function VersionHistoryModal({ onClose }: { onClose: () => void }
                       <div className="diff-cards-grid">
                         {diff.removedNodes.map(n => (
                           <div key={n.id} className="diff-node-card diff-node-card--removed">
-                            <span className="badge badge--critical text-mono" style={{ fontSize: '0.625rem' }}>&minus;{n.type}</span>
+                            <span className="badge badge--critical text-mono" style={{ fontSize: '0.75rem' }}>&minus;{n.type}</span>
                             <span style={{ fontWeight: 600, fontSize: '0.875rem', textDecoration: 'line-through' }}>{n.label}</span>
                             <span className="text-caption text-mono">{n.modelId || 'Node'}</span>
                           </div>

@@ -274,22 +274,22 @@ body {
 
 .text-label {
   font-family: var(--font-ui);
-  font-size: 0.8125rem;
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
   color: var(--color-text-secondary);
 }
 
-/* Level 3: System Data & Metrics (IBM Plex Mono) */
+/* Level 3: System Data & Metrics (Geist Mono) */
 .text-technical-label {
   font-family: var(--font-mono);
-  font-size: 0.6875rem; /* 11px */
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.08em;
+  font-size: 0.78125rem; /* 12.5px */
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .text-mono {
@@ -300,8 +300,8 @@ body {
 .text-metric-xl,
 .text-metric {
   font-family: var(--font-mono);
-  font-size: clamp(2rem, 3.5vw, 2.75rem);
-  font-weight: 500;
+  font-size: clamp(2.25rem, 3.8vw, 3rem);
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
@@ -310,8 +310,8 @@ body {
 
 .text-metric-lg {
   font-family: var(--font-mono);
-  font-size: clamp(1.5rem, 2.4vw, 2rem);
-  font-weight: 500;
+  font-size: clamp(1.625rem, 2.6vw, 2.25rem);
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.025em;
   font-variant-numeric: tabular-nums;
@@ -321,23 +321,23 @@ body {
 .text-metric-md,
 .text-metric-sm {
   font-family: var(--font-mono);
-  font-size: 1.125rem;
-  font-weight: 500;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
 }
 
 .text-mono-sm {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: 0.875rem; /* 14px */
   font-variant-numeric: tabular-nums;
 }
 
 .text-mono-xs {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.78125rem; /* 12.5px */
   font-variant-numeric: tabular-nums;
 }
 
@@ -377,11 +377,11 @@ body {
 
 .section-label {
   font-family: var(--font-mono);
-  font-size: 0.6875rem; /* 11px */
-  font-weight: 500;
-  letter-spacing: 0.10em;
+  font-size: 0.78125rem; /* 12.5px */
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: var(--space-3);
   display: flex;
   align-items: center;
@@ -491,12 +491,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: 8px 16px;
+  padding: 10px 18px;
+  min-height: 44px;
   font-family: var(--font-ui);
-  font-size: 0.8125rem;
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
@@ -544,7 +545,8 @@ body {
   background: transparent;
   color: var(--color-text-secondary);
   border: 1px solid transparent;
-  padding: 6px 12px;
+  padding: 8px 14px;
+  min-height: 40px;
 }
 
 .btn-ghost:hover:not(:disabled) {
@@ -554,14 +556,16 @@ body {
 }
 
 .btn-sm {
-  padding: 5px 10px;
-  font-size: 0.75rem;
-  letter-spacing: 0.02em;
+  padding: 6px 12px;
+  min-height: 36px;
+  font-size: 0.8125rem; /* 13px */
+  letter-spacing: 0.01em;
 }
 
 .btn-lg {
-  padding: 10px 20px;
-  font-size: 0.875rem;
+  padding: 12px 24px;
+  min-height: 48px;
+  font-size: 0.9375rem; /* 15px */
 }
 
 /* ── Badges ── */
@@ -571,9 +575,9 @@ body {
   gap: 4px;
   padding: 3px 8px;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem; /* 12px */
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: var(--radius-sm);
   line-height: 1;
