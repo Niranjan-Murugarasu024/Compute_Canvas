@@ -65,7 +65,7 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     id: 'api',
     tag: 'INGRESS',
     label: 'API Ingress Gateway',
-    subsystemIndex: 'SUBSYSTEM // 01_INGRESS',
+    subsystemIndex: 'COMPONENT // API INGRESS',
     shortRole: 'First operational boundary for inbound traffic. Enforces TLS termination, token bucket rate limits, and trace ID injection.',
     unitCost: '$1.00 / 1M REQ',
     baselineLatency: '+12 MS',
@@ -85,7 +85,7 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     id: 'cache',
     tag: 'CACHE',
     label: 'Semantic Response & Prompt Cache',
-    subsystemIndex: 'SUBSYSTEM // 02_CACHE',
+    subsystemIndex: 'COMPONENT // SEMANTIC CACHE',
     shortRole: 'Evaluates prompt text and embeddings against recent completions. Exact and cosine matches (>0.92) return in single-digit milliseconds.',
     unitCost: '$65.00 / MO',
     baselineLatency: '+5 MS',
@@ -105,7 +105,7 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     id: 'router',
     tag: 'ROUTER',
     label: 'Complexity Classifier & Router',
-    subsystemIndex: 'SUBSYSTEM // 03_ROUTER',
+    subsystemIndex: 'COMPONENT // COMPLEXITY ROUTER',
     shortRole: 'Routes requests between fast and frontier inference tiers according to estimated reasoning complexity.',
     unitCost: '$0.50 / 1M REQ',
     baselineLatency: '+8 MS',
@@ -125,7 +125,7 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     id: 'vector',
     tag: 'RETRIEVAL',
     label: 'Vector Database & RAG Retrieval',
-    subsystemIndex: 'SUBSYSTEM // 04_RETRIEVAL',
+    subsystemIndex: 'COMPONENT // VECTOR DATABASE',
     shortRole: 'Performs approximate nearest-neighbor vector search over document chunks to inject relevant grounding context into prompt preambles.',
     unitCost: '$120.00 / MO',
     baselineLatency: '+45 MS',
@@ -145,7 +145,7 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     id: 'fast',
     tag: 'FAST LLM',
     label: 'Fast Reasoning Model Tier',
-    subsystemIndex: 'SUBSYSTEM // 05_FAST_LLM',
+    subsystemIndex: 'COMPONENT // FAST MODEL TIER',
     shortRole: 'Sub-150ms execution tier for high concurrency and throughput. Ideal for classification, JSON extraction, and conversational dialogue.',
     unitCost: '$0.15 / 1M TOKENS',
     baselineLatency: '+120 MS',
@@ -165,7 +165,7 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     id: 'frontier',
     tag: 'FRONTIER',
     label: 'Frontier Reasoning & Synthesis Model',
-    subsystemIndex: 'SUBSYSTEM // 06_FRONTIER',
+    subsystemIndex: 'COMPONENT // FRONTIER MODEL TIER',
     shortRole: 'State-of-the-art multi-step reasoning, mathematical proof, and code synthesis. Primary intelligence tier for high-complexity queries.',
     unitCost: '$2.50 / 1M TOKENS',
     baselineLatency: '+382 MS',
@@ -192,7 +192,6 @@ export function EveryRequestSection() {
     <Section id="every-request">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">01 ARCHITECTURE</span>
           <h2 className="section-heading">Every AI request is a system.</h2>
           <p className="section-lead">
             What appears to be a single API call hides an entire multi-tier pipeline. Every layer introduces token spend, latency penalty, and operational failure modes. Select any subsystem to inspect its telemetry and economics.
@@ -321,7 +320,7 @@ export function EveryRequestSection() {
                 onClick={() => setShowTradeoffs(!showTradeoffs)}
                 aria-expanded={showTradeoffs}
               >
-                <span>{showTradeoffs ? '− HIDE MODELED TRADE-OFF DELTAS' : '+ VIEW MODELED TRADE-OFF DELTAS'}</span>
+                <span>{showTradeoffs ? '− HIDE ARCHITECTURAL TRADEOFFS' : '+ VIEW ARCHITECTURAL TRADEOFFS'}</span>
                 <span className="tradeoff-toggle-count">({activeSubsystem.tradeoffRows.length} OPERATING STATES)</span>
               </button>
 
@@ -940,10 +939,9 @@ export function CostDecompositionSection() {
     <Section id="cost-decomposition">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">02 ECONOMICS</span>
           <h2 className="section-heading">Cost is not just model pricing.</h2>
           <p className="section-lead">
-            Every layer of your architecture contributes to total monthly spend. Adjust workload parameters to see how traffic scale and cache hit rate reshape the economic profile.
+            Every layer of your architecture contributes to modeled monthly cost. Adjust workload parameters to see how traffic scale and cache hit rate reshape the economic profile.
           </p>
         </div>
 
@@ -1395,7 +1393,6 @@ export function ScaleSection() {
     <Section id="scale">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">03 SCALE</span>
           <h2 className="section-heading">Scale changes the architecture.</h2>
           <p className="section-lead">
             What functions at 100K requests breaks at 10M. Watch components emerge, routing bifurcate, and economics shift across four orders of magnitude.
@@ -1842,7 +1839,6 @@ export function WhatWouldYouBuildSection() {
     <Section id="what-would-you-build">
       <div className="container">
         <div className="section-header-block">
-          <span className="section-label">04 TRADEOFFS</span>
           <h2 className="section-heading">What would you optimize for?</h2>
           <p className="section-lead">
             Every AI architecture decision is an explicit engineering tradeoff. Select an objective to inspect how component topologies alter cost, latency, and capability.
@@ -2076,7 +2072,6 @@ export function StoryFlowSection() {
     <Section id="story-flow">
       <div className="container">
         <div className="story-flow-block">
-          <span className="section-label">05 METHODOLOGY</span>
           <div className="story-flow">
             {STORY_LINES.map((line, i) => (
               <StoryLine key={i} text={line.text} muted={line.muted} />
@@ -2175,7 +2170,6 @@ export function TemplatesPreviewSection() {
       <div className="container">
         <div className="section-header-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px' }}>
           <div>
-            <span className="section-label">06 BLUEPRINTS</span>
             <h2 className="section-heading">Start from a canonical blueprint.</h2>
             <p className="section-lead">Pre-modeled topologies with deterministic cost functions and model-derived latency baselines.</p>
           </div>
@@ -2185,9 +2179,9 @@ export function TemplatesPreviewSection() {
         </div>
 
         <div className="templates-grid">
-          {TEMPLATES.slice(0, 3).map((template, idx) => {
+          {TEMPLATES.slice(0, 3).map((template) => {
             const result = simulate(template.defaultWorkload, template.architecture);
-            const indexLabel = `0${idx + 1} / ${template.category.toUpperCase()}`;
+            const indexLabel = template.category.toUpperCase();
             return (
               <Link href={`/simulator?template=${template.id}`} key={template.id} className="template-card">
                 <div className="template-card__header">

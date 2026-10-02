@@ -1865,7 +1865,7 @@ export const TEMPLATES: ArchTemplate[] = [
   {
     id: 'direct-llm',
     name: 'Direct LLM',
-    category: '01 / BASELINE',
+    category: 'BASELINE',
     description: 'Direct baseline pipeline routing all ingress requests to a Frontier Reasoning Model.',
     whenToUse: 'Simple prototyping, internal reasoning tasks, or low-volume applications where pipeline complexity is unwarranted.',
     whatItOptimizes: 'Development simplicity and raw reasoning fidelity without intermediary hops.',
@@ -1895,7 +1895,7 @@ export const TEMPLATES: ArchTemplate[] = [
   {
     id: 'rag-pipeline',
     name: 'RAG Pipeline',
-    category: '02 / RETRIEVAL',
+    category: 'RETRIEVAL',
     description: 'Retrieval-augmented generation pipeline with vector search and frontier LLM synthesis.',
     whenToUse: 'Dynamic knowledge bases, enterprise document search, and private factual domain synthesis.',
     whatItOptimizes: 'Factual grounding and context precision from proprietary external documents.',
@@ -1927,7 +1927,7 @@ export const TEMPLATES: ArchTemplate[] = [
   {
     id: 'router-cache',
     name: 'Router + Cache',
-    category: '03 / ROUTING',
+    category: 'ROUTING',
     description: 'Production architecture combining semantic caching with dynamic complexity routing between fast and frontier models.',
     whenToUse: 'High-volume production workloads with repeated queries and varying intent complexity.',
     whatItOptimizes: 'Cost per request and P95 latency via semantic cache hits and intelligent utility model tiering.',

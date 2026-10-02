@@ -78,12 +78,6 @@ export default function HeroInteractive() {
   return (
     <section className="hero" aria-label="ComputeCanvas live instrument">
       <div className="container">
-        {/* Editorial Header Row */}
-        <div className="hero__eyebrow">
-          <span className="hero__section-num text-mono">01</span>
-          <span className="hero__rule" aria-hidden="true" />
-          <span className="hero__section-label text-mono">ARCHITECTURE ECONOMICS</span>
-        </div>
 
         <div className="hero__grid">
           {/* Left: Editorial Narrative */}
@@ -110,27 +104,13 @@ export default function HeroInteractive() {
               </Link>
             </div>
 
-            {/* Engine metadata strip */}
-            <div className="hero__meta">
-              <div className="hero__meta-item">
-                <span className="text-mono" style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Engine</span>
-                <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Deterministic</span>
-              </div>
-              <span className="hero__meta-sep" aria-hidden="true" />
-              <div className="hero__meta-item">
-                <span className="text-mono" style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Pricing</span>
-                <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Snapshot 2026-03</span>
-              </div>
-              <span className="hero__meta-sep" aria-hidden="true" />
-              <div className="hero__meta-item">
-                <span className="text-mono" style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Calibration</span>
-                <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Optional</span>
-              </div>
-              <span className="hero__meta-sep" aria-hidden="true" />
-              <div className="hero__meta-item">
-                <span className="text-mono" style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Latency</span>
-                <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Model-derived</span>
-              </div>
+            {/* Technical provenance line */}
+            <div className="hero__provenance text-mono">
+              <span>Deterministic simulation engine</span>
+              <span className="hero__provenance-sep" aria-hidden="true">·</span>
+              <span>Pricing Snapshot 2026-03</span>
+              <span className="hero__provenance-sep" aria-hidden="true">·</span>
+              <span>Model-derived tail latency baselines</span>
             </div>
           </div>
 
@@ -139,9 +119,9 @@ export default function HeroInteractive() {
             {/* Instrument header */}
             <div className="instrument__header">
               <div className="instrument__title-row">
-                <span className="instrument__live text-mono">● LIVE SYSTEM</span>
+                <span className="instrument__arch-label text-mono">MODELED ARCHITECTURE</span>
                 <span className="instrument__sep text-mono" aria-hidden="true">/</span>
-                <span className="instrument__arch-id text-mono">001 ROUTER + CACHE</span>
+                <span className="instrument__arch-name text-mono">ROUTER + CACHE</span>
               </div>
               <button
                 onClick={handleOpenWorkbench}
@@ -237,80 +217,105 @@ export default function HeroInteractive() {
               </svg>
             </div>
 
-            {/* Workload controls */}
+            {/* Workload controls — Prominent 18-20px values */}
             <div className="instrument__controls">
-              <div className="control-row">
-                <span className="control-label text-mono">WORKLOAD VOLUME</span>
-                <span className="control-value text-mono">{formatNumber(monthlyRequests)} REQ/MO</span>
+              <div className="control-group">
+                <div className="control-row">
+                  <span className="control-label text-mono">WORKLOAD VOLUME</span>
+                  <span className="control-value text-mono">
+                    {formatNumber(monthlyRequests)} <span className="control-unit">REQ / MO</span>
+                  </span>
+                </div>
+                <input
+                  type="range" min={200_000} max={15_000_000} step={100_000}
+                  value={monthlyRequests}
+                  onChange={e => setMonthlyRequests(Number(e.target.value))}
+                  className="hero-slider"
+                  aria-label={`Workload volume: ${formatNumber(monthlyRequests)} requests per month`}
+                />
               </div>
-              <input
-                type="range" min={200_000} max={15_000_000} step={100_000}
-                value={monthlyRequests}
-                onChange={e => setMonthlyRequests(Number(e.target.value))}
-                className="hero-slider"
-                aria-label={`Workload volume: ${formatNumber(monthlyRequests)} requests per month`}
-              />
 
-              <div className="control-row" style={{ marginTop: '12px' }}>
-                <span className="control-label text-mono">CACHE HIT RATE</span>
-                <span className="control-value text-mono">{Math.round(cacheHitRate * 100)}%</span>
+              <div className="control-group">
+                <div className="control-row">
+                  <span className="control-label text-mono">CACHE HIT RATE</span>
+                  <span className="control-value text-mono">
+                    {Math.round(cacheHitRate * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range" min={0} max={0.85} step={0.05}
+                  value={cacheHitRate}
+                  onChange={e => setCacheHitRate(Number(e.target.value))}
+                  className="hero-slider"
+                  aria-label={`Cache hit rate: ${Math.round(cacheHitRate * 100)}%`}
+                />
               </div>
-              <input
-                type="range" min={0} max={0.85} step={0.05}
-                value={cacheHitRate}
-                onChange={e => setCacheHitRate(Number(e.target.value))}
-                className="hero-slider"
-                aria-label={`Cache hit rate: ${Math.round(cacheHitRate * 100)}%`}
-              />
 
-              <div className="control-row" style={{ marginTop: '12px' }}>
-                <span className="control-label text-mono">ROUTING SPLIT</span>
-                <span className="control-value text-mono">{fastRouting}% FAST / {frontierRouting}% FRONTIER</span>
+              <div className="control-group">
+                <div className="control-row">
+                  <span className="control-label text-mono">ROUTING SPLIT</span>
+                  <span className="control-value text-mono">
+                    {fastRouting}% <span className="control-unit">FAST</span> / {frontierRouting}% <span className="control-unit">FRONTIER</span>
+                  </span>
+                </div>
+                <input
+                  type="range" min={0.1} max={0.9} step={0.05}
+                  value={fastModelRouting}
+                  onChange={e => setFastModelRouting(Number(e.target.value))}
+                  className="hero-slider"
+                  aria-label={`Routing split: ${fastRouting}% fast model, ${frontierRouting}% frontier model`}
+                />
               </div>
-              <input
-                type="range" min={0.1} max={0.9} step={0.05}
-                value={fastModelRouting}
-                onChange={e => setFastModelRouting(Number(e.target.value))}
-                className="hero-slider"
-                aria-label={`Routing split: ${fastRouting}% fast model, ${frontierRouting}% frontier model`}
-              />
             </div>
 
-            {/* Modeled telemetry readouts */}
+            {/* Modeled telemetry readouts — Economics as dominant visual anchor */}
             <div className="instrument__readouts">
-              {/* Primary: Monthly cost */}
+              {/* Primary: Monthly cost anchor */}
               <div className="readout-primary">
-                <div className="readout-primary__left">
+                <div className="readout-primary__header">
                   <span className="text-mono readout-label">MODELED MONTHLY COST</span>
-                  <span className="text-mono" style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>USD / MONTH</span>
+                  <span className="readout-primary__badge text-mono">DETERMINISTIC SIMULATION</span>
                 </div>
-                <span className="readout-primary__value text-mono">{formatCurrency(sim.monthlyCost)}</span>
+                <div className="readout-primary__main">
+                  <span className="readout-primary__value text-mono">{formatCurrency(sim.monthlyCost)}</span>
+                  <span className="readout-primary__unit text-mono">/ MO</span>
+                </div>
               </div>
 
-              {/* Secondary: Three metrics */}
+              {/* Secondary telemetry rail */}
               <div className="readout-secondary">
                 <div className="readout-cell">
-                  <span className="text-mono readout-label">COST / 1K REQ</span>
-                  <span className="text-mono readout-cell-value">${(sim.costPerRequest * 1000).toFixed(3)}</span>
+                  <span className="text-mono readout-label">MODELED TAIL LATENCY</span>
+                  <div className="readout-cell-value text-mono">
+                    <span>{formatLatency(sim.p95Latency)}</span>
+                    <span className="readout-cell-sub">est. P95</span>
+                  </div>
                 </div>
                 <div className="readout-cell">
-                  <span className="text-mono readout-label">MODELED TAIL LATENCY</span>
-                  <span className="text-mono readout-cell-value">{formatLatency(sim.p95Latency)}</span>
+                  <span className="text-mono readout-label">COST / 1K REQ</span>
+                  <div className="readout-cell-value text-mono">
+                    <span>${(sim.costPerRequest * 1000).toFixed(3)}</span>
+                    <span className="readout-cell-sub">per 1K req</span>
+                  </div>
                 </div>
                 <div className="readout-cell">
                   <span className="text-mono readout-label">MODELED SAVINGS VS BASELINE</span>
-                  <span className="text-mono readout-cell-value">−{formatCurrency(estimatedSavings)}/MO</span>
+                  <div className="readout-cell-value text-mono">
+                    <span style={{ color: '#FAFAFA' }}>−{formatCurrency(estimatedSavings)}/MO</span>
+                    <span className="readout-cell-sub">vs 0% cache</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Baseline context */}
-              <div className="readout-footnote text-mono">
-                <span>
-                  BASELINE (0% CACHE): {formatCurrency(noCacheSim.monthlyCost)}/MO → WITH {Math.round(cacheHitRate * 100)}% CACHE: {formatCurrency(sim.monthlyCost)}/MO · MODELED DIFFERENCE: −{formatCurrency(estimatedSavings)}/MO
-                </span>
-                <span>
-                  PRIMARY BOTTLENECK: {sim.bottleneck.componentName.toUpperCase()} — {sim.bottleneck.impactPercentage}% COST SHARE
-                </span>
+              {/* Causal Relationship Anchor (Section 6) */}
+              <div className="readout-causal text-mono">
+                <div className="causal-row">
+                  <span className="causal-tag">CAUSAL IMPACT</span>
+                  <span className="causal-bottleneck">PRIMARY BOTTLENECK: {sim.bottleneck.componentName.toUpperCase()} ({sim.bottleneck.impactPercentage}% COST SHARE)</span>
+                </div>
+                <div className="causal-text">
+                  At {Math.round(cacheHitRate * 100)}% cache: {formatNumber(Math.round(monthlyRequests * cacheHitRate))} requests terminate at cache, saving {formatCurrency(estimatedSavings)}/mo vs direct frontier baseline ({formatCurrency(noCacheSim.monthlyCost)}/mo).
+                </div>
               </div>
             </div>
           </div>
@@ -423,35 +428,21 @@ export default function HeroInteractive() {
           border-radius: 3px;
         }
 
-        /* ── Engine metadata strip ── */
-        .hero__meta {
+        /* ── Technical provenance line ── */
+        .hero__provenance {
           display: flex;
           align-items: center;
-          gap: 0;
-          padding-top: 20px;
+          gap: 8px;
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          padding-top: 16px;
           border-top: 1px solid var(--color-border);
           flex-wrap: wrap;
-          row-gap: 12px;
         }
 
-        .hero__meta-item {
-          display: flex;
-          flex-direction: column;
-          gap: 3px;
-          padding: 0 20px 0 0;
-          margin-right: 20px;
-        }
-
-        .hero__meta-sep {
-          width: 1px;
-          height: 28px;
-          background: var(--color-border);
-          margin-right: 20px;
-          flex-shrink: 0;
-        }
-
-        .hero__meta-sep:last-of-type {
-          display: none;
+        .hero__provenance-sep {
+          color: var(--color-border-strong);
         }
 
         /* ── Instrument shell ── */
@@ -475,15 +466,15 @@ export default function HeroInteractive() {
         .instrument__title-row {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
 
-        .instrument__live {
+        .instrument__arch-label {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
-          color: #FFFFFF;
+          color: #A1A1AA;
           letter-spacing: 0.06em;
-          font-weight: 600;
+          font-weight: 500;
         }
 
         .instrument__sep {
@@ -491,11 +482,12 @@ export default function HeroInteractive() {
           font-size: 0.75rem;
         }
 
-        .instrument__arch-id {
+        .instrument__arch-name {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
-          color: var(--color-text-muted);
+          color: #FFFFFF;
           letter-spacing: 0.06em;
+          font-weight: 600;
         }
 
         .instrument__open {
@@ -528,42 +520,58 @@ export default function HeroInteractive() {
           display: block;
         }
 
-        /* ── Controls ── */
+        /* ── Controls (Prominent 18px Hierarchy) ── */
         .instrument__controls {
-          padding: 16px 18px;
+          padding: 18px 20px;
           background: #0D0D10;
           border-bottom: 1px solid var(--color-border);
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .control-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
         .control-row {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          margin-bottom: 6px;
+          align-items: baseline;
         }
 
         .control-label {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.6875rem;
           letter-spacing: 0.08em;
           color: var(--color-text-muted);
           text-transform: uppercase;
+          font-weight: 500;
         }
 
         .control-value {
           font-family: var(--font-mono);
-          font-size: 0.75rem;
+          font-size: 1.125rem;
           color: #FFFFFF;
-          font-weight: 500;
+          font-weight: 600;
           font-variant-numeric: tabular-nums;
+          letter-spacing: -0.01em;
+        }
+
+        .control-unit {
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          font-weight: 400;
         }
 
         .hero-slider {
           -webkit-appearance: none;
           appearance: none;
           width: 100%;
-          height: 2px;
-          background: #1E1E22;
+          height: 3px;
+          background: #24242A;
           outline: none;
           border-radius: 1px;
         }
@@ -571,20 +579,21 @@ export default function HeroInteractive() {
         .hero-slider::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 10px;
-          height: 10px;
+          width: 12px;
+          height: 12px;
           background: #FFFFFF;
           cursor: pointer;
-          border-radius: 1px;
+          border-radius: 2px;
           border: 1px solid #09090B;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
         .hero-slider::-moz-range-thumb {
-          width: 10px;
-          height: 10px;
+          width: 12px;
+          height: 12px;
           background: #FFFFFF;
           cursor: pointer;
-          border-radius: 1px;
+          border-radius: 2px;
           border: 1px solid #09090B;
           box-sizing: border-box;
         }
@@ -594,53 +603,78 @@ export default function HeroInteractive() {
           outline-offset: 2px;
         }
 
-        /* ── Readouts ── */
+        /* ── Readouts (Dominant Economic Anchor) ── */
         .instrument__readouts {
-          padding: 16px 18px;
+          padding: 18px 20px;
           background: var(--color-bg);
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 16px;
         }
 
         .readout-label {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.625rem;
           letter-spacing: 0.08em;
           color: var(--color-text-muted);
           text-transform: uppercase;
           display: block;
-          margin-bottom: 3px;
+          margin-bottom: 4px;
+          font-weight: 500;
         }
 
         .readout-primary {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          padding-bottom: 12px;
-          border-bottom: 1px solid var(--color-border);
-        }
-
-        .readout-primary__left {
+          padding: 16px 18px;
+          background: #141418;
+          border: 1px solid #27272A;
+          border-radius: 3px;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 6px;
+        }
+
+        .readout-primary__header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .readout-primary__badge {
+          font-size: 0.5625rem;
+          letter-spacing: 0.08em;
+          color: #71717A;
+          border: 1px solid #27272A;
+          padding: 2px 6px;
+          border-radius: 2px;
+        }
+
+        .readout-primary__main {
+          display: flex;
+          align-items: baseline;
+          gap: 6px;
         }
 
         .readout-primary__value {
           font-family: var(--font-mono);
-          font-size: 1.875rem;
-          font-weight: 500;
+          font-size: clamp(2.25rem, 3.8vw, 2.75rem);
+          font-weight: 600;
           font-variant-numeric: tabular-nums;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.03em;
           color: #FFFFFF;
           line-height: 1;
+        }
+
+        .readout-primary__unit {
+          font-size: 0.875rem;
+          color: #A1A1AA;
+          font-weight: 500;
         }
 
         .readout-secondary {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 12px;
+          gap: 14px;
+          padding: 0 4px;
         }
 
         .readout-cell {
@@ -651,23 +685,58 @@ export default function HeroInteractive() {
 
         .readout-cell-value {
           font-family: var(--font-mono);
-          font-size: 0.9375rem;
-          font-weight: 500;
+          font-size: 1.0625rem;
+          font-weight: 600;
           font-variant-numeric: tabular-nums;
-          color: var(--color-text);
-        }
-
-        .readout-footnote {
+          color: #FFFFFF;
           display: flex;
           flex-direction: column;
           gap: 2px;
-          padding-top: 10px;
-          border-top: 1px solid var(--color-border);
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          color: var(--color-text-muted);
+        }
+
+        .readout-cell-sub {
+          font-size: 0.6875rem;
+          color: #71717A;
+          font-weight: 400;
           letter-spacing: 0.04em;
-          line-height: 1.5;
+        }
+
+        /* ── Causal Impact Bar ── */
+        .readout-causal {
+          padding: 12px 14px;
+          background: #111114;
+          border-left: 2px solid #52525B;
+          border-radius: 0 2px 2px 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .causal-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .causal-tag {
+          font-size: 0.5625rem;
+          letter-spacing: 0.1em;
+          color: #A1A1AA;
+          font-weight: 600;
+        }
+
+        .causal-bottleneck {
+          font-size: 0.625rem;
+          color: #71717A;
+          letter-spacing: 0.04em;
+        }
+
+        .causal-text {
+          font-size: 0.75rem;
+          color: #D4D4D8;
+          line-height: 1.45;
         }
 
         /* ── Responsive ── */
@@ -686,28 +755,16 @@ export default function HeroInteractive() {
             padding-top: calc(var(--nav-height) + 32px);
             padding-bottom: 48px;
           }
-          .hero__eyebrow {
-            margin-bottom: 28px;
+          .hero__provenance {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
           }
-          .hero__rule {
+          .hero__provenance-sep {
             display: none;
           }
           .readout-secondary {
             grid-template-columns: 1fr;
-            gap: 10px;
-          }
-          .hero__meta-sep {
-            display: none;
-          }
-          .hero__meta {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .hero__meta-item {
-            padding: 0;
-            margin: 0;
-            flex-direction: row;
-            align-items: center;
             gap: 12px;
           }
         }

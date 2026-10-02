@@ -21,7 +21,6 @@ export default function AssumptionsClient() {
       <main className="assumptions-page">
         <div className="container">
           <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
-            <span className="section-label">MODEL ASSUMPTION REGISTRY</span>
             <h1 className="section-heading">Model Assumption Registry</h1>
             <p className="section-lead">
               Every formula, unit price, latency baseline, and calibration parameter used by ComputeCanvas is deterministic and publicly traceable. Prices reflect a point-in-time snapshot.

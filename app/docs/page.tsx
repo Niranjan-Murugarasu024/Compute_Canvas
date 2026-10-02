@@ -12,7 +12,6 @@ export default function DocsPage() {
         <div className="container">
           {/* Header */}
           <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
-            <span className="section-label">05 / METHODOLOGY</span>
             <h1 className="section-heading">
               Architecture &amp; Simulation Guide
             </h1>
@@ -90,11 +89,11 @@ InfraSpend = (TotalRequests / 1M × GatewayFee)
            + (CacheBase + MemoryFee)
            + (VectorDBBase + UncachedRequests × QueryFee)
 
-Total Monthly Spend = ModelSpend + InfraSpend`}
+Modeled Monthly Cost = ModelSpend + InfraSpend`}
                 </code>
               </div>
               <p style={{ marginTop: 'var(--space-4)' }}>
-                <strong>Modeled Tail Latency (Estimated P95):</strong>
+                <strong>Modeled Tail Latency:</strong>
               </p>
               <div className="docs-code-block">
                 <code>

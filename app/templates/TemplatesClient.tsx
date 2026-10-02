@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { TEMPLATES, simulate, formatCurrency, formatLatency } from '@/lib/simulation/engine';
 
-const CATEGORIES = ['All', '01 / BASELINE', '02 / RETRIEVAL', '03 / ROUTING'];
+const CATEGORIES = ['All', 'BASELINE', 'RETRIEVAL', 'ROUTING'];
 
 export default function TemplatesClient() {
   const [category, setCategory] = useState('All');
@@ -15,7 +15,6 @@ export default function TemplatesClient() {
   return (
     <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + 40px)', paddingBottom: 'var(--space-16)' }}>
       <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
-        <span className="section-label">06 / BLUEPRINTS</span>
         <h1 className="section-heading">Canonical Architecture Blueprints</h1>
         <p className="section-lead">
           Each blueprint is a deterministic architectural topology with reproducible reference configuration and simulated economics.

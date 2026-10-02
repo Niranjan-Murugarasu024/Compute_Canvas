@@ -31,7 +31,14 @@ async function run() {
   // 1. Homepage (/)
   const home = await fetchPage('/');
   assert(home.status === 200, 'Homepage (/) returns HTTP 200');
-  assert(home.html.includes('ARCHITECTURE ECONOMICS'), 'Homepage includes "ARCHITECTURE ECONOMICS"');
+  assert(!home.html.includes('01 ARCHITECTURE'), 'Homepage excludes "01 ARCHITECTURE"');
+  assert(!home.html.includes('02 ECONOMICS'), 'Homepage excludes "02 ECONOMICS"');
+  assert(!home.html.includes('03 SCALE'), 'Homepage excludes "03 SCALE"');
+  assert(!home.html.includes('04 TRADEOFFS'), 'Homepage excludes "04 TRADEOFFS"');
+  assert(!home.html.includes('05 METHODOLOGY'), 'Homepage excludes "05 METHODOLOGY"');
+  assert(!home.html.includes('06 BLUEPRINTS'), 'Homepage excludes "06 BLUEPRINTS"');
+  assert(!home.html.includes('LIVE SYSTEM'), 'Homepage excludes deprecated "LIVE SYSTEM"');
+  assert(home.html.includes('MODELED ARCHITECTURE'), 'Homepage includes "MODELED ARCHITECTURE"');
   assert(home.html.includes('MODELED MONTHLY COST'), 'Homepage includes "MODELED MONTHLY COST"');
   assert(home.html.includes('MODELED TAIL LATENCY'), 'Homepage includes "MODELED TAIL LATENCY"');
   assert(home.html.includes('MODELED SAVINGS VS BASELINE'), 'Homepage includes "MODELED SAVINGS VS BASELINE"');
@@ -53,10 +60,10 @@ async function run() {
   // 3. Blueprints (/templates)
   const templates = await fetchPage('/templates');
   assert(templates.status === 200, 'Blueprints (/templates) returns HTTP 200');
-  assert(templates.html.includes('06 / BLUEPRINTS'), 'Blueprints includes "06 / BLUEPRINTS" section');
-  assert(templates.html.includes('01 / BASELINE'), 'Blueprints includes "01 / BASELINE" taxonomy');
-  assert(templates.html.includes('02 / RETRIEVAL'), 'Blueprints includes "02 / RETRIEVAL" taxonomy');
-  assert(templates.html.includes('03 / ROUTING'), 'Blueprints includes "03 / ROUTING" taxonomy');
+  assert(!templates.html.includes('06 / BLUEPRINTS'), 'Blueprints excludes "06 / BLUEPRINTS" section number');
+  assert(templates.html.includes('BASELINE'), 'Blueprints includes "BASELINE" taxonomy');
+  assert(templates.html.includes('RETRIEVAL'), 'Blueprints includes "RETRIEVAL" taxonomy');
+  assert(templates.html.includes('ROUTING'), 'Blueprints includes "ROUTING" taxonomy');
   assert(templates.html.includes('MODELED MONTHLY COST'), 'Blueprints includes "MODELED MONTHLY COST"');
   assert(templates.html.includes('MODELED TAIL LATENCY'), 'Blueprints includes "MODELED TAIL LATENCY"');
   assert(templates.html.includes('REFERENCE WORKLOAD'), 'Blueprints includes "REFERENCE WORKLOAD" configuration');
@@ -74,7 +81,7 @@ async function run() {
   // 5. Methodology & Documentation (/docs)
   const docs = await fetchPage('/docs');
   assert(docs.status === 200, 'Docs (/docs) returns HTTP 200');
-  assert(docs.html.includes('05 / METHODOLOGY'), 'Docs includes "05 / METHODOLOGY"');
+  assert(!docs.html.includes('05 / METHODOLOGY'), 'Docs excludes "05 / METHODOLOGY"');
   assert(docs.html.includes('deterministic simulation methodology'), 'Docs includes "deterministic simulation methodology"');
   assert(!docs.html.includes('stochastic hallucinations'), 'Docs excludes "without stochastic hallucinations"');
   assert(!docs.html.includes('[SYSTEM_DOCUMENTATION]'), 'Docs excludes label fatigue "[SYSTEM_DOCUMENTATION]"');

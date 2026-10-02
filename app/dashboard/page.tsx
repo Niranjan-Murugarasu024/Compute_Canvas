@@ -245,8 +245,8 @@ export default function DashboardPage() {
                     <tr>
                       <th>Scenario</th>
                       <th>Workload Scale</th>
-                      <th>Monthly Spend</th>
-                      <th>P95 Latency</th>
+                      <th>Modeled Monthly Cost</th>
+                      <th>Modeled Tail Latency</th>
                       <th>Capacity Status</th>
                     </tr>
                   </thead>

@@ -1420,22 +1420,22 @@ export default function SimulatorClient({
             <div className="dialog-content">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
                 <div>
-                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED P95 TAIL LATENCY</span>
+                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED TAIL LATENCY</span>
                   <div className="text-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-performance, #FAFAFA)' }}>
                     {formatLatency(result.p95Latency)}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '16px' }} className="text-mono">
                   <div>
-                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>P50</span>
+                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>est. P50</span>
                     <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p50)}</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>P90</span>
+                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>est. P90</span>
                     <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p90)}</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>P99</span>
+                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>est. P99</span>
                     <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p99)}</strong>
                   </div>
                 </div>
