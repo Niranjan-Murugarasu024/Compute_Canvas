@@ -12,7 +12,7 @@ export default function CompanyPage() {
         <div className="container">
           <div className="company-content" style={{ maxWidth: '960px', margin: 0 }}>
             <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
-              <span className="section-label">[COMPANY_MISSION]</span>
+              <span className="section-label">DESIGN PHILOSOPHY</span>
               <h1 className="section-heading">
                 Interactive Pre-Deployment Decision Intelligence
               </h1>
@@ -59,7 +59,7 @@ export default function CompanyPage() {
                 </p>
               </div>
               <Link href="/simulator" className="btn btn-primary">
-                Open Simulator &rarr;
+                Open Workbench &rarr;
               </Link>
             </div>
           </div>

@@ -75,7 +75,7 @@ export default function PrivacyPage() {
 
             <div className="policy-footer-nav">
               <Link href="/simulator" className="btn btn-primary">
-                Open Simulator &rarr;
+                Open Workbench &rarr;
               </Link>
               <Link href="/terms" className="btn btn-secondary">
                 Terms &amp; Disclaimers

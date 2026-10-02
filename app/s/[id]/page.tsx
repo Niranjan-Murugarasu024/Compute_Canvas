@@ -99,7 +99,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
                 Fork architecture
               </button>
               <Link href="/simulator" className="btn btn-secondary">
-                Open Simulator
+                Open Workbench
               </Link>
             </div>
           </div>

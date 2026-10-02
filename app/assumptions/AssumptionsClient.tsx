@@ -332,7 +332,7 @@ export default function AssumptionsClient() {
                 </p>
               </div>
               <Link href="/simulator" className="btn btn-primary" style={{ flexShrink: 0 }}>
-                Open Simulator
+                Open Workbench
               </Link>
             </div>
           </div>

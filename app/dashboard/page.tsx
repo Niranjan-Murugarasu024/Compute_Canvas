@@ -101,7 +101,7 @@ export default function DashboardPage() {
                 New Architecture
               </Link>
               <Link href="/simulator" className="btn btn-primary text-mono" style={{ fontSize: '0.8125rem' }}>
-                Open Spatial Simulator
+                Open Workbench
               </Link>
             </div>
           </div>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
               <div className="section-title-row" style={{ marginTop: 'var(--space-8)' }}>
                 <h2 className="text-title" style={{ fontSize: '1.125rem' }}>Growth &amp; Stress Scenarios</h2>
                 <Link href="/simulator" className="text-caption text-mono" style={{ color: 'var(--color-accent)' }}>
-                  + Open Simulator Matrix
+                  + Open Workbench Matrix
                 </Link>
               </div>
 

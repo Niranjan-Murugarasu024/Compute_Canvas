@@ -63,7 +63,7 @@ export default function TermsPage() {
 
             <div className="terms-footer-nav">
               <Link href="/simulator" className="btn btn-primary">
-                Open Simulator &rarr;
+                Open Workbench &rarr;
               </Link>
               <Link href="/assumptions" className="btn btn-secondary">
                 View Assumptions &rarr;

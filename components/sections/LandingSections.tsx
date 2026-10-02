@@ -2091,15 +2091,15 @@ export function StoryFlowSection() {
             transition={{ delay: 0.3 }}
           >
             <p className="story-flow__statement">
-              Build. <span style={{ color: '#A1A1AA' }}>Simulate.</span>{' '}
-              <span style={{ color: '#71717A' }}>Compare. Optimize.</span>
+              Design. <span style={{ color: '#A1A1AA' }}>Simulate.</span>{' '}
+              <span style={{ color: '#71717A' }}>Understand. Share.</span>
             </p>
             <div className="story-flow__btn-group">
               <Link href="/simulator" className="btn btn-primary story-btn-main">
                 OPEN WORKBENCH &rarr;
               </Link>
               <Link href="/templates" className="btn btn-secondary story-btn-sec">
-                EXPLORE TEMPLATES
+                BROWSE BLUEPRINTS
               </Link>
             </div>
           </motion.div>
@@ -2176,11 +2176,11 @@ export function TemplatesPreviewSection() {
         <div className="section-header-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px' }}>
           <div>
             <span className="section-label">06 BLUEPRINTS</span>
-            <h2 className="section-heading">Start from proven architectures.</h2>
-            <p className="section-lead">Pre-modeled topologies with verified cost functions and empirical latency baselines.</p>
+            <h2 className="section-heading">Start from a canonical blueprint.</h2>
+            <p className="section-lead">Pre-modeled topologies with deterministic cost functions and model-derived latency baselines.</p>
           </div>
           <Link href="/templates" className="btn btn-secondary" style={{ height: '42px', padding: '0 18px', borderRadius: '3px', fontFamily: 'var(--font-sans)', fontSize: '0.875rem', fontWeight: 500 }}>
-            VIEW ALL TEMPLATES &rarr;
+            VIEW ALL BLUEPRINTS &rarr;
           </Link>
         </div>
 

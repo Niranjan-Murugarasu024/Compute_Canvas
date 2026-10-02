@@ -763,12 +763,9 @@ export default function SpatialCanvas({
 
       {/* Empty State per Rule 20 */}
       {architecture.nodes.length === 0 && (
-        <div className="canvas-empty-state" role="region" aria-label="Empty canvas prompt">
+        <div className="canvas-empty-state" role="region" aria-label="Empty canvas — load a blueprint to begin">
           <div className="empty-state-badge text-mono">NO ARCHITECTURE</div>
-          <div className="empty-state-title">ARCHITECTURE STAGE EMPTY</div>
-          <div className="empty-state-subtitle">
-            Start by adding a component from the palette or load a canonical architecture:
-          </div>
+          <div className="empty-state-title">Start with a component or load a canonical blueprint.</div>
           <div className="empty-state-actions">
             <button
               type="button"
@@ -790,7 +787,7 @@ export default function SpatialCanvas({
               }}
               title="Load RAG Pipeline architecture"
             >
-              [ RAG PIPELINE ]
+              [ RAG ]
             </button>
             <button
               type="button"

@@ -34,7 +34,7 @@ export default function DocsPage() {
             <section className="docs-section">
               <h2 className="docs-title">2. The Six V1 Building Blocks</h2>
               <p>
-                ComputeCanvas V1 focuses on the primary architectural levers that dictate 95%+ of generative AI system cost and latency:
+                ComputeCanvas V1 focuses on six architectural levers that materially influence the modeled cost and latency of the supported workloads:
               </p>
               <div className="docs-components-grid">
                 <div className="doc-component-card">
