@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { TEMPLATES, simulate, formatCurrency, formatLatency } from '@/lib/simulation/engine';
 
-const CATEGORIES = ['All', 'Generative AI', 'Data', 'Infrastructure'];
+const CATEGORIES = ['All', '01 / BASELINE', '02 / RETRIEVAL', '03 / ROUTING'];
 
 export default function TemplatesClient() {
   const [category, setCategory] = useState('All');
@@ -15,10 +15,10 @@ export default function TemplatesClient() {
   return (
     <div className="container" style={{ paddingTop: 'calc(var(--nav-height) + 40px)', paddingBottom: 'var(--space-16)' }}>
       <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
-        <span className="section-label">CANONICAL BLUEPRINTS</span>
-        <h1 className="section-heading">Canonical architecture blueprints.</h1>
+        <span className="section-label">06 / BLUEPRINTS</span>
+        <h1 className="section-heading">Canonical Architecture Blueprints</h1>
         <p className="section-lead">
-          Each blueprint is a functional architectural topology with deterministic simulation outputs. Open in the workbench to adjust workload assumptions.
+          Each blueprint is a deterministic architectural topology with reproducible reference configuration and simulated economics.
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function TemplatesClient() {
         {CATEGORIES.map(cat => (
           <button
             key={cat}
-            className={`btn ${category === cat ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            className={`btn ${category === cat ? 'btn-primary' : 'btn-secondary'} btn-sm text-mono`}
             onClick={() => setCategory(cat)}
           >
             {cat}
@@ -52,7 +52,7 @@ export default function TemplatesClient() {
                     {template.category}
                   </span>
                   <span className="badge badge--neutral text-mono" style={{ fontSize: '0.5625rem' }}>
-                    TEMPLATE DEFAULT
+                    CANONICAL PATTERN
                   </span>
                 </div>
                 <h2 style={{ fontSize: '1.125rem', fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
@@ -63,7 +63,7 @@ export default function TemplatesClient() {
                 </p>
 
                 {/* Structured Architectural Blueprint: When to Use / Optimizes / Tradeoff (Section 29) */}
-                <div className="template-tradeoffs-box text-mono" style={{ margin: '8px 0 16px 0', padding: '10px 12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.6875rem', lineHeight: 1.5 }}>
+                <div className="template-tradeoffs-box text-mono" style={{ margin: '8px 0 12px 0', padding: '10px 12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.6875rem', lineHeight: 1.5 }}>
                   <div style={{ marginBottom: '4px' }}>
                     <span style={{ color: '#71717A', fontWeight: 600 }}>WHEN TO USE: </span>
                     <span style={{ color: '#FAFAFA' }}>{template.whenToUse}</span>
@@ -78,6 +78,22 @@ export default function TemplatesClient() {
                   </div>
                 </div>
 
+                {/* Reference Configuration Matrix (Section 38) */}
+                <div className="template-ref-config text-mono" style={{ margin: '0 0 14px 0', padding: '8px 10px', background: '#0D0D10', border: '1px solid var(--color-border)', borderRadius: '3px', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                    <span>REFERENCE WORKLOAD:</span>
+                    <span style={{ color: '#FAFAFA' }}>{(template.defaultWorkload.requestsPerMonth / 1_000_000).toFixed(1)}M REQS/MO</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                    <span>TOKENS (IN / OUT):</span>
+                    <span style={{ color: '#FAFAFA' }}>{template.defaultWorkload.avgInputTokens} / {template.defaultWorkload.avgOutputTokens}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>CACHE / SNAPSHOT:</span>
+                    <span style={{ color: '#FAFAFA' }}>{Math.round(template.defaultWorkload.cacheHitRate * 100)}% · 2026-03</span>
+                  </div>
+                </div>
+
                 {/* Mini architecture preview */}
                 <div className="template-page-card__nodes">
                   {template.architecture.nodes.map(node => (
@@ -89,13 +105,13 @@ export default function TemplatesClient() {
 
                 <div className="template-page-card__metrics">
                   <div>
-                    <span className="text-technical-label">EST. SPEND</span>
-                    <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 500 }}>
+                    <span className="text-technical-label">MODELED MONTHLY COST</span>
+                    <span className="text-mono" style={{ color: '#FFFFFF', fontWeight: 600 }}>
                       {formatCurrency(result.monthlyCost, true)}/MO
                     </span>
                   </div>
                   <div>
-                    <span className="text-technical-label">MODELED P95</span>
+                    <span className="text-technical-label">MODELED TAIL LATENCY</span>
                     <span className="text-mono" style={{ color: '#D4D4D8', fontWeight: 500 }}>
                       {formatLatency(result.p95Latency)}
                     </span>
@@ -105,7 +121,7 @@ export default function TemplatesClient() {
                     <span className="text-mono" style={{ color: '#A1A1AA' }}>{template.architecture.nodes.length} NODES</span>
                   </div>
                   <div>
-                    <span className="text-technical-label">CAPABILITY TIER</span>
+                    <span className="text-technical-label">TRADEOFF TIER</span>
                     <span className="text-mono" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: '0.75rem' }}>
                       {template.capabilityTier || result.capabilityTier}
                     </span>

@@ -513,17 +513,18 @@ export default function SpatialCanvas({
         height="100%"
       >
         <defs>
-          {/* Subtle grid pattern */}
+          {/* Subtle engineering grid pattern */}
           <pattern id="canvas-grid-pattern" width={32 * zoom} height={32 * zoom} patternUnits="userSpaceOnUse" x={pan.x % (32 * zoom)} y={pan.y % (32 * zoom)}>
-            <circle cx="1" cy="1" r="1" fill="var(--color-border-subtle)" />
+            <path d={`M ${32 * zoom} 0 L 0 0 0 ${32 * zoom}`} fill="none" stroke="#161619" strokeWidth="0.5" />
+            <circle cx="1" cy="1" r="0.75" fill="#24242A" />
           </pattern>
 
-          {/* Edge arrow marker */}
+          {/* Edge arrow markers */}
           <marker id="edge-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
             <polygon points="0 0, 6 3, 0 6" fill="var(--color-border-strong)" />
           </marker>
           <marker id="edge-arrow-selected" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <polygon points="0 0, 6 3, 0 6" fill="var(--color-accent)" />
+            <polygon points="0 0, 6 3, 0 6" fill="#FFFFFF" />
           </marker>
         </defs>
 
@@ -547,12 +548,19 @@ export default function SpatialCanvas({
             const dy = Math.max(36, Math.abs(toY - fromY) / 2);
             const pathData = `M ${fromX} ${fromY} C ${fromX} ${fromY + dy}, ${toX} ${toY - dy}, ${toX} ${toY}`;
 
-            const isSelected = selectedEdgeIndex === idx;
+            const isDirectlySelected = selectedEdgeIndex === idx;
+            const isIncomingToSelected = selectedNodeId !== null && edge.target === selectedNodeId;
+            const isOutgoingFromSelected = selectedNodeId !== null && edge.source === selectedNodeId;
+            const isConnectedToSelected = isIncomingToSelected || isOutgoingFromSelected;
+
+            const isHighlighted = isDirectlySelected || isConnectedToSelected;
+            const isDimmed = selectedNodeId !== null && !isConnectedToSelected && !isDirectlySelected;
 
             return (
               <g
                 key={`edge-${edge.source}-${edge.target}-${idx}`}
                 className="canvas-edge-group"
+                style={{ opacity: isDimmed ? 0.3 : 1, transition: 'opacity 0.2s' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedEdge(idx);
@@ -564,25 +572,42 @@ export default function SpatialCanvas({
                 {/* Visible connection path */}
                 <path
                   d={pathData}
-                  stroke={isSelected ? 'var(--color-accent)' : 'var(--color-border-strong)'}
-                  strokeWidth={isSelected ? 2.5 : 1.5}
+                  stroke={isHighlighted ? '#FFFFFF' : isDimmed ? '#27272A' : 'var(--color-border-strong)'}
+                  strokeWidth={isHighlighted ? 2.5 : 1.5}
                   fill="none"
-                  markerEnd={isSelected ? 'url(#edge-arrow-selected)' : 'url(#edge-arrow)'}
-                  style={{ transition: 'stroke 0.2s' }}
+                  markerEnd={isHighlighted ? 'url(#edge-arrow-selected)' : 'url(#edge-arrow)'}
+                  style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
                 />
 
                 {/* Traffic share percentage badge */}
                 {edge.trafficShare !== undefined && (
                   <g transform={`translate(${(fromX + toX) / 2}, ${(fromY + toY) / 2})`}>
-                    <rect x="-20" y="-10" width="40" height="20" rx="4" fill="var(--color-bg-elevated)" stroke="var(--color-border-strong)" strokeWidth="1" />
-                    <text x="0" y="4" textAnchor="middle" fill="var(--color-text)" fontSize="10" fontFamily="var(--font-mono)" fontWeight="600">
-                      {Math.round(edge.trafficShare * 100)}%
+                    <rect
+                      x="-26"
+                      y="-10"
+                      width="52"
+                      height="20"
+                      rx="2"
+                      fill="#111114"
+                      stroke={isHighlighted ? '#FFFFFF' : 'var(--color-border-strong)'}
+                      strokeWidth={isHighlighted ? 1.5 : 1}
+                    />
+                    <text
+                      x="0"
+                      y="4"
+                      textAnchor="middle"
+                      fill="#FAFAFA"
+                      fontSize="9.5"
+                      fontFamily="var(--font-mono)"
+                      fontWeight="600"
+                    >
+                      {Math.round(edge.trafficShare * 100)}% route
                     </text>
                   </g>
                 )}
 
                 {/* Subtle animated traffic particle */}
-                <circle r={2.5} fill="var(--color-accent)">
+                <circle r={2.5} fill={isHighlighted ? '#FFFFFF' : 'var(--color-accent)'}>
                   <animateMotion dur="2.4s" repeatCount="indefinite" path={pathData} />
                 </circle>
               </g>
@@ -612,9 +637,14 @@ export default function SpatialCanvas({
             const isBottleneck = metric?.isBottleneck || simulation.bottleneck?.nodeId === node.id;
             const styling = getTypeStyling(node.type);
 
+            const isConnectedNeighbor = selectedNodeId !== null && architecture.edges.some(
+              e => (e.source === selectedNodeId && e.target === node.id) || (e.target === selectedNodeId && e.source === node.id)
+            );
+            const isUnrelatedNode = selectedNodeId !== null && !isSelected && !isConnectedNeighbor;
+
             const costText = metric && metric.monthlyCost > 0 ? `${formatCurrency(metric.monthlyCost)}/mo` : '$0/mo';
             const latencyText = metric ? formatLatency(metric.latencyMs) : '0 ms';
-            const costPctText = metric && metric.costPercentage > 0 ? `${metric.costPercentage}% spend` : null;
+            const costPctText = metric && metric.costPercentage > 0 ? `${metric.costPercentage}% cost share` : null;
 
             return (
               <g
@@ -643,7 +673,12 @@ export default function SpatialCanvas({
                     setNodePosition(node.id, x, y + (e.shiftKey ? 20 : 5), true);
                   }
                 }}
-                style={{ cursor: isDraggingThis ? 'grabbing' : 'grab', outline: 'none' }}
+                style={{
+                  cursor: isDraggingThis ? 'grabbing' : 'grab',
+                  outline: 'none',
+                  opacity: isUnrelatedNode ? 0.45 : 1,
+                  transition: 'opacity 0.2s',
+                }}
               >
                 {/* Node Card Background */}
                 <rect
@@ -652,7 +687,7 @@ export default function SpatialCanvas({
                   width={NODE_WIDTH}
                   height={NODE_HEIGHT}
                   rx="2"
-                  fill="#141417"
+                  fill={isSelected ? '#18181B' : '#111114'}
                   stroke={isBottleneck ? '#FFFFFF' : isSelected ? '#FFFFFF' : '#27272A'}
                   strokeWidth={isBottleneck ? 2 : isSelected ? 1.5 : 1}
                   className="spatial-node-rect"

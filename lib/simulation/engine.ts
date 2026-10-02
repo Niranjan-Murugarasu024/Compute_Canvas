@@ -15,12 +15,16 @@ export const MODEL_METADATA = {
 export const PRICING_VERSION = '2026.03.1';
 export const PRICING_ASSUMPTION_DATE = 'March 2026';
 
+export type AssumptionSourceType = 'PROVIDER' | 'BENCHMARK' | 'INTERNAL REFERENCE' | 'DERIVED';
+
 export interface ModelAssumption {
   id: string;
   name: string;
   value: number | string;
   unit: string;
   source: string;
+  sourceType?: AssumptionSourceType;
+  snapshot?: string;
   sourceUrl?: string;
   effectiveDate: string;
   notes: string;
@@ -34,6 +38,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 0.15,
     unit: 'USD / 1M tokens',
     source: 'OpenAI Pricing Table',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://openai.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'Low-latency utility reasoning model input rate.',
@@ -45,6 +51,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 0.60,
     unit: 'USD / 1M tokens',
     source: 'OpenAI Pricing Table',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://openai.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'Low-latency utility reasoning model output rate.',
@@ -56,6 +64,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 0.10,
     unit: 'USD / 1M tokens',
     source: 'Google Cloud Vertex AI Pricing',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://cloud.google.com/vertex-ai/pricing',
     effectiveDate: 'March 2026',
     notes: 'Sub-100ms ultra-low latency utility model.',
@@ -67,6 +77,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 0.40,
     unit: 'USD / 1M tokens',
     source: 'Google Cloud Vertex AI Pricing',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://cloud.google.com/vertex-ai/pricing',
     effectiveDate: 'March 2026',
     notes: 'Sub-100ms ultra-low latency utility model.',
@@ -78,6 +90,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 0.25,
     unit: 'USD / 1M tokens',
     source: 'Anthropic Pricing API',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://anthropic.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'Lightweight rapid reasoning tier.',
@@ -89,6 +103,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 1.25,
     unit: 'USD / 1M tokens',
     source: 'Anthropic Pricing API',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://anthropic.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'Lightweight rapid reasoning tier.',
@@ -100,6 +116,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 2.50,
     unit: 'USD / 1M tokens',
     source: 'OpenAI Pricing Table',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://openai.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'Omni-modal flagship frontier model input rate.',
@@ -111,6 +129,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 10.00,
     unit: 'USD / 1M tokens',
     source: 'OpenAI Pricing Table',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://openai.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'Omni-modal flagship frontier model output rate.',
@@ -122,6 +142,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 3.00,
     unit: 'USD / 1M tokens',
     source: 'Anthropic Pricing API',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://anthropic.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'High-precision technical synthesis input rate.',
@@ -133,6 +155,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 15.00,
     unit: 'USD / 1M tokens',
     source: 'Anthropic Pricing API',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://anthropic.com/pricing',
     effectiveDate: 'March 2026',
     notes: 'High-precision technical synthesis output rate.',
@@ -144,6 +168,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 1.25,
     unit: 'USD / 1M tokens',
     source: 'Google Cloud Vertex AI Pricing',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://cloud.google.com/vertex-ai/pricing',
     effectiveDate: 'March 2026',
     notes: 'Deep context reasoning input rate.',
@@ -155,6 +181,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 10.00,
     unit: 'USD / 1M tokens',
     source: 'Google Cloud Vertex AI Pricing',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://cloud.google.com/vertex-ai/pricing',
     effectiveDate: 'March 2026',
     notes: 'Deep context reasoning output rate.',
@@ -166,6 +194,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 65.00,
     unit: 'USD / instance-month',
     source: 'Redis Cloud Standard Tier',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://redis.io/pricing',
     effectiveDate: 'March 2026',
     notes: 'In-memory prompt & embedding cache instance.',
@@ -177,6 +207,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 120.00,
     unit: 'USD / cluster-month',
     source: 'Pinecone / Qdrant Cloud Standard Pod',
+    sourceType: 'PROVIDER',
+    snapshot: '2026-03',
     sourceUrl: 'https://pinecone.io/pricing',
     effectiveDate: 'March 2026',
     notes: 'Base indexing pod for nearest-neighbor approximate search.',
@@ -188,6 +220,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 1.00,
     unit: 'USD / 1M requests',
     source: 'Internal reference assumption (AWS API Gateway / Cloudflare)',
+    sourceType: 'INTERNAL REFERENCE',
+    snapshot: '2026-03',
     effectiveDate: 'March 2026',
     notes: 'TLS termination, edge rate limiting, and request ingress.',
     category: 'infrastructure',
@@ -198,6 +232,8 @@ export const ASSUMPTION_REGISTRY: ModelAssumption[] = [
     value: 0.50,
     unit: 'USD / 1M requests',
     source: 'Internal reference assumption (Edge Worker / Classification)',
+    sourceType: 'INTERNAL REFERENCE',
+    snapshot: '2026-03',
     effectiveDate: 'March 2026',
     notes: 'Heuristic prompt intent classification and steering compute.',
     category: 'infrastructure',
@@ -214,6 +250,10 @@ export interface PricingRecord {
   capabilityTier: 'Fast Utility' | 'Frontier Reasoning';
   capabilityDescription: string;
   source: string;
+  sourceType?: AssumptionSourceType;
+  pricingSnapshot?: string;
+  registryVersion?: string;
+  status?: 'ACTIVE' | 'HISTORICAL' | 'DEPRECATED';
   unit: string;
   notes: string;
   // Optional backward compatibility
@@ -233,6 +273,10 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 140,
     capabilityTier: 'Fast Utility',
     capabilityDescription: 'High-speed utility tier optimized for extraction, classification, and sub-150ms workflows.',
+    sourceType: 'PROVIDER',
+    pricingSnapshot: 'March 2026',
+    registryVersion: 'v1.4',
+    status: 'ACTIVE',
     qualityScore: 82, // Deprecated compatibility
     qualityBenchmark: 'Artificial Analysis: 82 | LMSYS Arena Elo: ~1215',
     qualitySource: 'artificialanalysis.ai / chat.lmsys.org',
@@ -249,6 +293,10 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 90,
     capabilityTier: 'Fast Utility',
     capabilityDescription: 'Sub-100ms ultra-low latency model for high-throughput streaming and high-volume workloads.',
+    sourceType: 'PROVIDER',
+    pricingSnapshot: 'March 2026',
+    registryVersion: 'v1.4',
+    status: 'ACTIVE',
     qualityScore: 80, // Deprecated compatibility
     qualityBenchmark: 'Artificial Analysis: 80 | LMSYS Arena Elo: ~1205',
     qualitySource: 'artificialanalysis.ai / chat.lmsys.org',
@@ -265,6 +313,10 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 120,
     capabilityTier: 'Fast Utility',
     capabilityDescription: 'Lightweight rapid reasoning tier for customer support triage and data parsing.',
+    sourceType: 'PROVIDER',
+    pricingSnapshot: 'March 2026',
+    registryVersion: 'v1.4',
+    status: 'ACTIVE',
     qualityScore: 78, // Deprecated compatibility
     qualityBenchmark: 'Artificial Analysis: 78 | LMSYS Arena Elo: ~1180',
     qualitySource: 'artificialanalysis.ai / chat.lmsys.org',
@@ -283,6 +335,10 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 380,
     capabilityTier: 'Frontier Reasoning',
     capabilityDescription: 'Omni-modal flagship frontier model for complex logic, multi-step agent actions, and code.',
+    sourceType: 'PROVIDER',
+    pricingSnapshot: 'March 2026',
+    registryVersion: 'v1.4',
+    status: 'ACTIVE',
     qualityScore: 95, // Deprecated compatibility
     qualityBenchmark: 'Artificial Analysis: 95 | LMSYS Arena Elo: ~1285',
     qualitySource: 'artificialanalysis.ai / chat.lmsys.org',
@@ -299,6 +355,10 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 420,
     capabilityTier: 'Frontier Reasoning',
     capabilityDescription: 'High-precision technical reasoning, codebase architecture, and comprehensive document synthesis.',
+    sourceType: 'PROVIDER',
+    pricingSnapshot: 'March 2026',
+    registryVersion: 'v1.4',
+    status: 'ACTIVE',
     qualityScore: 96, // Deprecated compatibility
     qualityBenchmark: 'Artificial Analysis: 96 | LMSYS Arena Elo: ~1290',
     qualitySource: 'artificialanalysis.ai / chat.lmsys.org',
@@ -315,6 +375,10 @@ export const MODEL_PRICING: Record<string, PricingRecord> = {
     baselineLatencyMs: 350,
     capabilityTier: 'Frontier Reasoning',
     capabilityDescription: 'Deep context reasoning, mathematical logic, and multi-modal analysis.',
+    sourceType: 'PROVIDER',
+    pricingSnapshot: 'March 2026',
+    registryVersion: 'v1.4',
+    status: 'ACTIVE',
     qualityScore: 94, // Deprecated compatibility
     qualityBenchmark: 'Artificial Analysis: 94 | LMSYS Arena Elo: ~1275',
     qualitySource: 'artificialanalysis.ai / chat.lmsys.org',
@@ -517,6 +581,42 @@ export type CapabilityTier =
   | 'Context-Grounded Frontier'
   | 'Quality Not Modeled';
 
+export interface ModelCalculationDetail {
+  nodeId: string;
+  modelName: string;
+  modelId: string;
+  trafficShare: number;
+  routedRequests: number;
+  inputTokens: number;
+  outputTokens: number;
+  inputPricePer1M: number;
+  outputPricePer1M: number;
+  inputCost: number;
+  outputCost: number;
+  totalCost: number;
+}
+
+export interface CalculationTrace {
+  totalRequests: number;
+  cacheHitRate: number;
+  cachedRequests: number;
+  uncachedRequests: number;
+  avgInputTokens: number;
+  avgOutputTokens: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  modelInputCost: number;
+  modelOutputCost: number;
+  totalModelCost: number;
+  cacheCost: number;
+  ingressCost: number;
+  routerCost: number;
+  vectorDbCost: number;
+  totalCost: number;
+  costPerRequest: number;
+  models: ModelCalculationDetail[];
+}
+
 export interface SimulationResult {
   monthlyCost: number;
   costPerRequest: number;
@@ -533,6 +633,7 @@ export interface SimulationResult {
   validation: ArchitectureValidation;
   warnings: { type: string; message: string; severity: 'info' | 'warning' | 'critical' }[];
   assumptions: { category: string; detail: string }[];
+  calculationTrace?: CalculationTrace;
 }
 
 export interface CalibratedEconomics {
@@ -785,6 +886,26 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
       validation,
       warnings: validation.errors.map(err => ({ type: 'validation', message: err, severity: 'critical' as const })),
       assumptions,
+      calculationTrace: {
+        totalRequests: requestsPerMonth,
+        cacheHitRate,
+        cachedRequests: 0,
+        uncachedRequests: 0,
+        avgInputTokens,
+        avgOutputTokens,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        modelInputCost: 0,
+        modelOutputCost: 0,
+        totalModelCost: 0,
+        cacheCost: 0,
+        ingressCost: 0,
+        routerCost: 0,
+        vectorDbCost: 0,
+        totalCost: 0,
+        costPerRequest: 0,
+        models: [],
+      },
     };
   }
 
@@ -884,6 +1005,9 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
   const modelNodes = reachableNodes.filter(n => isModel(n.type));
 
   let totalModelCost = 0;
+  let modelInputCostTotal = 0;
+  let modelOutputCostTotal = 0;
+  const modelCalculationDetails: ModelCalculationDetail[] = [];
   let weightedModelLatency = 0;
   const warnings: { type: string; message: string; severity: 'info' | 'warning' | 'critical' }[] = [];
 
@@ -897,8 +1021,25 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
     const outputCost = (uncachedRequests * avgOutputTokens / 1_000_000) * pricing.outputPricePer1M;
     const nodeCost = inputCost + outputCost;
 
+    modelInputCostTotal += inputCost;
+    modelOutputCostTotal += outputCost;
     totalModelCost += nodeCost;
     weightedModelLatency = pricing.baselineLatencyMs;
+
+    modelCalculationDetails.push({
+      nodeId: node.id,
+      modelName: node.label || pricing.product,
+      modelId,
+      trafficShare: 1.0,
+      routedRequests: Math.round(uncachedRequests),
+      inputTokens: Math.round(uncachedRequests * avgInputTokens),
+      outputTokens: Math.round(uncachedRequests * avgOutputTokens),
+      inputPricePer1M: pricing.inputPricePer1M,
+      outputPricePer1M: pricing.outputPricePer1M,
+      inputCost: Math.round(inputCost * 100) / 100,
+      outputCost: Math.round(outputCost * 100) / 100,
+      totalCost: Math.round(nodeCost * 100) / 100,
+    });
 
     nodeMetrics.set(node.id, {
       nodeId: node.id,
@@ -938,9 +1079,26 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
       const outputCost = (nodeRequests * avgOutputTokens / 1_000_000) * pricing.outputPricePer1M;
       const nodeCost = inputCost + outputCost;
 
+      modelInputCostTotal += inputCost;
+      modelOutputCostTotal += outputCost;
       totalModelCost += nodeCost;
       const latencyShare = shareSum > 0 ? (alloc.share / shareSum) : (1 / modelNodes.length);
       weightedModelLatency += pricing.baselineLatencyMs * latencyShare;
+
+      modelCalculationDetails.push({
+        nodeId: node.id,
+        modelName: node.label || pricing.product,
+        modelId,
+        trafficShare: effectiveShare,
+        routedRequests: Math.round(nodeRequests),
+        inputTokens: Math.round(nodeRequests * avgInputTokens),
+        outputTokens: Math.round(nodeRequests * avgOutputTokens),
+        inputPricePer1M: pricing.inputPricePer1M,
+        outputPricePer1M: pricing.outputPricePer1M,
+        inputCost: Math.round(inputCost * 100) / 100,
+        outputCost: Math.round(outputCost * 100) / 100,
+        totalCost: Math.round(nodeCost * 100) / 100,
+      });
 
       nodeMetrics.set(node.id, {
         nodeId: node.id,
@@ -965,9 +1123,12 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
   const totalCost = Math.round((totalModelCost + cacheCost + vectorDbCost + ingressCost + routerCost) * 100) / 100;
   const costPerRequest = requestsPerMonth > 0 ? totalCost / requestsPerMonth : 0;
 
-  // P95 Latency Model:
-  // Cache hits take: Ingress + Cache Lookup (~17ms)
-  // Cache misses take: Ingress + Cache Lookup + Router + Vector DB + Model Inference
+  // MODELED TAIL LATENCY (labeled as p95Latency for interface compatibility):
+  // This is a weighted-average latency estimate across the request path.
+  // It is NOT a statistically-derived P95 from a latency distribution.
+  // Cache hits: Ingress + Cache Lookup
+  // Cache misses: Ingress + Cache Lookup + Router + Vector DB + Model Inference
+  // Result: cache-hit-rate weighted combination of both paths.
   const cacheHitLatency = ingressLatency + cacheLookupLatency;
   const cacheMissLatency = ingressLatency + cacheLookupLatency + routerLatency + vectorLookupLatency + weightedModelLatency;
   const p95Latency = Math.round(effectiveCacheRate * cacheHitLatency + (1 - effectiveCacheRate) * cacheMissLatency);
@@ -1053,11 +1214,15 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
     });
   }
 
+  // Latency percentile methodology note:
+  // p50/p90/p99 are deterministic multipliers applied to the modeled tail estimate.
+  // They are NOT derived from a statistical latency distribution.
+  // All values should be read as model-derived approximations, not observed production percentiles.
   const latencies: LatencyBreakdown = {
-    p50: Math.round(p95Latency * 0.72),
-    p90: Math.round(p95Latency * 0.92),
-    p95: p95Latency,
-    p99: Math.round(p95Latency * 1.35 + queueingMs),
+    p50: Math.round(p95Latency * 0.72),  // deterministic multiplier — not observed P50
+    p90: Math.round(p95Latency * 0.92),  // deterministic multiplier — not observed P90
+    p95: p95Latency,                      // weighted-average path estimate — not observed P95
+    p99: Math.round(p95Latency * 1.35 + queueingMs), // deterministic multiplier — not observed P99
     ttftMs,
     generationMs,
     queueingMs,
@@ -1065,7 +1230,7 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
     cachePathMs: cacheHitLatency,
     criticalPathMs: p95Latency,
     criticalPathSegments,
-    latencyDisclaimer: 'Estimated P95 is a model-derived metric based on configured latency and saturation assumptions, not a live production measurement.',
+    latencyDisclaimer: 'Modeled tail latency is a weighted-average path estimate across cache-hit and cache-miss request paths. P50/P90/P95/P99 labels use deterministic multipliers — they are not derived from a production latency distribution.',
   };
 
   // Compute node cost percentages & find bottleneck
@@ -1248,6 +1413,27 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
     });
   }
 
+  const calculationTrace: CalculationTrace = {
+    totalRequests: requestsPerMonth,
+    cacheHitRate: effectiveCacheRate,
+    cachedRequests: Math.round(requestsPerMonth * effectiveCacheRate),
+    uncachedRequests: Math.round(uncachedRequests),
+    avgInputTokens,
+    avgOutputTokens,
+    totalInputTokens: Math.round(uncachedRequests * avgInputTokens),
+    totalOutputTokens: Math.round(uncachedRequests * avgOutputTokens),
+    modelInputCost: Math.round(modelInputCostTotal * 100) / 100,
+    modelOutputCost: Math.round(modelOutputCostTotal * 100) / 100,
+    totalModelCost: Math.round(totalModelCost * 100) / 100,
+    cacheCost: Math.round(cacheCost * 100) / 100,
+    ingressCost: Math.round(ingressCost * 100) / 100,
+    routerCost: Math.round(routerCost * 100) / 100,
+    vectorDbCost: Math.round(vectorDbCost * 100) / 100,
+    totalCost,
+    costPerRequest,
+    models: modelCalculationDetails,
+  };
+
   return {
     monthlyCost: totalCost,
     costPerRequest,
@@ -1264,6 +1450,7 @@ export function simulate(workload: Workload, architecture: Architecture): Simula
     validation,
     warnings,
     assumptions,
+    calculationTrace,
   };
 }
 
@@ -1475,6 +1662,190 @@ export function explainEconomicsDelta(
   return 'Simulation updated with current workload parameters.';
 }
 
+export function buildCalculationTrace(
+  workload: Workload,
+  architecture: Architecture,
+  sim?: SimulationResult
+): CalculationTrace {
+  if (sim?.calculationTrace) {
+    return sim.calculationTrace;
+  }
+  const result = sim || simulate(workload, architecture);
+  return result.calculationTrace || {
+    totalRequests: workload.requestsPerMonth,
+    cacheHitRate: workload.cacheHitRate,
+    cachedRequests: 0,
+    uncachedRequests: workload.requestsPerMonth,
+    avgInputTokens: workload.avgInputTokens,
+    avgOutputTokens: workload.avgOutputTokens,
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    modelInputCost: 0,
+    modelOutputCost: 0,
+    totalModelCost: 0,
+    cacheCost: 0,
+    ingressCost: 0,
+    routerCost: 0,
+    vectorDbCost: 0,
+    totalCost: result.monthlyCost,
+    costPerRequest: result.costPerRequest,
+    models: [],
+  };
+}
+
+export interface CausalDeltaDetails {
+  baselineCost: number;
+  currentCost: number;
+  costDelta: number;
+  baselineLatency: number;
+  currentLatency: number;
+  latencyDelta: number;
+  parameterChanges: {
+    label: string;
+    baseline: string;
+    current: string;
+    delta?: string;
+  }[];
+  primaryCause: string;
+  summary: string;
+}
+
+export function computeCausalDeltaDetails(
+  prevWorkload: Workload | null,
+  prevArch: Architecture | null,
+  prevSim: SimulationResult | null,
+  currentWorkload: Workload,
+  currentArch: Architecture,
+  currentSim: SimulationResult
+): CausalDeltaDetails {
+  if (!prevSim || !prevArch || !prevWorkload) {
+    return {
+      baselineCost: currentSim.monthlyCost,
+      currentCost: currentSim.monthlyCost,
+      costDelta: 0,
+      baselineLatency: currentSim.p95Latency,
+      currentLatency: currentSim.p95Latency,
+      latencyDelta: 0,
+      parameterChanges: [],
+      primaryCause: 'Baseline architecture loaded.',
+      summary: 'Baseline architecture simulation loaded.',
+    };
+  }
+
+  const costDelta = currentSim.monthlyCost - prevSim.monthlyCost;
+  const latencyDelta = currentSim.p95Latency - prevSim.p95Latency;
+  const changes: { label: string; baseline: string; current: string; delta?: string }[] = [];
+
+  if (currentWorkload.cacheHitRate !== prevWorkload.cacheHitRate) {
+    const diffPct = Math.round((currentWorkload.cacheHitRate - prevWorkload.cacheHitRate) * 100);
+    changes.push({
+      label: 'CACHE HIT RATE',
+      baseline: `${Math.round(prevWorkload.cacheHitRate * 100)}%`,
+      current: `${Math.round(currentWorkload.cacheHitRate * 100)}%`,
+      delta: `${diffPct > 0 ? '+' : ''}${diffPct}%`,
+    });
+  }
+
+  if (currentWorkload.requestsPerMonth !== prevWorkload.requestsPerMonth) {
+    const diff = currentWorkload.requestsPerMonth - prevWorkload.requestsPerMonth;
+    changes.push({
+      label: 'MONTHLY REQUESTS',
+      baseline: formatNumber(prevWorkload.requestsPerMonth),
+      current: formatNumber(currentWorkload.requestsPerMonth),
+      delta: `${diff > 0 ? '+' : ''}${formatNumber(diff)}`,
+    });
+  }
+
+  if (currentWorkload.avgInputTokens !== prevWorkload.avgInputTokens) {
+    const diff = currentWorkload.avgInputTokens - prevWorkload.avgInputTokens;
+    changes.push({
+      label: 'INPUT TOKENS',
+      baseline: `${formatNumber(prevWorkload.avgInputTokens)}`,
+      current: `${formatNumber(currentWorkload.avgInputTokens)}`,
+      delta: `${diff > 0 ? '+' : ''}${formatNumber(diff)}`,
+    });
+  }
+
+  if (currentWorkload.avgOutputTokens !== prevWorkload.avgOutputTokens) {
+    const diff = currentWorkload.avgOutputTokens - prevWorkload.avgOutputTokens;
+    changes.push({
+      label: 'OUTPUT TOKENS',
+      baseline: `${formatNumber(prevWorkload.avgOutputTokens)}`,
+      current: `${formatNumber(currentWorkload.avgOutputTokens)}`,
+      delta: `${diff > 0 ? '+' : ''}${formatNumber(diff)}`,
+    });
+  }
+
+  // Model node differences
+  const prevModels = prevArch.nodes.filter(n => n.type === 'model' || n.type === 'fast-model' || n.type === 'frontier-model');
+  const currModels = currentArch.nodes.filter(n => n.type === 'model' || n.type === 'fast-model' || n.type === 'frontier-model');
+  const prevModelKeys = prevModels.map(m => m.modelId || m.type).sort().join(',');
+  const currModelKeys = currModels.map(m => m.modelId || m.type).sort().join(',');
+  if (prevModelKeys !== currModelKeys) {
+    changes.push({
+      label: 'MODEL INFERENCE TIER',
+      baseline: prevModels.map(m => m.label).join(' + ') || 'None',
+      current: currModels.map(m => m.label).join(' + ') || 'None',
+    });
+  }
+
+  // Topology node differences
+  const hadCacheBefore = prevArch.nodes.some(n => n.type === 'cache');
+  const hasCacheNow = currentArch.nodes.some(n => n.type === 'cache');
+  if (!hadCacheBefore && hasCacheNow) {
+    changes.push({ label: 'TOPOLOGY', baseline: 'Direct path', current: '+ Semantic Cache' });
+  } else if (hadCacheBefore && !hasCacheNow) {
+    changes.push({ label: 'TOPOLOGY', baseline: 'With Cache', current: 'Removed Cache' });
+  }
+
+  const hadVectorDbBefore = prevArch.nodes.some(n => n.type === 'vectordb');
+  const hasVectorDbNow = currentArch.nodes.some(n => n.type === 'vectordb');
+  if (!hadVectorDbBefore && hasVectorDbNow) {
+    changes.push({ label: 'TOPOLOGY', baseline: 'Without Retrieval', current: '+ Vector Database' });
+  } else if (hadVectorDbBefore && !hasVectorDbNow) {
+    changes.push({ label: 'TOPOLOGY', baseline: 'With Vector DB', current: 'Removed Vector DB' });
+  }
+
+  let primaryCause = 'Parameters updated within modeled operating range.';
+  if (Math.abs(costDelta) >= 5) {
+    if (costDelta < 0) {
+      if (!hadCacheBefore && hasCacheNow) {
+        primaryCause = `Adding Semantic Cache intercepted ${Math.round(currentWorkload.cacheHitRate * 100)}% of requests, eliminating downstream model inference.`;
+      } else if (currentWorkload.cacheHitRate > prevWorkload.cacheHitRate) {
+        primaryCause = `Cache hit rate increased by ${Math.round((currentWorkload.cacheHitRate - prevWorkload.cacheHitRate) * 100)}%, intercepting more requests before model inference.`;
+      } else if (currentWorkload.requestsPerMonth < prevWorkload.requestsPerMonth) {
+        primaryCause = `Monthly request volume decreased by ${formatNumber(prevWorkload.requestsPerMonth - currentWorkload.requestsPerMonth)}, lowering total token consumption.`;
+      } else {
+        primaryCause = `Architecture optimization reduced modeled expenditure by ${formatCurrency(Math.abs(costDelta))}/mo.`;
+      }
+    } else {
+      if (currentWorkload.requestsPerMonth > prevWorkload.requestsPerMonth) {
+        primaryCause = `Request volume grew by ${formatNumber(currentWorkload.requestsPerMonth - prevWorkload.requestsPerMonth)} reqs/mo, scaling total model token generation.`;
+      } else if (!hadVectorDbBefore && hasVectorDbNow) {
+        primaryCause = `Added Vector Database cluster base and retrieval query fees (+${formatCurrency(costDelta)}/mo).`;
+      } else if (hadCacheBefore && !hasCacheNow) {
+        primaryCause = `Removed Semantic Cache: all ingress traffic now reaches model inference directly (+${formatCurrency(costDelta)}/mo).`;
+      } else {
+        primaryCause = `Component topology additions and workload changes increased modeled spend by ${formatCurrency(costDelta)}/mo.`;
+      }
+    }
+  }
+
+  const summary = explainEconomicsDelta(prevWorkload, prevArch, prevSim, currentWorkload, currentArch, currentSim);
+
+  return {
+    baselineCost: prevSim.monthlyCost,
+    currentCost: currentSim.monthlyCost,
+    costDelta,
+    baselineLatency: prevSim.p95Latency,
+    currentLatency: currentSim.p95Latency,
+    latencyDelta,
+    parameterChanges: changes,
+    primaryCause,
+    summary,
+  };
+}
+
 // ── 8. Three Canonical Templates + Default Architecture ──
 
 export interface ArchTemplate {
@@ -1494,7 +1865,7 @@ export const TEMPLATES: ArchTemplate[] = [
   {
     id: 'direct-llm',
     name: 'Direct LLM',
-    category: 'Generative AI',
+    category: '01 / BASELINE',
     description: 'Direct baseline pipeline routing all ingress requests to a Frontier Reasoning Model.',
     whenToUse: 'Simple prototyping, internal reasoning tasks, or low-volume applications where pipeline complexity is unwarranted.',
     whatItOptimizes: 'Development simplicity and raw reasoning fidelity without intermediary hops.',
@@ -1524,7 +1895,7 @@ export const TEMPLATES: ArchTemplate[] = [
   {
     id: 'rag-pipeline',
     name: 'RAG Pipeline',
-    category: 'Data',
+    category: '02 / RETRIEVAL',
     description: 'Retrieval-augmented generation pipeline with vector search and frontier LLM synthesis.',
     whenToUse: 'Dynamic knowledge bases, enterprise document search, and private factual domain synthesis.',
     whatItOptimizes: 'Factual grounding and context precision from proprietary external documents.',
@@ -1556,7 +1927,7 @@ export const TEMPLATES: ArchTemplate[] = [
   {
     id: 'router-cache',
     name: 'Router + Cache',
-    category: 'Infrastructure',
+    category: '03 / ROUTING',
     description: 'Production architecture combining semantic caching with dynamic complexity routing between fast and frontier models.',
     whenToUse: 'High-volume production workloads with repeated queries and varying intent complexity.',
     whatItOptimizes: 'Cost per request and P95 latency via semantic cache hits and intelligent utility model tiering.',

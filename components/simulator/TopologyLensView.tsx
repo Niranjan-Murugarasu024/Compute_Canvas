@@ -58,7 +58,7 @@ export default function TopologyLensView() {
           </div>
 
           <div className="status-kpi">
-            <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>TOTAL MONTHLY SPEND</span>
+            <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>TOTAL MODELED MONTHLY COST</span>
             <span className="text-mono status-kpi__val" style={{ color: 'var(--color-cost)' }}>
               {formatCurrency(multiRegionSim.effectiveMonthlyCost)}
             </span>

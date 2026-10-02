@@ -112,13 +112,13 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     impactPercent: 65,
     flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'COMPLEXITY ROUTER', 'FAST / FRONTIER'],
     activeFlowIdx: 2,
-    diagnosticTitle: 'MISROUTING QUALITY RISK',
+    diagnosticTitle: 'ROUTING QUALITY TRADEOFF',
     diagnosticDesc: 'Complex requests routed to the fast tier can increase quality failures, user frustration, and re-prompts.',
     diagnosticMitigation: 'Confidence thresholds with automatic escalation rules to frontier models.',
     tradeoffLabel: 'ROUTING TRAFFIC DISTRIBUTION',
     tradeoffRows: [
-      { condition: '80% Fast Model / 20% Frontier', cost: '$1,189 / mo', latency: '142 ms', impact: 'Optimal cost-performance frontier' },
-      { condition: '100% Frontier Model (Direct Path)', cost: '$6,453 / mo', latency: '394 ms', impact: 'Highest quality, maximum spend' },
+      { condition: '80% Fast Model / 20% Frontier', cost: '$1,189 / mo', latency: '142 ms', impact: '82% modeled cost reduction vs direct' },
+      { condition: '100% Frontier Model (Direct Path)', cost: '$6,453 / mo', latency: '394 ms', impact: 'Frontier precision, maximum modeled spend' },
     ],
   },
   {
@@ -172,13 +172,13 @@ const SYSTEM_NODES: SubsystemDetail[] = [
     impactPercent: 84,
     flowSteps: ['API INGRESS', 'SEMANTIC CACHE', 'COMPLEXITY ROUTER', 'FRONTIER MODEL'],
     activeFlowIdx: 3,
-    diagnosticTitle: 'EXPONENTIAL SPEND & LATENCY BOTTLENECK',
-    diagnosticDesc: 'Forms up to 84% of total system spend and the primary latency center during recursive or unconstrained agent execution loops.',
+    diagnosticTitle: 'EXPONENTIAL COST & LATENCY BOTTLENECK',
+    diagnosticDesc: 'Forms up to 84% of total modeled system cost and the primary latency center during recursive or unconstrained agent execution loops.',
     diagnosticMitigation: 'Aggressive upstream semantic caching, max_tokens output clamps, and offloading 70%+ volume via Complexity Router.',
     tradeoffLabel: 'SYSTEM BOTTLENECK MITIGATION',
     tradeoffRows: [
       { condition: 'Un-architected (Direct Frontier LLM)', cost: '$6,097 / mo', latency: '382 ms', impact: 'Primary cost and latency bottleneck' },
-      { condition: 'Architected (Ingress + Cache + Router)', cost: '$1,308 / mo', latency: '105 ms', impact: '78% spend savings, 3.6× faster P95' },
+      { condition: 'Architected (Ingress + Cache + Router)', cost: '$1,308 / mo', latency: '105 ms', impact: '78% modeled cost reduction, 3.6× faster modeled tail' },
     ],
   },
 ];
@@ -272,7 +272,7 @@ export function EveryRequestSection() {
               </div>
 
               <div className="console-metric-cell">
-                <span className="metric-cell-tag text-mono">SYSTEM SHARE</span>
+                <span className="metric-cell-tag text-mono">COST SHARE</span>
                 <span className="metric-cell-val text-mono">{activeSubsystem.impactPercent}%</span>
               </div>
             </div>
@@ -321,7 +321,7 @@ export function EveryRequestSection() {
                 onClick={() => setShowTradeoffs(!showTradeoffs)}
                 aria-expanded={showTradeoffs}
               >
-                <span>{showTradeoffs ? '− HIDE EMPIRICAL TRADE-OFF DELTAS' : '+ VIEW EMPIRICAL TRADE-OFF DELTAS'}</span>
+                <span>{showTradeoffs ? '− HIDE MODELED TRADE-OFF DELTAS' : '+ VIEW MODELED TRADE-OFF DELTAS'}</span>
                 <span className="tradeoff-toggle-count">({activeSubsystem.tradeoffRows.length} OPERATING STATES)</span>
               </button>
 
@@ -1039,7 +1039,7 @@ export function CostDecompositionSection() {
           <div className="cost-instrument__bars">
             <div className="cost-summary-header">
               <div>
-                <span className="text-technical-label">ESTIMATED MONTHLY SPEND</span>
+                <span className="text-technical-label">MODELED MONTHLY COST</span>
                 <p className="text-mono cost-total-number" style={{ color: '#FFFFFF' }}>
                   {formatCurrency(result.costBreakdown.total)}
                 </p>
@@ -1097,7 +1097,7 @@ export function CostDecompositionSection() {
             <div className="cost-causality-callout">
               <span className="text-mono" style={{ color: 'var(--color-text-muted)', marginRight: '6px' }}>[INFO]</span>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-                Model inference accounts for {Math.round((result.costBreakdown.model / result.costBreakdown.total) * 100)}% of spend. Caching eliminates {formatCurrency(monthlySavings)}/mo before requests reach frontier inference.
+                Model inference accounts for {Math.round((result.costBreakdown.model / result.costBreakdown.total) * 100)}% of modeled cost. Caching offsets an estimated {formatCurrency(monthlySavings)}/mo before requests reach frontier inference.
               </span>
             </div>
           </div>
@@ -1526,7 +1526,7 @@ export function ScaleSection() {
             {/* Metrics Sidebar */}
             <div className="scale-living__metrics">
               <div className="scale-metric-box">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. MONTHLY SPEND</span>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED MONTHLY COST</span>
                 <span className="text-mono scale-metric-val" style={{ color: '#FFFFFF' }}>
                   {formatCurrency(sim.monthlyCost)}
                 </span>
@@ -1536,7 +1536,7 @@ export function ScaleSection() {
               </div>
 
               <div className="scale-metric-box">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED P95</span>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED TAIL LATENCY</span>
                 <span className="text-mono scale-metric-val" style={{ color: '#D4D4D8' }}>
                   {formatLatency(sim.p95Latency)}
                 </span>
@@ -1746,7 +1746,7 @@ const OBJECTIVES: ObjectiveItem[] = [
   },
   {
     id: 'quality',
-    label: 'MAXIMUM QUALITY',
+    label: 'FRONTIER PRECISION',
     icon: '◉',
     description: 'Claude 3.5 Sonnet frontier reasoning with multi-step vector retrieval and reranking.',
     model: 'claude-3.5-sonnet',
@@ -1899,13 +1899,13 @@ export function WhatWouldYouBuildSection() {
             {/* Metrics Strip */}
             <div className="obj-metrics-grid">
               <div className="obj-metric-item">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>EST. MONTHLY SPEND</span>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED MONTHLY COST</span>
                 <span className="text-mono obj-metric-num" style={{ color: '#FFFFFF' }}>
                   {formatCurrency(result.monthlyCost)}
                 </span>
               </div>
               <div className="obj-metric-item">
-                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED P95</span>
+                <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED TAIL LATENCY</span>
                 <span className="text-mono obj-metric-num" style={{ color: '#D4D4D8' }}>
                   {formatLatency(result.p95Latency)}
                 </span>
@@ -2203,13 +2203,13 @@ export function TemplatesPreviewSection() {
                 </p>
                 <div className="template-card__metrics">
                   <div>
-                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>EST. SPEND</span>
+                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>MODELED COST</span>
                     <span className="text-mono" style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
                       {formatCurrency(result.monthlyCost, true)}/MO
                     </span>
                   </div>
                   <div>
-                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>P95 LATENCY</span>
+                    <span className="text-mono" style={{ fontSize: '0.625rem', color: '#71717A', letterSpacing: '0.08em' }}>MODELED TAIL</span>
                     <span className="text-mono" style={{ color: '#D4D4D8', fontSize: '0.875rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
                       {formatLatency(result.p95Latency)}
                     </span>

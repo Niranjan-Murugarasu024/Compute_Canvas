@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "start": "next start",
     "lint": "eslint",
     "test": "npx tsx scripts/test-v1-scenarios.ts && npx tsx scripts/test-workbench-interaction.ts && npx tsx scripts/test-regression-suite.ts && npx tsx scripts/test-waitlist-api.ts",
     "test:scenarios": "npx tsx scripts/test-v1-scenarios.ts",
@@ -14,6 +15,7 @@
   },
   "dependencies": {
     "framer-motion": "^13.4.3",
+    "geist": "^1.7.2",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",

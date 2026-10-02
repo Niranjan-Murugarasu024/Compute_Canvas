@@ -196,7 +196,7 @@ export default function ReviewPresentationModal({ onClose }: { onClose: () => vo
                   <div className="cost-total-banner">
                     <div>
                       <span className="text-label">
-                        {calibrated.isCalibrated ? 'CALIBRATED MONTHLY SPEND' : 'ESTIMATED MONTHLY COMPUTE RUN-RATE'}
+                        {calibrated.isCalibrated ? 'CALIBRATED MODELED MONTHLY COST' : 'MODELED MONTHLY COST'}
                       </span>
                       <p className="text-mono cost-banner-val">
                         {calibrated.isCalibrated

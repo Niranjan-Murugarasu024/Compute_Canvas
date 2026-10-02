@@ -102,7 +102,7 @@ export default function OptimizerWorkspace({ onClose }: { onClose?: () => void }
         {/* Metric Comparison Strip */}
         <div className="metrics-compare-strip">
           <div className="metric-compare-col">
-            <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>EST. MONTHLY SPEND</span>
+            <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>MODELED MONTHLY COST</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
               <span className="text-mono" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-cost)' }}>
                 {formatCurrency(activeCandidate.simulation.monthlyCost)}

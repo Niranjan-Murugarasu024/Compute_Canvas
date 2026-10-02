@@ -12,6 +12,9 @@ import {
 
 export interface V1ShareState {
   version: 1;
+  schemaVersion?: string;
+  registryVersion?: string;
+  pricingSnapshot?: string;
   architecture: Architecture;
   workload: Workload;
   calibration?: BillCalibration;
@@ -56,6 +59,9 @@ export function encodeArchitectureState(state: {
 }): string {
   const sharePayload: V1ShareState = {
     version: 1,
+    schemaVersion: '1.0',
+    registryVersion: 'v1.4',
+    pricingSnapshot: '2026-03',
     architecture: {
       id: state.architecture.id || 'custom',
       name: state.architecture.name || 'Custom Architecture',
@@ -164,6 +170,9 @@ export function decodeArchitectureState(encoded: string): {
       success: true,
       data: {
         version: 1,
+        schemaVersion: parsed.schemaVersion || '1.0',
+        registryVersion: parsed.registryVersion || 'v1.4',
+        pricingSnapshot: parsed.pricingSnapshot || '2026-03',
         architecture: sanitizedArch,
         workload: sanitizedWorkload,
         calibration: parsed.calibration ? {

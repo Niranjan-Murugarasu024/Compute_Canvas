@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV_LINKS = [
-  { href: '/simulator', label: 'WORKBENCH', description: 'Architecture & economics workbench' },
-  { href: '/templates', label: 'BLUEPRINTS', description: 'Canonical architecture patterns' },
-  { href: '/assumptions', label: 'MODELS', description: 'Model assumption registry' },
-  { href: '/docs', label: 'DOCS', description: 'Methodology & documentation' },
+  { href: '/simulator', label: 'Workbench', description: 'Architecture & economics workbench' },
+  { href: '/templates', label: 'Blueprints', description: 'Canonical architecture patterns' },
+  { href: '/assumptions', label: 'Models', description: 'Model assumption registry' },
+  { href: '/docs', label: 'Docs', description: 'Methodology & documentation' },
 ] as const;
 
 export default function Navigation() {

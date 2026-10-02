@@ -49,7 +49,7 @@ export default function AssumptionsClient() {
             <section className="assumption-card">
               <div className="card-top-row">
                 <span className="badge badge--primary text-mono">SOURCE OF TRUTH</span>
-                <span className="card-date text-technical-label">16 VERIFIED ASSUMPTIONS</span>
+                <span className="card-date text-technical-label">16 MODEL ASSUMPTIONS</span>
               </div>
               <h2 className="card-title">Model Assumption Registry</h2>
               <p className="card-desc">
@@ -64,8 +64,9 @@ export default function AssumptionsClient() {
                       <th>Parameter Name</th>
                       <th>Default Value</th>
                       <th>Unit</th>
+                      <th>Source Type</th>
                       <th>Primary Source</th>
-                      <th>Effective Date</th>
+                      <th>Snapshot</th>
                       <th>Technical Context / Notes</th>
                     </tr>
                   </thead>
@@ -77,6 +78,11 @@ export default function AssumptionsClient() {
                         <td style={{ color: '#FAFAFA' }}>{a.value}</td>
                         <td style={{ color: '#71717A' }}>{a.unit}</td>
                         <td>
+                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                            {a.sourceType || 'INTERNAL REFERENCE'}
+                          </span>
+                        </td>
+                        <td>
                           {a.sourceUrl ? (
                             <a href={a.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#FAFAFA', textDecoration: 'underline' }}>
                               {a.source}
@@ -85,7 +91,7 @@ export default function AssumptionsClient() {
                             <span style={{ color: '#A1A1AA' }}>{a.source || 'Internal reference assumption'}</span>
                           )}
                         </td>
-                        <td style={{ color: '#71717A' }}>{a.effectiveDate || 'March 2026'}</td>
+                        <td style={{ color: '#71717A' }}>{a.snapshot || a.effectiveDate || '2026-03'}</td>
                         <td style={{ color: '#A1A1AA', fontSize: '0.6875rem' }}>{a.notes}</td>
                       </tr>
                     ))}
@@ -97,36 +103,48 @@ export default function AssumptionsClient() {
             {/* Section 1: Fast Reasoning Models */}
             <section className="assumption-card">
               <div className="card-top-row">
-                <span className="badge badge--neutral text-mono">TIER 1</span>
-                <span className="card-date text-technical-label">UPDATED: MARCH 2026</span>
+                <span className="badge badge--neutral text-mono">TIER 1 FAST</span>
+                <span className="card-date text-technical-label">PRICING SNAPSHOT: MARCH 2026</span>
               </div>
               <h2 className="card-title">Fast Reasoning Models (Low Latency / High Volume)</h2>
               <p className="card-desc">
                 Ideal for classification, routing, extraction, and sub-150ms interactive UI workflows.
               </p>
 
+              <div className="text-mono" style={{ fontSize: '0.6875rem', color: '#A1A1AA', background: '#141417', padding: '6px 10px', borderRadius: '3px', border: '1px solid var(--color-border)', margin: '10px 0 14px' }}>
+                PRICING SNAPSHOT: <strong style={{ color: '#FFFFFF' }}>MARCH 2026</strong> · NOT LIVE PROVIDER PRICING · REGISTRY: <strong style={{ color: '#FFFFFF' }}>v1.4</strong> · STATUS: <span style={{ color: 'var(--color-success, #4ADE80)' }}>ACTIVE</span>
+              </div>
+
               <div className="table-responsive">
                 <table className="assumptions-data-table text-mono">
                   <thead>
                     <tr>
-                      <th>Model</th>
+                      <th>Model ID</th>
+                      <th>Display Name</th>
                       <th>Provider</th>
                       <th>Input / 1M</th>
                       <th>Output / 1M</th>
-                      <th>Baseline P95</th>
-                      <th>Capability Tier</th>
+                      <th>Baseline Latency</th>
+                      <th>Source Type</th>
+                      <th>Status</th>
                       <th>Benchmark Citation</th>
                     </tr>
                   </thead>
                   <tbody>
                     {fastModels.map(([id, m]) => (
                       <tr key={id}>
+                        <td style={{ color: '#71717A', fontWeight: 600 }}>{id}</td>
                         <td style={{ fontWeight: 500, color: 'var(--color-text)' }}>{m.product}</td>
                         <td>{m.provider}</td>
                         <td style={{ color: '#FFFFFF' }}>${m.inputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#FFFFFF' }}>${m.outputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#D4D4D8' }}>{m.baselineLatencyMs} ms</td>
-                        <td style={{ color: '#FAFAFA', fontWeight: 600 }}>{m.capabilityTier}</td>
+                        <td>
+                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.5625rem' }}>
+                            {m.sourceType || 'PROVIDER'}
+                          </span>
+                        </td>
+                        <td style={{ color: 'var(--color-success, #4ADE80)' }}>{m.status || 'ACTIVE'}</td>
                         <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
                           {m.qualityBenchmark}
                         </td>
@@ -140,36 +158,48 @@ export default function AssumptionsClient() {
             {/* Section 2: Frontier Reasoning Models */}
             <section className="assumption-card">
               <div className="card-top-row">
-                <span className="badge badge--neutral text-mono">TIER 2</span>
-                <span className="card-date text-technical-label">UPDATED: MARCH 2026</span>
+                <span className="badge badge--neutral text-mono">TIER 2 FRONTIER</span>
+                <span className="card-date text-technical-label">PRICING SNAPSHOT: MARCH 2026</span>
               </div>
               <h2 className="card-title">Frontier Reasoning Models (Complex Synthesis &amp; Code)</h2>
               <p className="card-desc">
                 Highest reasoning depth, multi-step problem solving, complex agent workflows, and critical synthesis.
               </p>
 
+              <div className="text-mono" style={{ fontSize: '0.6875rem', color: '#A1A1AA', background: '#141417', padding: '6px 10px', borderRadius: '3px', border: '1px solid var(--color-border)', margin: '10px 0 14px' }}>
+                PRICING SNAPSHOT: <strong style={{ color: '#FFFFFF' }}>MARCH 2026</strong> · NOT LIVE PROVIDER PRICING · REGISTRY: <strong style={{ color: '#FFFFFF' }}>v1.4</strong> · STATUS: <span style={{ color: 'var(--color-success, #4ADE80)' }}>ACTIVE</span>
+              </div>
+
               <div className="table-responsive">
                 <table className="assumptions-data-table text-mono">
                   <thead>
                     <tr>
-                      <th>Model</th>
+                      <th>Model ID</th>
+                      <th>Display Name</th>
                       <th>Provider</th>
                       <th>Input / 1M</th>
                       <th>Output / 1M</th>
-                      <th>Baseline P95</th>
-                      <th>Capability Tier</th>
+                      <th>Baseline Latency</th>
+                      <th>Source Type</th>
+                      <th>Status</th>
                       <th>Benchmark Citation</th>
                     </tr>
                   </thead>
                   <tbody>
                     {frontierModels.map(([id, m]) => (
                       <tr key={id}>
+                        <td style={{ color: '#71717A', fontWeight: 600 }}>{id}</td>
                         <td style={{ fontWeight: 600, color: 'var(--color-text)' }}>{m.product}</td>
                         <td>{m.provider}</td>
                         <td style={{ color: '#FAFAFA' }}>${m.inputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#FAFAFA' }}>${m.outputPricePer1M.toFixed(2)}</td>
                         <td style={{ color: '#FAFAFA' }}>{m.baselineLatencyMs} ms</td>
-                        <td style={{ color: '#FAFAFA', fontWeight: 600 }}>{m.capabilityTier}</td>
+                        <td>
+                          <span className="badge badge--neutral text-mono" style={{ fontSize: '0.5625rem' }}>
+                            {m.sourceType || 'PROVIDER'}
+                          </span>
+                        </td>
+                        <td style={{ color: 'var(--color-success, #4ADE80)' }}>{m.status || 'ACTIVE'}</td>
                         <td className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
                           {m.qualityBenchmark}
                         </td>
@@ -328,7 +358,7 @@ export default function AssumptionsClient() {
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Ready to simulate your architecture?</h3>
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
-                  Design custom pipelines and see your cost and latency change in real-time.
+                  Design custom topologies and inspect deterministic cost and latency updates across every component.
                 </p>
               </div>
               <Link href="/simulator" className="btn btn-primary" style={{ flexShrink: 0 }}>

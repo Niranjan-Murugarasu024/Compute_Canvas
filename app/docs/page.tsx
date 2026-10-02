@@ -12,12 +12,12 @@ export default function DocsPage() {
         <div className="container">
           {/* Header */}
           <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
-            <span className="section-label">[SYSTEM_DOCUMENTATION]</span>
+            <span className="section-label">05 / METHODOLOGY</span>
             <h1 className="section-heading">
               Architecture &amp; Simulation Guide
             </h1>
             <p className="section-lead">
-              Learn how ComputeCanvas calculates token economics, composite P95 latencies, bottleneck thresholds, and calibration factors without stochastic hallucinations.
+              Learn how ComputeCanvas calculates token economics, composite path latencies, bottleneck thresholds, and calibration factors through deterministic simulation methodology.
             </p>
           </div>
 
@@ -26,7 +26,7 @@ export default function DocsPage() {
             <section className="docs-section">
               <h2 className="docs-title">1. What is ComputeCanvas?</h2>
               <p>
-                ComputeCanvas is an interactive AI architecture and economics decision simulator. It allows engineers, architects, founders, and FinOps practitioners to map generative AI systems visually and immediately understand their trade-offs across <strong>monthly spend</strong>, <strong>cost per request</strong>, and <strong>estimated P95 latency</strong> before writing code or provisioning cloud infrastructure.
+                ComputeCanvas is an interactive AI architecture and economics decision simulator. It allows engineers, architects, founders, and FinOps practitioners to map generative AI systems visually and immediately understand their trade-offs across <strong>modeled monthly cost</strong>, <strong>cost per request</strong>, and <strong>modeled tail latency</strong> before writing code or provisioning cloud infrastructure.
               </p>
             </section>
 

@@ -276,12 +276,12 @@ export default function HeroInteractive() {
               />
             </div>
 
-            {/* Live telemetry readouts */}
+            {/* Modeled telemetry readouts */}
             <div className="instrument__readouts">
               {/* Primary: Monthly cost */}
               <div className="readout-primary">
                 <div className="readout-primary__left">
-                  <span className="text-mono readout-label">MONTHLY COST</span>
+                  <span className="text-mono readout-label">MODELED MONTHLY COST</span>
                   <span className="text-mono" style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>USD / MONTH</span>
                 </div>
                 <span className="readout-primary__value text-mono">{formatCurrency(sim.monthlyCost)}</span>
@@ -294,11 +294,11 @@ export default function HeroInteractive() {
                   <span className="text-mono readout-cell-value">${(sim.costPerRequest * 1000).toFixed(3)}</span>
                 </div>
                 <div className="readout-cell">
-                  <span className="text-mono readout-label">MODELED P95 ⓘ</span>
+                  <span className="text-mono readout-label">MODELED TAIL LATENCY</span>
                   <span className="text-mono readout-cell-value">{formatLatency(sim.p95Latency)}</span>
                 </div>
                 <div className="readout-cell">
-                  <span className="text-mono readout-label">CACHE SAVINGS</span>
+                  <span className="text-mono readout-label">MODELED SAVINGS VS BASELINE</span>
                   <span className="text-mono readout-cell-value">−{formatCurrency(estimatedSavings)}/MO</span>
                 </div>
               </div>
@@ -306,10 +306,10 @@ export default function HeroInteractive() {
               {/* Baseline context */}
               <div className="readout-footnote text-mono">
                 <span>
-                  BASELINE (0% CACHE): {formatCurrency(noCacheSim.monthlyCost)}/MO → WITH {Math.round(cacheHitRate * 100)}% CACHE: {formatCurrency(sim.monthlyCost)}/MO · SAVINGS: {formatCurrency(estimatedSavings)}/MO
+                  BASELINE (0% CACHE): {formatCurrency(noCacheSim.monthlyCost)}/MO → WITH {Math.round(cacheHitRate * 100)}% CACHE: {formatCurrency(sim.monthlyCost)}/MO · MODELED DIFFERENCE: −{formatCurrency(estimatedSavings)}/MO
                 </span>
                 <span>
-                  PRIMARY BOTTLENECK: {sim.bottleneck.componentName.toUpperCase()} — {sim.bottleneck.impactPercentage}% OF MODELED SPEND
+                  PRIMARY BOTTLENECK: {sim.bottleneck.componentName.toUpperCase()} — {sim.bottleneck.impactPercentage}% COST SHARE
                 </span>
               </div>
             </div>

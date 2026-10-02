@@ -14,11 +14,15 @@ import {
   formatNumber,
   calculateCalibratedEconomics,
   explainEconomicsDelta,
+  computeCausalDeltaDetails,
+  buildCalculationTrace,
   type ArchNode,
   type Architecture,
   type Workload,
   type BillCalibration,
   type SimulationResult,
+  type CalculationTrace,
+  type CausalDeltaDetails,
   MODEL_PRICING,
   INFRA_PRICING,
   TEMPLATES,
@@ -222,6 +226,7 @@ export default function SimulatorClient({
   const [isAssumptionsOpen, setIsAssumptionsOpen] = useState(false);
   const [isCostModalOpen, setIsCostModalOpen] = useState(false);
   const [isLatencyModalOpen, setIsLatencyModalOpen] = useState(false);
+  const [isCalculationModalOpen, setIsCalculationModalOpen] = useState(false);
   const [shareModalUrl, setShareModalUrl] = useState<string | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(initialTemplateId || 'router-cache');
   const [calibrationError, setCalibrationError] = useState<string | null>(null);
@@ -248,6 +253,18 @@ export default function SimulatorClient({
   // 3. Dynamic causal explanation ("Why did this change?")
   const deltaExplanation = useMemo(() => {
     return explainEconomicsDelta(
+      previousState?.workload || null,
+      previousState?.arch || null,
+      previousState?.sim || null,
+      workload,
+      architecture,
+      result
+    );
+  }, [previousState, workload, architecture, result]);
+
+  // 4. Structured causal delta with parameter differences and primary cause
+  const causalDelta: CausalDeltaDetails = useMemo(() => {
+    return computeCausalDeltaDetails(
       previousState?.workload || null,
       previousState?.arch || null,
       previousState?.sim || null,
@@ -462,20 +479,20 @@ export default function SimulatorClient({
         </div>
       )}
 
-      {/* Section 21 & 22: Engineering Telemetry Strip */}
-      <section className="simulator-telemetry-strip" aria-label="Live Simulation Telemetry">
+      {/* Engineering Telemetry Rail (Sections 13, 15, 27) */}
+      <section className="simulator-telemetry-strip" aria-label="Modeled Simulation Telemetry">
         <div
           className="telemetry-cell telemetry-cell--clickable"
-          onClick={() => setIsCostModalOpen(true)}
+          onClick={() => setIsCalculationModalOpen(true)}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsCostModalOpen(true)}
-          title="Click to view detailed itemized cost breakdown"
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsCalculationModalOpen(true)}
+          title="Click to inspect step-by-step deterministic calculation trace"
         >
           <div className="telemetry-cell-header">
-            <span className="telemetry-cell-label">MONTHLY SPEND</span>
+            <span className="telemetry-cell-label">MODELED MONTHLY COST</span>
             <span className={`telemetry-mode-tag text-mono ${calibrated.isCalibrated ? 'mode-calibrated' : 'mode-live'}`}>
-              {calibrated.isCalibrated ? 'CALIBRATED ESTIMATE' : 'LIVE SIMULATION'}
+              {calibrated.isCalibrated ? 'CALIBRATED ESTIMATE' : 'MODELED'}
             </span>
           </div>
           <div className="telemetry-cell-value text-mono">
@@ -484,8 +501,8 @@ export default function SimulatorClient({
           </div>
           <div className="telemetry-cell-subtext text-mono">
             {calibrated.isCalibrated
-              ? `Factor: ${calibrated.calibrationFactor.toFixed(2)}× (Baseline: ${formatCurrency(calibrated.simulatedBaselineCost)})`
-              : `$${result.costPerRequest.toFixed(4)} / request · Breakdown →`}
+              ? `Factor: ${calibrated.calibrationFactor.toFixed(2)}× (Raw: ${formatCurrency(calibrated.simulatedBaselineCost)})`
+              : `$${result.costPerRequest.toFixed(4)} / req · Show Calculation →`}
           </div>
         </div>
 
@@ -495,43 +512,43 @@ export default function SimulatorClient({
           role="button"
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsLatencyModalOpen(true)}
-          title="Click to inspect modeled tail latency critical path"
+          title="Click to inspect modeled tail latency critical path and deterministic percentile estimates"
         >
           <div className="telemetry-cell-header">
             <span className="telemetry-cell-label">MODELED TAIL LATENCY</span>
-            <span className="telemetry-mode-tag text-mono mode-live">ESTIMATED P95</span>
+            <span className="telemetry-mode-tag text-mono mode-live">MODELED TAIL</span>
           </div>
           <div className="telemetry-cell-value text-mono" style={{ color: 'var(--color-performance, #FAFAFA)' }}>
             {formatLatency(result.p95Latency)}
           </div>
           <div className="telemetry-cell-subtext text-mono">
-            Critical path: {formatLatency(result.latencies.criticalPathMs || result.p95Latency)} · Critical path →
+            est. P50 {formatLatency(result.latencies.p50)} · est. P90 {formatLatency(result.latencies.p90)} · est. P99 {formatLatency(result.latencies.p99)}
           </div>
         </div>
 
         <div className="telemetry-cell">
           <div className="telemetry-cell-header">
-            <span className="telemetry-cell-label">BOTTLENECK IDENTIFIER</span>
+            <span className="telemetry-cell-label">BOTTLENECK</span>
             <span className="telemetry-mode-tag text-mono mode-warning">DOMINANT FACTOR</span>
           </div>
           <div className="telemetry-cell-value text-mono">
             {result.bottleneck.componentName.toUpperCase()}
           </div>
           <div className="telemetry-cell-subtext text-mono">
-            {result.bottleneck.impactPercentage}% of total spend
+            {result.bottleneck.impactPercentage}% COST SHARE
           </div>
         </div>
 
         <div className="telemetry-cell">
           <div className="telemetry-cell-header">
-            <span className="telemetry-cell-label">CAPABILITY TIER</span>
-            <span className="telemetry-mode-tag text-mono mode-neutral">QUALITATIVE</span>
+            <span className="telemetry-cell-label">CAPABILITY / TRADEOFF</span>
+            <span className="telemetry-mode-tag text-mono mode-neutral">BALANCED</span>
           </div>
           <div className="telemetry-cell-value text-mono" style={{ fontSize: '1.05rem', letterSpacing: '0.01em' }}>
-            {result.capabilityTier || 'Quality Not Modeled'}
+            {result.capabilityTier || 'BALANCED'}
           </div>
           <div className="telemetry-cell-subtext text-mono" style={{ fontSize: '0.6875rem' }}>
-            {result.capabilityDescription || 'Architectural tier classification'}
+            {result.capabilityDescription || 'Architectural tradeoff tier'}
           </div>
         </div>
       </section>
@@ -632,7 +649,7 @@ export default function SimulatorClient({
               <div className="sidebar-card-header">
                 <h2 className="sidebar-section-title">WORKLOAD CONTROLS</h2>
                 <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
-                  Real-time
+                  Recalculates on change
                 </span>
               </div>
 
@@ -819,7 +836,7 @@ export default function SimulatorClient({
               ) : (
                 <div className="calibration-idle-box">
                   <p className="calibration-idle-desc">
-                    Anchor the simulator to your real provider invoice to ground architectural changes in empirical reality.
+                  Anchor the workbench to a historical provider invoice to calibrate modeled costs against observed spending.
                   </p>
                   <button
                     onClick={() => setIsCalibrating(true)}
@@ -841,72 +858,166 @@ export default function SimulatorClient({
           </div>
         </main>
 
-        {/* ── RIGHT COLUMN: Live Economics Panel ── */}
+        {/* ── RIGHT COLUMN: Modeled Economics & Inspection Panel ── */}
         <aside className="simulator-sidebar-right">
-          {/* Subsystem Inspection Card (Section 42) */}
-          {selectedNode && selectedNodeTrafficInfo && (
-            <div className="sidebar-card" style={{ borderColor: '#FFFFFF', background: '#0D0D10' }}>
-              <div className="sidebar-card-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h2 className="sidebar-section-title">SUBSYSTEM INSPECTION</h2>
-                  <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
-                    {selectedNode.type.toUpperCase()}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setSelectedNode(null)}
-                  className="btn btn-ghost btn-sm text-mono"
-                  style={{ fontSize: '0.6875rem', padding: '2px 6px', height: 'auto', minHeight: 'unset' }}
-                  title="Close inspection"
-                >
-                  ✕
-                </button>
-              </div>
+          {/* Subsystem Inspection Card (Sections 20, 28) */}
+          {(selectedNode && selectedNodeTrafficInfo) ? (() => {
+            const modelRecord = selectedNodeTrafficInfo.isModel
+              ? ((selectedNode.modelId && MODEL_PRICING[selectedNode.modelId])
+                  ? MODEL_PRICING[selectedNode.modelId]
+                  : (selectedNode.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']))
+              : null;
 
-              <div style={{ padding: '4px 0 2px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#FFFFFF' }}>{selectedNode.label}</span>
-                  {selectedNodeMetrics?.isBottleneck && (
-                    <span className="badge badge--warning text-mono" style={{ fontSize: '0.625rem' }}>
-                      BOTTLENECK
+            return (
+              <div className="sidebar-card" style={{ borderColor: '#FFFFFF', background: '#0D0D10' }}>
+                <div className="sidebar-card-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h2 className="sidebar-section-title">PROPERTIES INSPECTOR</h2>
+                    <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>
+                      {selectedNode.type.toUpperCase()}
                     </span>
-                  )}
+                  </div>
+                  <button
+                    onClick={() => setSelectedNode(null)}
+                    className="btn btn-ghost btn-sm text-mono"
+                    style={{ fontSize: '0.6875rem', padding: '2px 6px', height: 'auto', minHeight: 'unset' }}
+                    title="Close inspection"
+                  >
+                    ✕
+                  </button>
                 </div>
 
-                <div className="inspection-matrix-grid text-mono">
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">TRAFFIC</span>
-                    <span className="insp-val">{selectedNodeTrafficInfo.shareText}</span>
+                <div style={{ padding: '4px 0 2px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#FFFFFF' }}>{selectedNode.label}</span>
+                    {selectedNodeMetrics?.isBottleneck && (
+                      <span className="badge badge--warning text-mono" style={{ fontSize: '0.625rem' }}>
+                        BOTTLENECK
+                      </span>
+                    )}
                   </div>
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">MONTHLY REQS</span>
-                    <span className="insp-val">{formatNumber(selectedNodeTrafficInfo.routedReqs)}</span>
-                  </div>
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">INPUT TOKENS</span>
-                    <span className="insp-val">{selectedNodeTrafficInfo.isModel ? formatNumber(workload.avgInputTokens) : '—'}</span>
-                  </div>
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">OUTPUT TOKENS</span>
-                    <span className="insp-val">{selectedNodeTrafficInfo.isModel ? formatNumber(workload.avgOutputTokens) : '—'}</span>
-                  </div>
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">MONTHLY COST</span>
-                    <span className="insp-val" style={{ color: '#FFFFFF' }}>{formatCurrency(selectedNodeMetrics?.monthlyCost ?? 0)}</span>
-                  </div>
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">SHARE OF SPEND</span>
-                    <span className="insp-val">{selectedNodeMetrics?.costPercentage ?? 0}%</span>
-                  </div>
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">P95 LATENCY</span>
-                    <span className="insp-val" style={{ color: 'var(--color-performance)' }}>{formatLatency(selectedNodeMetrics?.latencyMs ?? 0)}</span>
-                  </div>
-                  <div className="inspection-matrix-item">
-                    <span className="insp-lbl">CAPACITY</span>
-                    <span className="insp-val">{result.capacityUtilization}%</span>
+
+                  <div className="inspection-matrix-grid text-mono">
+                    <div className="inspection-matrix-item">
+                      <span className="insp-lbl">TYPE</span>
+                      <span className="insp-val">{selectedNodeTrafficInfo.isModel ? 'MODEL' : 'INFRASTRUCTURE'}</span>
+                    </div>
+
+                    {modelRecord ? (
+                      <>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">MODEL</span>
+                          <span className="insp-val" style={{ color: '#FFFFFF' }}>{modelRecord.product}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">PROVIDER</span>
+                          <span className="insp-val">{modelRecord.provider}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">TRAFFIC SHARE</span>
+                          <span className="insp-val">{selectedNodeTrafficInfo.shareText}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">MONTHLY REQS</span>
+                          <span className="insp-val">{formatNumber(selectedNodeTrafficInfo.routedReqs)}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">INPUT TOKENS</span>
+                          <span className="insp-val">{formatNumber(workload.avgInputTokens)} / req</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">OUTPUT TOKENS</span>
+                          <span className="insp-val">{formatNumber(workload.avgOutputTokens)} / req</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">INPUT RATE</span>
+                          <span className="insp-val">${modelRecord.inputPricePer1M.toFixed(2)} / 1M</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">OUTPUT RATE</span>
+                          <span className="insp-val">${modelRecord.outputPricePer1M.toFixed(2)} / 1M</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">MODELED COST</span>
+                          <span className="insp-val" style={{ color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(selectedNodeMetrics?.monthlyCost ?? 0)} / mo</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">COST SHARE</span>
+                          <span className="insp-val">{selectedNodeMetrics?.costPercentage ?? 0}%</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">LATENCY BASE</span>
+                          <span className="insp-val" style={{ color: 'var(--color-performance)' }}>{modelRecord.baselineLatencyMs} ms</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">SOURCE TYPE</span>
+                          <span className="insp-val">{modelRecord.sourceType || 'PROVIDER'}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">REGISTRY VER</span>
+                          <span className="insp-val">{modelRecord.registryVersion || 'v1.4'}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">SNAPSHOT</span>
+                          <span className="insp-val">{modelRecord.pricingSnapshot || 'March 2026'}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">STATUS</span>
+                          <span className="insp-val" style={{ color: 'var(--color-success, #4ADE80)' }}>{modelRecord.status || 'ACTIVE'}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">NODE ID</span>
+                          <span className="insp-val">{selectedNode.id}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">TRAFFIC</span>
+                          <span className="insp-val">{selectedNodeTrafficInfo.shareText}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">MONTHLY REQS</span>
+                          <span className="insp-val">{formatNumber(selectedNodeTrafficInfo.routedReqs)}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">MODELED COST</span>
+                          <span className="insp-val" style={{ color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(selectedNodeMetrics?.monthlyCost ?? 0)} / mo</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">COST SHARE</span>
+                          <span className="insp-val">{selectedNodeMetrics?.costPercentage ?? 0}%</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">LATENCY</span>
+                          <span className="insp-val" style={{ color: 'var(--color-performance)' }}>{formatLatency(selectedNodeMetrics?.latencyMs ?? 0)}</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">SOURCE TYPE</span>
+                          <span className="insp-val">INTERNAL REFERENCE</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">SNAPSHOT</span>
+                          <span className="insp-val">2026-03</span>
+                        </div>
+                        <div className="inspection-matrix-item">
+                          <span className="insp-lbl">STATUS</span>
+                          <span className="insp-val" style={{ color: 'var(--color-success, #4ADE80)' }}>ACTIVE</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
+              </div>
+            );
+          })() : (
+            <div className="sidebar-card">
+              <div className="sidebar-card-header">
+                <h2 className="sidebar-section-title">PROPERTIES INSPECTOR</h2>
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem' }}>CANVAS IDLE</span>
+              </div>
+              <div style={{ padding: '8px 2px', color: 'var(--color-text-muted)', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                Select any node on the canvas to inspect its configuration parameters, model registry provenance, token rates, and capacity allocation.
               </div>
             </div>
           )}
@@ -914,7 +1025,7 @@ export default function SimulatorClient({
           {/* Card 1: Key Economics Metrics */}
           <div className="sidebar-card">
             <div className="sidebar-card-header">
-              <h2 className="sidebar-section-title">LIVE ECONOMICS</h2>
+              <h2 className="sidebar-section-title">MODELED ECONOMICS</h2>
               {calibrated.isCalibrated ? (
                 <span className="badge badge--success text-mono" style={{ fontSize: '0.6875rem' }}>
                   CALIBRATED ESTIMATE
@@ -930,7 +1041,7 @@ export default function SimulatorClient({
               {/* Monthly Spend */}
               <div className="metric-box">
                 <span className="metric-label">
-                  {calibrated.isCalibrated ? 'CALIBRATED MONTHLY SPEND' : 'ESTIMATED MONTHLY SPEND'}
+                  {calibrated.isCalibrated ? 'CALIBRATED MODELED COST' : 'MODELED MONTHLY COST'}
                 </span>
                 <div className="metric-huge-value text-mono">
                   {calibrated.isCalibrated
@@ -940,15 +1051,15 @@ export default function SimulatorClient({
                 </div>
                 {calibrated.isCalibrated && (
                   <span className="metric-sub-detail text-mono">
-                    Baseline: {formatCurrency(calibrated.simulatedBaselineCost)}/mo ({calibrated.variancePercentage > 0 ? `+${calibrated.variancePercentage}%` : `${calibrated.variancePercentage}%`})
+                    Raw Baseline: {formatCurrency(calibrated.simulatedBaselineCost)}/mo ({calibrated.variancePercentage > 0 ? `+${calibrated.variancePercentage}%` : `${calibrated.variancePercentage}%`})
                   </span>
                 )}
               </div>
 
-              {/* Cost Per Request & P95 Latency */}
+              {/* Cost Per Request & Tail Latency */}
               <div className="metric-dual-row">
                 <div className="metric-sub-box">
-                  <span className="metric-label">COST / REQUEST</span>
+                  <span className="metric-label">MODELED COST / REQUEST</span>
                   <div className="metric-val text-mono">
                     {calibrated.isCalibrated
                       ? `$${calibrated.calibratedCostPerRequest.toFixed(4)}`
@@ -956,20 +1067,30 @@ export default function SimulatorClient({
                   </div>
                 </div>
 
-                {/* Estimated P95 Latency */}
+                {/* Modeled Tail Latency */}
                 <div className="metric-sub-box">
-                  <span className="metric-label">ESTIMATED P95 LATENCY</span>
+                  <span className="metric-label">MODELED TAIL LATENCY</span>
                   <div className="metric-val text-mono" style={{ color: 'var(--color-performance)' }}>
                     {formatLatency(result.p95Latency)}
                   </div>
                 </div>
               </div>
 
-              {/* Latency Percentiles Strip (Section 8) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 8px', background: 'var(--color-bg-surface)', borderRadius: 'var(--radius-xs)', fontSize: '0.6875rem', border: '1px solid var(--color-border)' }} className="text-mono">
-                <span style={{ color: 'var(--color-text-muted)' }}>P50: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p50)}</strong></span>
-                <span style={{ color: 'var(--color-text-muted)' }}>P90: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p90)}</strong></span>
-                <span style={{ color: 'var(--color-text-muted)' }}>P99: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p99)}</strong></span>
+              {/* Show Calculation Trace Action */}
+              <button
+                type="button"
+                onClick={() => setIsCalculationModalOpen(true)}
+                className="btn btn-secondary btn-sm text-mono"
+                style={{ width: '100%', marginTop: '4px', fontSize: '0.6875rem', justifyContent: 'center' }}
+              >
+                SHOW CALCULATION TRACE →
+              </button>
+
+              {/* Latency Approximations — model-derived multipliers, not production percentiles */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 8px', background: 'var(--color-bg-surface)', borderRadius: 'var(--radius-xs)', fontSize: '0.6875rem', border: '1px solid var(--color-border)' }} className="text-mono" title="These values are deterministic multipliers of the modeled tail estimate, not observed production percentiles.">
+                <span style={{ color: 'var(--color-text-muted)' }}>est. P50: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p50)}</strong></span>
+                <span style={{ color: 'var(--color-text-muted)' }}>est. P90: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p90)}</strong></span>
+                <span style={{ color: 'var(--color-text-muted)' }}>est. P99: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p99)}</strong></span>
               </div>
             </div>
           </div>
@@ -1082,7 +1203,7 @@ export default function SimulatorClient({
             </div>
           </div>
 
-          {/* Card 4: "Why did this change?" Causal Delta Box */}
+          {/* Card 4: "Why did this change?" Causal Delta Box (Sections 29, 30) */}
           <div className="sidebar-card">
             <div className="sidebar-card-header">
               <h2 className="sidebar-section-title">WHY DID THIS CHANGE?</h2>
@@ -1091,11 +1212,58 @@ export default function SimulatorClient({
               </span>
             </div>
 
-            <div className="why-changed-box">
-              <p className="why-changed-text">
-                {deltaExplanation}
-              </p>
-            </div>
+            {(causalDelta.parameterChanges.length > 0 || causalDelta.costDelta !== 0) ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* Parameter diffs */}
+                {causalDelta.parameterChanges.length > 0 && (
+                  <div className="causal-param-changes text-mono" style={{ background: '#141417', padding: '8px 10px', borderRadius: '3px', border: '1px solid var(--color-border)' }}>
+                    <div style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '6px' }}>
+                      CHANGED PARAMETERS
+                    </div>
+                    {causalDelta.parameterChanges.map((ch, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6875rem', marginBottom: '3px' }}>
+                        <span style={{ color: 'var(--color-text-muted)' }}>{ch.label}</span>
+                        <span style={{ color: '#FFFFFF', fontWeight: 600 }}>{ch.baseline} → {ch.current}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Economics diff grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', background: '#141417', padding: '8px', borderRadius: '3px', border: '1px solid var(--color-border)' }} className="text-mono">
+                  <div>
+                    <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>BASELINE</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{formatCurrency(causalDelta.baselineCost)}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>CURRENT</span>
+                    <span style={{ fontSize: '0.75rem', color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(causalDelta.currentCost)}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', display: 'block' }}>Δ COST</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: causalDelta.costDelta < 0 ? 'var(--color-success, #4ADE80)' : causalDelta.costDelta > 0 ? '#F87171' : 'var(--color-text-muted)' }}>
+                      {causalDelta.costDelta > 0 ? `+${formatCurrency(causalDelta.costDelta)}` : causalDelta.costDelta < 0 ? `−${formatCurrency(Math.abs(causalDelta.costDelta))}` : '$0'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Primary Cause */}
+                <div className="why-changed-box">
+                  <div style={{ fontSize: '0.5625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                    PRIMARY CAUSE
+                  </div>
+                  <p className="why-changed-text" style={{ fontSize: '0.75rem', lineHeight: 1.5, margin: 0 }}>
+                    {causalDelta.primaryCause || deltaExplanation}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="why-changed-box">
+                <p className="why-changed-text">
+                  {deltaExplanation}
+                </p>
+              </div>
+            )}
           </div>
         </aside>
       </div>
@@ -1182,13 +1350,13 @@ export default function SimulatorClient({
             <div className="dialog-content">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
                 <div>
-                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>TOTAL MONTHLY SPEND</span>
+                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>TOTAL MODELED MONTHLY COST</span>
                   <div className="text-mono" style={{ fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF' }}>
                     {formatCurrency(result.monthlyCost)} <span style={{ fontSize: '0.875rem', color: '#71717A' }}>/ mo</span>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>COST PER REQUEST</span>
+                  <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED COST / REQUEST</span>
                   <div className="text-mono" style={{ fontSize: '1.125rem', fontWeight: 600, color: '#A1A1AA' }}>
                     ${result.costPerRequest.toFixed(4)}
                   </div>
@@ -1201,8 +1369,8 @@ export default function SimulatorClient({
                     <tr>
                       <th>Subsystem Component</th>
                       <th>Type</th>
-                      <th style={{ textAlign: 'right' }}>Monthly Spend</th>
-                      <th style={{ textAlign: 'right' }}>Share</th>
+                      <th style={{ textAlign: 'right' }}>Modeled Cost</th>
+                      <th style={{ textAlign: 'right' }}>Cost Share</th>
                       <th>Unit Rate Description</th>
                     </tr>
                   </thead>
@@ -1317,6 +1485,211 @@ export default function SimulatorClient({
           </div>
         </div>
       )}
+
+      {/* Calculation Trace Modal (Sections 31, 32, 33) */}
+      {isCalculationModalOpen && (() => {
+        const trace = result.calculationTrace || buildCalculationTrace(workload, architecture, result);
+        return (
+          <div className="assumptions-modal-overlay" onClick={() => setIsCalculationModalOpen(false)}>
+            <div className="assumptions-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '740px' }}>
+              <div className="dialog-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="badge badge--primary text-mono">CALCULATION TRACE</span>
+                  <h3 className="dialog-title" style={{ margin: 0 }}>Deterministic Economic Trace</h3>
+                </div>
+                <button onClick={() => setIsCalculationModalOpen(false)} className="btn btn-ghost btn-sm" aria-label="Close dialog">✕</button>
+              </div>
+
+              <div className="dialog-content">
+                {/* Top Provenance & Snapshot Banner */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '3px', marginBottom: '16px' }} className="text-mono">
+                  <span style={{ fontSize: '0.6875rem', color: '#A1A1AA' }}>
+                    ENGINE: <strong style={{ color: '#FFFFFF' }}>v1.4</strong> · SNAPSHOT: <strong style={{ color: '#FFFFFF' }}>MARCH 2026</strong>
+                  </span>
+                  <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
+                    NOT LIVE PROVIDER PRICING · DETERMINISTIC
+                  </span>
+                </div>
+
+                {/* Primary Modeled Cost Header with Raw vs Calibrated Comparison */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
+                  <div>
+                    <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
+                      {calibrated.isCalibrated ? 'CALIBRATED MODELED COST' : 'TOTAL MODELED MONTHLY COST'}
+                    </span>
+                    <div className="text-mono" style={{ fontSize: '1.75rem', fontWeight: 700, color: '#FFFFFF' }}>
+                      {calibrated.isCalibrated ? formatCurrency(calibrated.calibratedMonthlyCost) : formatCurrency(trace.totalCost)}
+                      <span style={{ fontSize: '0.875rem', color: '#71717A' }}> / mo</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>MODELED COST / REQUEST</span>
+                    <div className="text-mono" style={{ fontSize: '1.125rem', fontWeight: 600, color: '#A1A1AA' }}>
+                      ${(calibrated.isCalibrated ? calibrated.calibratedCostPerRequest : trace.costPerRequest).toFixed(4)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Calibrated Transparency Stack (Section 33) */}
+                {calibrated.isCalibrated && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', padding: '10px', background: '#18181B', border: '1px solid var(--color-border)', borderRadius: '4px', marginBottom: '16px' }} className="text-mono">
+                    <div>
+                      <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', display: 'block' }}>RAW MODELED COST</span>
+                      <strong style={{ fontSize: '0.875rem', color: '#FAFAFA' }}>{formatCurrency(trace.totalCost)}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', display: 'block' }}>CALIBRATION FACTOR</span>
+                      <strong style={{ fontSize: '0.875rem', color: 'var(--color-success, #4ADE80)' }}>{calibrated.calibrationFactor.toFixed(2)}×</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', display: 'block' }}>HISTORICAL BILL</span>
+                      <strong style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>{formatCurrency(calibrated.actualHistoricalBill)}</strong>
+                    </div>
+                  </div>
+                )}
+
+                {/* Arithmetic Breakdown Trace (Section 31) */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div className="text-caption text-mono" style={{ color: '#A1A1AA', marginBottom: '8px', fontWeight: 600 }}>
+                    COMPUTATIONAL DERIVATION
+                  </div>
+                  <div className="assumptions-table-wrapper">
+                    <table className="assumptions-table text-mono" style={{ fontSize: '0.75rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Derivation Parameter</th>
+                          <th>Formula / Input</th>
+                          <th style={{ textAlign: 'right' }}>Calculated Value</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td style={{ color: '#FFFFFF', fontWeight: 500 }}>Total Ingress Requests</td>
+                          <td style={{ color: '#71717A' }}>workload.requestsPerMonth</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatNumber(trace.totalRequests)} / mo</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#FFFFFF', fontWeight: 500 }}>Semantic Cache Hit Rate</td>
+                          <td style={{ color: '#71717A' }}>workload.cacheHitRate</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{Math.round(trace.cacheHitRate * 100)}%</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#FFFFFF', fontWeight: 500 }}>Cache Miss Rate (Downstream Traffic)</td>
+                          <td style={{ color: '#71717A' }}>1.0 − cacheHitRate</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{Math.round((1 - trace.cacheHitRate) * 100)}%</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#FFFFFF', fontWeight: 500 }}>Model Inference Requests</td>
+                          <td style={{ color: '#71717A' }}>requests × (1 − cacheHitRate)</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatNumber(trace.uncachedRequests)} / mo</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#FFFFFF', fontWeight: 500 }}>Total Modeled Input Tokens</td>
+                          <td style={{ color: '#71717A' }}>modelRequests × avgInputTokens</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatNumber(trace.totalInputTokens)}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#FFFFFF', fontWeight: 500 }}>Total Modeled Output Tokens</td>
+                          <td style={{ color: '#71717A' }}>modelRequests × avgOutputTokens</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatNumber(trace.totalOutputTokens)}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#D4D4D8' }}>Model Input Cost</td>
+                          <td style={{ color: '#71717A' }}>∑ (inputTokens × inputPrice / 1M)</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(trace.modelInputCost)}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#D4D4D8' }}>Model Output Cost</td>
+                          <td style={{ color: '#71717A' }}>∑ (outputTokens × outputPrice / 1M)</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(trace.modelOutputCost)}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#FFFFFF', fontWeight: 600 }}>Total Model Inference Cost</td>
+                          <td style={{ color: '#71717A' }}>modelInputCost + modelOutputCost</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(trace.totalModelCost)}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#D4D4D8' }}>Semantic Cache Infrastructure</td>
+                          <td style={{ color: '#71717A' }}>cache memory base + lookups ($0.20/1M)</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(trace.cacheCost)}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#D4D4D8' }}>API Gateway Ingress</td>
+                          <td style={{ color: '#71717A' }}>requests × $0.60 / 1M</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(trace.ingressCost)}</td>
+                        </tr>
+                        {trace.routerCost > 0 && (
+                          <tr>
+                            <td style={{ color: '#D4D4D8' }}>Complexity Router Overhead</td>
+                            <td style={{ color: '#71717A' }}>router lookups × $0.15 / 1M</td>
+                            <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(trace.routerCost)}</td>
+                          </tr>
+                        )}
+                        {trace.vectorDbCost > 0 && (
+                          <tr>
+                            <td style={{ color: '#D4D4D8' }}>Vector Database Retrieval</td>
+                            <td style={{ color: '#71717A' }}>index hosting + queries</td>
+                            <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(trace.vectorDbCost)}</td>
+                          </tr>
+                        )}
+                        <tr style={{ borderTop: '2px solid var(--color-border-strong)' }}>
+                          <td style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.8125rem' }}>TOTAL MODELED MONTHLY COST</td>
+                          <td style={{ color: '#A1A1AA' }}>models + cache + ingress + router + vectorDb</td>
+                          <td style={{ textAlign: 'right', color: '#FFFFFF', fontWeight: 700, fontSize: '0.875rem' }}>{formatCurrency(trace.totalCost)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Per-Model Itemized Sub-Breakdown */}
+                {trace.models && trace.models.length > 0 && (
+                  <div style={{ marginTop: '16px' }}>
+                    <div className="text-caption text-mono" style={{ color: '#A1A1AA', marginBottom: '8px', fontWeight: 600 }}>
+                      MODEL TIER ITEMIZATION
+                    </div>
+                    <div className="assumptions-table-wrapper">
+                      <table className="assumptions-table text-mono" style={{ fontSize: '0.6875rem' }}>
+                        <thead>
+                          <tr>
+                            <th>Model Target</th>
+                            <th>Traffic Share</th>
+                            <th style={{ textAlign: 'right' }}>Routed Reqs</th>
+                            <th style={{ textAlign: 'right' }}>Input Cost</th>
+                            <th style={{ textAlign: 'right' }}>Output Cost</th>
+                            <th style={{ textAlign: 'right' }}>Monthly Subtotal</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {trace.models.map((m, idx) => (
+                            <tr key={idx}>
+                              <td style={{ fontWeight: 600, color: '#FFFFFF' }}>{m.modelName}</td>
+                              <td style={{ color: '#A1A1AA' }}>{Math.round(m.trafficShare * 100)}%</td>
+                              <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatNumber(m.routedRequests)}</td>
+                              <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatCurrency(m.inputCost)}</td>
+                              <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatCurrency(m.outputCost)}</td>
+                              <td style={{ textAlign: 'right', color: '#FFFFFF', fontWeight: 600 }}>{formatCurrency(m.totalCost)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.6875rem', color: '#A1A1AA', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#FFFFFF' }}>Deterministic Engine Methodology: </strong>
+                  Every metric is computed directly from active graph topology and workload variables without stochastic simulation or statistical regression. Pricing records represent list prices snapshot as of March 2026.
+                </div>
+              </div>
+
+              <div className="dialog-footer" style={{ justifyContent: 'flex-end' }}>
+                <button onClick={() => setIsCalculationModalOpen(false)} className="btn btn-secondary btn-sm">Close</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Assumptions Modal */}
       {isAssumptionsOpen && (
