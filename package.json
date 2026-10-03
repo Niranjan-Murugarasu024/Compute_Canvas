@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npx tsx scripts/test-v1-scenarios.ts && npx tsx scripts/test-workbench-interaction.ts && npx tsx scripts/test-regression-suite.ts && npx tsx scripts/test-waitlist-api.ts",
+    "test": "npx tsx scripts/test-engine-v4.ts && npx tsx scripts/test-v1-scenarios.ts && npx tsx scripts/test-workbench-interaction.ts && npx tsx scripts/test-regression-suite.ts && npx tsx scripts/test-waitlist-api.ts",
+    "test:engine": "npx tsx scripts/test-engine-v4.ts",
     "test:scenarios": "npx tsx scripts/test-v1-scenarios.ts",
     "test:workbench": "npx tsx scripts/test-workbench-interaction.ts",
     "test:regression": "npx tsx scripts/test-regression-suite.ts",
-    "test:waitlist": "npx tsx scripts/test-waitlist-api.ts"
+    "test:waitlist": "npx tsx scripts/test-waitlist-api.ts",
+    "test:all": "npx tsx scripts/test-engine-v4.ts && npx tsx scripts/test-v1-scenarios.ts && npx tsx scripts/test-workbench-interaction.ts && npx tsx scripts/test-regression-suite.ts && npx tsx scripts/test-cc32-workbench.ts && npx tsx scripts/test-mathematical-invariants.ts && npx tsx scripts/test-shared-state.ts && npx tsx scripts/test-cc33-readability.ts && npx tsx scripts/test-waitlist-api.ts"
   },
   "dependencies": {
     "framer-motion": "^13.4.3",
