@@ -55,11 +55,11 @@ export default function SignInPage() {
 
             <div className="signin-metrics-grid">
               <div className="signin-metric">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>ESTIMATED COST</span>
+                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>MODELED MONTHLY COST</span>
                 <span className="text-mono" style={{ color: 'var(--color-cost)', fontSize: '1.25rem', fontWeight: 600 }}>$18,420<span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>/mo</span></span>
               </div>
               <div className="signin-metric">
-                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>P95 LATENCY</span>
+                <span className="text-caption" style={{ color: 'var(--color-text-muted)' }}>MODELED TAIL LATENCY</span>
                 <span className="text-mono" style={{ color: 'var(--color-performance)', fontSize: '1.25rem', fontWeight: 600 }}>640ms</span>
               </div>
               <div className="signin-metric">

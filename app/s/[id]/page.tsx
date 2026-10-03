@@ -35,7 +35,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           arch: decoded.data.architecture,
           workload: decoded.data.workload,
           name: decoded.data.architecture.name || 'Shared Architecture',
-          description: 'Custom architecture snapshot shared from ComputeCanvas Simulator.',
+          description: 'Custom architecture snapshot shared from ComputeCanvas Workbench.',
         };
       }
     }
@@ -107,7 +107,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           {/* Primary Metrics Strip */}
           <div className="share-metrics-strip">
             <div className="share-metric-card">
-              <span className="metric-tag">ESTIMATED MONTHLY COST</span>
+              <span className="metric-tag">MODELED MONTHLY COST</span>
               <span className="metric-number text-mono" style={{ color: 'var(--color-cost)' }}>
                 {formatCurrency(sim.monthlyCost)}
               </span>
@@ -117,7 +117,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
             </div>
 
             <div className="share-metric-card">
-              <span className="metric-tag">P95 LATENCY</span>
+              <span className="metric-tag">MODELED TAIL LATENCY</span>
               <span className="metric-number text-mono" style={{ color: 'var(--color-performance)' }}>
                 {formatLatency(sim.p95Latency)}
               </span>
@@ -228,7 +228,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Want to simulate this architecture under your traffic?</h3>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
-                Fork this system into the ComputeCanvas simulator to change models, adjust cache hit rates, or add load-balancers.
+                Fork this system into the ComputeCanvas workbench to change models, adjust cache hit rates, or add load-balancers.
               </p>
             </div>
             <button onClick={handleFork} className="btn btn-primary" style={{ flexShrink: 0 }}>
@@ -277,7 +277,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           gap: var(--space-1);
         }
         .metric-tag {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-family: var(--font-mono);
           color: var(--color-text-muted);
           letter-spacing: 0.04em;
@@ -328,7 +328,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           min-width: 140px;
         }
         .share-node-type {
-          font-size: 0.625rem;
+          font-size: 0.75rem;
           font-family: var(--font-mono);
           color: var(--color-text-secondary);
           font-weight: 500;
@@ -336,13 +336,13 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         }
         .share-node-label {
           font-family: var(--font-ui);
-          font-size: 0.875rem;
-          font-weight: 500;
+          font-size: 0.90625rem;
+          font-weight: 600;
           margin: 2px 0;
           white-space: nowrap;
         }
         .share-node-provider {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-family: var(--font-mono);
           color: var(--color-text-muted);
         }

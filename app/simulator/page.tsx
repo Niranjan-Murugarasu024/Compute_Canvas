@@ -6,8 +6,8 @@ import { TEMPLATES } from '@/lib/simulation/engine';
 import { decodeArchitectureState } from '@/lib/simulation/sharing';
 
 export const metadata: Metadata = {
-  title: 'Simulator — ComputeCanvas',
-  description: 'Deterministic AI architecture and economics simulator workbench. Model cost, latency percentiles, and bottleneck topology in real-time.',
+  title: 'Workbench — ComputeCanvas',
+  description: 'Deterministic AI architecture and economics engineering workbench. Model cost, latency percentiles, and bottleneck topology in real-time.',
 };
 
 interface PageProps {

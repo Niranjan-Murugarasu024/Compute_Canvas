@@ -196,9 +196,9 @@ export default function ExploreClient() {
           border: 1px solid var(--color-border-subtle);
           border-radius: var(--radius-sm);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.75rem;
           font-weight: 500;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.02em;
           color: var(--color-text-muted);
         }
         .explore-card__metrics {

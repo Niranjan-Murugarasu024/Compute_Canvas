@@ -211,7 +211,7 @@ export function computeBaselineDeltas(
 
 /**
  * Deterministic explanation of why a selected component matters within the architecture.
- * Strict logic — zero hallucinated telemetry or synthetic LLM generation.
+ * Strict logic — deterministic calculation directly from active graph topology.
  */
 export function getComponentCausalRole(
   node: ArchNode,
@@ -278,7 +278,7 @@ export function getComponentCausalRole(
       return {
         role: 'High-intelligence reasoning and multi-step agent execution',
         whyItMatters: isBottleneck
-          ? `Primary architectural cost driver (${costPct}% of total monthly spend). Consumes the largest share of token expenditure and governs P95 critical-path latency.`
+          ? `Primary architectural cost driver (${costPct}% of total modeled monthly cost). Consumes the largest share of token expenditure and governs P95 critical-path latency.`
           : `Executes high-complexity synthesis. Billed at premium token rates ($2.50/1M input, $10.00/1M output); traffic allocation directly controls budget scaling.`,
         sourceType: 'PROVIDER',
         registryVersion: 'v1.4',

@@ -15,7 +15,20 @@ export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isWorkbench = pathname === '/simulator';
+  const isWorkbench = pathname === '/simulator' || pathname === '/workbench' || pathname?.startsWith('/simulator') || pathname?.startsWith('/workbench');
+
+  const isLinkActive = (href: string) => {
+    if (href === '/simulator') {
+      return pathname === '/simulator' || pathname === '/workbench' || pathname?.startsWith('/simulator') || pathname?.startsWith('/workbench');
+    }
+    if (href === '/templates') {
+      return pathname === '/templates' || pathname === '/blueprints';
+    }
+    if (href === '/assumptions') {
+      return pathname === '/assumptions' || pathname === '/models';
+    }
+    return pathname === href;
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -54,8 +67,8 @@ export default function Navigation() {
               <Link
                 key={href}
                 href={href}
-                className={`cc-nav__link ${pathname === href || (href === '/simulator' && pathname?.startsWith('/simulator')) ? 'cc-nav__link--active' : ''}`}
-                aria-current={pathname === href ? 'page' : undefined}
+                className={`cc-nav__link ${isLinkActive(href) ? 'cc-nav__link--active' : ''}`}
+                aria-current={isLinkActive(href) ? 'page' : undefined}
               >
                 {label}
               </Link>
@@ -98,10 +111,10 @@ export default function Navigation() {
         aria-hidden={!mobileMenuOpen}
       >
         <div className="cc-mobile-drawer__header">
-          <span className="text-mono" style={{ fontSize: '0.6875rem', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
+          <span className="text-mono" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
             NAVIGATION
           </span>
-          <span className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+          <span className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
             ENGINE v1
           </span>
         </div>
@@ -110,7 +123,7 @@ export default function Navigation() {
           <Link
             key={href}
             href={href}
-            className={`cc-mobile-link ${pathname === href ? 'cc-mobile-link--active' : ''}`}
+            className={`cc-mobile-link ${isLinkActive(href) ? 'cc-mobile-link--active' : ''}`}
             onClick={() => setMobileMenuOpen(false)}
           >
             <span className="cc-mobile-link__label">{label}</span>

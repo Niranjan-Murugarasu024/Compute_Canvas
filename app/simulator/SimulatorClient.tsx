@@ -1285,7 +1285,7 @@ export default function SimulatorClient({
 
                   {/* Deterministic "Why it matters" explanation (Section 14, 29) */}
                   <div style={{ marginTop: '10px', padding: '10px 12px', background: '#141418', border: '1px solid var(--color-border)', borderRadius: '3px' }}>
-                    <div style={{ fontSize: '0.6875rem', fontFamily: 'var(--font-mono)', color: '#A1A1AA', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
+                    <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#A1A1AA', letterSpacing: '0.08em', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
                       WHY IT MATTERS
                     </div>
                     <p style={{ margin: 0, fontSize: '0.8125rem', lineHeight: 1.5, color: '#D4D4D8' }}>
@@ -1320,11 +1320,11 @@ export default function SimulatorClient({
             <div className="sidebar-card-header">
               <h2 className="sidebar-section-title">MODELED ECONOMICS</h2>
               {calibrated.isCalibrated ? (
-                <span className="badge badge--success text-mono" style={{ fontSize: '0.6875rem' }}>
+                <span className="badge badge--success text-mono" style={{ fontSize: '0.75rem' }}>
                   CALIBRATED ESTIMATE
                 </span>
               ) : (
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.6875rem' }}>
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem' }}>
                   SIMULATION
                 </span>
               )}
@@ -1374,13 +1374,13 @@ export default function SimulatorClient({
                 type="button"
                 onClick={() => setIsCalculationModalOpen(true)}
                 className="btn btn-secondary btn-sm text-mono"
-                style={{ width: '100%', marginTop: '4px', fontSize: '0.6875rem', justifyContent: 'center' }}
+                style={{ width: '100%', marginTop: '4px', fontSize: '0.8125rem', justifyContent: 'center' }}
               >
                 SHOW CALCULATION TRACE →
               </button>
 
               {/* Latency Approximations — model-derived multipliers, not production percentiles */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 8px', background: 'var(--color-bg-surface)', borderRadius: 'var(--radius-xs)', fontSize: '0.6875rem', border: '1px solid var(--color-border)' }} className="text-mono" title="These values are deterministic multipliers of the modeled tail estimate, not observed production percentiles.">
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 8px', background: 'var(--color-bg-surface)', borderRadius: 'var(--radius-xs)', fontSize: '0.75rem', border: '1px solid var(--color-border)' }} className="text-mono" title="These values are deterministic multipliers of the modeled tail estimate, not observed production percentiles.">
                 <span style={{ color: 'var(--color-text-muted)' }}>est. P50: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p50)}</strong></span>
                 <span style={{ color: 'var(--color-text-muted)' }}>est. P90: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p90)}</strong></span>
                 <span style={{ color: 'var(--color-text-muted)' }}>est. P99: <strong style={{ color: 'var(--color-text)' }}>{formatLatency(result.latencies.p99)}</strong></span>
@@ -1391,9 +1391,9 @@ export default function SimulatorClient({
           {/* Card 2: Bottleneck Detection */}
           <div className="sidebar-card">
             <div className="sidebar-card-header">
-              <h2 className="sidebar-section-title">BOTTLENECK IDENTIFIER</h2>
-              <span className="badge badge--warning text-mono" style={{ fontSize: '0.6875rem' }}>
-                DOMINANT FACTOR
+              <h2 className="sidebar-section-title">PRIMARY BOTTLENECK</h2>
+              <span className="badge badge--warning text-mono" style={{ fontSize: '0.75rem' }}>
+                PRIMARY FACTOR
               </span>
             </div>
 
@@ -1407,7 +1407,7 @@ export default function SimulatorClient({
                 </span>
               </div>
               {result.bottleneck.latencySharePercentage !== undefined && result.bottleneck.latencySharePercentage > 0 && (
-                <div className="text-mono" style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                <div className="text-mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
                   Critical-path latency contribution: {result.bottleneck.latencySharePercentage}%
                 </div>
               )}
@@ -1547,15 +1547,15 @@ export default function SimulatorClient({
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', background: '#141417', padding: '10px', borderRadius: '3px', border: '1px solid var(--color-border)' }} className="text-mono">
                     <div>
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>BASELINE</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>BASELINE</span>
                       <span style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>{formatCurrency(causalDelta.baselineCost)}</span>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>CURRENT</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>CURRENT</span>
                       <span style={{ fontSize: '0.9375rem', color: '#FFFFFF', fontWeight: 700 }}>{formatCurrency(causalDelta.currentCost)}</span>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>DELTA</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '2px' }}>DELTA</span>
                       <span style={{ fontSize: '1rem', fontWeight: 700, color: causalDelta.costDelta < 0 ? 'var(--color-success, #4ADE80)' : causalDelta.costDelta > 0 ? '#F87171' : 'var(--color-text-muted)' }}>
                         {causalDelta.costDelta > 0 ? `+${formatCurrency(causalDelta.costDelta)}` : causalDelta.costDelta < 0 ? `−${formatCurrency(Math.abs(causalDelta.costDelta))}` : '$0'}/mo
                       </span>
@@ -1688,7 +1688,7 @@ export default function SimulatorClient({
                           <td style={{ color: '#A1A1AA' }}>{sub.type}</td>
                           <td style={{ textAlign: 'right', color: '#FFFFFF' }}>{formatCurrency(sub.monthlyCost)}</td>
                           <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{sub.sharePercentage}%</td>
-                          <td style={{ color: '#71717A', fontSize: '0.6875rem' }}>{sub.unitRateDescription}</td>
+                          <td style={{ color: '#71717A', fontSize: '0.75rem' }}>{sub.unitRateDescription}</td>
                         </tr>
                       ))
                     ) : (
@@ -1700,7 +1700,7 @@ export default function SimulatorClient({
                 </table>
               </div>
 
-              <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.6875rem', color: '#A1A1AA', lineHeight: 1.5 }}>
+              <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.75rem', color: '#A1A1AA', lineHeight: 1.5 }}>
                 <strong style={{ color: '#FFFFFF' }}>Methodology Note: </strong>
                 ComputeCanvas computes cost deterministically from active graph routes and configured token counts. Token pricing reflects publicly cited list rates (March 2026). Ingress and routing costs are modeled on public edge gateway tiers ($0.50 - $0.60 / 1M requests).
               </div>
@@ -1733,15 +1733,15 @@ export default function SimulatorClient({
                 </div>
                 <div style={{ display: 'flex', gap: '16px' }} className="text-mono">
                   <div>
-                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>est. P50</span>
+                    <span style={{ fontSize: '0.75rem', color: '#71717A', display: 'block' }}>est. P50</span>
                     <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p50)}</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>est. P90</span>
+                    <span style={{ fontSize: '0.75rem', color: '#71717A', display: 'block' }}>est. P90</span>
                     <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p90)}</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.6875rem', color: '#71717A', display: 'block' }}>est. P99</span>
+                    <span style={{ fontSize: '0.75rem', color: '#71717A', display: 'block' }}>est. P99</span>
                     <strong style={{ color: '#FFFFFF' }}>{formatLatency(result.latencies.p99)}</strong>
                   </div>
                 </div>
@@ -1768,7 +1768,7 @@ export default function SimulatorClient({
                           <td style={{ textAlign: 'right', color: '#A1A1AA' }}>{formatLatency(seg.baseLatencyMs)}</td>
                           <td style={{ textAlign: 'right', color: '#71717A' }}>{Math.round(seg.trafficFactor * 100)}%</td>
                           <td style={{ textAlign: 'right', color: '#FFFFFF', fontWeight: 600 }}>{formatLatency(seg.effectiveLatencyMs)}</td>
-                          <td style={{ color: '#71717A', fontSize: '0.6875rem' }}>{seg.notes}</td>
+                          <td style={{ color: '#71717A', fontSize: '0.75rem' }}>{seg.notes}</td>
                         </tr>
                       ))
                     ) : (
@@ -1780,7 +1780,7 @@ export default function SimulatorClient({
                 </table>
               </div>
 
-              <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.6875rem', color: '#A1A1AA', lineHeight: 1.5 }}>
+              <div style={{ marginTop: '16px', padding: '12px', background: '#141417', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.75rem', color: '#A1A1AA', lineHeight: 1.5 }}>
                 <strong style={{ color: '#FFFFFF' }}>Model Transparency: </strong>
                 {result.latencies.latencyDisclaimer || 'P95 is a model-derived estimate based on configured latency and saturation assumptions, not a measurement from production infrastructure.'}
               </div>
@@ -1807,7 +1807,7 @@ export default function SimulatorClient({
                   <button
                     onClick={() => setShowTraceFormulas(!showTraceFormulas)}
                     className={`btn btn-sm text-mono ${showTraceFormulas ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ fontSize: '0.6875rem', padding: '3px 8px' }}
+                    style={{ fontSize: '0.78125rem', padding: '4px 10px' }}
                     title="Toggle explicit mathematical formula expressions"
                   >
                     {showTraceFormulas ? 'HIDE FORMULAS' : 'SHOW FORMULAS'}
@@ -1825,7 +1825,7 @@ export default function SimulatorClient({
                       showToast('Calculation trace copied as plain text.');
                     }}
                     className="btn btn-secondary btn-sm text-mono"
-                    style={{ fontSize: '0.6875rem', padding: '3px 8px' }}
+                    style={{ fontSize: '0.78125rem', padding: '4px 10px' }}
                     title="Copy full trace to clipboard as plain text markdown for PRs & tickets"
                   >
                     COPY TRACE
@@ -2516,7 +2516,7 @@ export default function SimulatorClient({
         .template-label {
           color: var(--color-text-muted);
           font-weight: 600;
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
         }
 
         .template-select-dropdown {
@@ -2611,7 +2611,7 @@ export default function SimulatorClient({
         }
 
         .telemetry-mode-tag {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-weight: 700;
           letter-spacing: 0.06em;
           padding: 2px 5px;
@@ -2679,7 +2679,7 @@ export default function SimulatorClient({
         }
 
         .share-disclosure-title {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-weight: 700;
           letter-spacing: 0.08em;
           color: #FFFFFF;
@@ -2695,7 +2695,7 @@ export default function SimulatorClient({
         }
 
         .share-disclosure-list {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           color: #D4D4D8;
           display: flex;
           flex-direction: column;
@@ -2707,7 +2707,7 @@ export default function SimulatorClient({
 
         .share-disclosure-warning {
           font-family: var(--font-ui);
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           color: #71717A;
           line-height: 1.4;
           border-top: 1px solid #27272A;
@@ -2878,7 +2878,7 @@ export default function SimulatorClient({
 
         .palette-item-badge {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           font-weight: 600;
           letter-spacing: 0.04em;
           padding: 2px 7px;
@@ -2935,7 +2935,7 @@ export default function SimulatorClient({
           background: none;
           border: none;
           color: var(--color-text-muted);
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           cursor: pointer;
         }
 
@@ -2978,7 +2978,7 @@ export default function SimulatorClient({
         }
 
         .meta-sub {
-          font-size: 0.625rem;
+          font-size: 0.75rem;
           color: var(--color-text-muted);
         }
 
@@ -2990,7 +2990,7 @@ export default function SimulatorClient({
         }
 
         .calibration-explainer {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           color: var(--color-text-muted);
           margin: 0;
         }

@@ -201,7 +201,7 @@ export default function PricingClient() {
                     <span className="text-caption text-mono" style={{ color: plan.status === 'available' ? 'var(--color-accent)' : 'var(--color-text-muted)' }}>
                       {plan.tagline}
                     </span>
-                    <span className={`badge ${plan.status === 'available' ? 'badge--primary' : 'badge--neutral'} text-mono`} style={{ fontSize: '0.625rem' }}>
+                    <span className={`badge ${plan.status === 'available' ? 'badge--primary' : 'badge--neutral'} text-mono`} style={{ fontSize: '0.75rem' }}>
                       {plan.badge}
                     </span>
                   </div>
@@ -271,7 +271,7 @@ export default function PricingClient() {
           <div className="waitlist-modal-content" onClick={e => e.stopPropagation()}>
             <div className="waitlist-modal-header">
               <div>
-                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.625rem', marginBottom: '6px', display: 'inline-block' }}>
+                <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem', marginBottom: '6px', display: 'inline-block' }}>
                   PRIORITY INTAKE // {(selectedPlanForWaitlist?.name || 'Team Workspaces').toUpperCase()}
                 </span>
                 <h3 id="waitlist-title" className="waitlist-modal-title">
@@ -603,7 +603,7 @@ export default function PricingClient() {
           margin-top: 8px;
         }
         .waitlist-privacy-note {
-          font-size: 0.6875rem;
+          font-size: 0.75rem;
           color: var(--color-text-muted);
           line-height: 1.4;
           margin: 6px 0 0 0;

@@ -12,209 +12,303 @@ export default function DocsPage() {
         <div className="container">
           {/* Header */}
           <div className="section-header-block" style={{ marginBottom: 'var(--space-8)' }}>
+            <span className="badge badge--neutral text-mono" style={{ fontSize: '0.75rem', marginBottom: '12px', display: 'inline-block' }}>
+              METHODOLOGY &amp; REFERENCE
+            </span>
             <h1 className="section-heading">
-              Architecture &amp; Simulation Guide
+              Architecture Planning &amp; Decision Instrument Guide
             </h1>
             <p className="section-lead">
-              Learn how ComputeCanvas calculates token economics, composite path latencies, bottleneck thresholds, and calibration factors through deterministic simulation methodology.
+              A comprehensive technical reference for ComputeCanvas: an architecture planning and comparative decision instrument for reasoning deterministically about AI systems, economics, latencies, and topological bottlenecks before deployment.
             </p>
           </div>
 
           <div className="docs-body" style={{ maxWidth: '960px' }}>
-            {/* Section 1: Overview */}
+            {/* 1. Product Purpose */}
             <section className="docs-section">
-              <h2 className="docs-title">1. What is ComputeCanvas?</h2>
+              <h2 className="docs-title">1. Product Purpose</h2>
               <p>
-                ComputeCanvas is an interactive AI architecture and economics decision simulator. It allows engineers, architects, founders, and FinOps practitioners to map generative AI systems visually and immediately understand their trade-offs across <strong>modeled monthly cost</strong>, <strong>cost per request</strong>, and <strong>modeled tail latency</strong> before writing code or provisioning cloud infrastructure.
+                ComputeCanvas is an <strong>architecture planning and comparative decision instrument</strong>. It enables software architects, machine learning engineers, and engineering leadership to model generative AI systems visually and deterministically before writing production orchestration code or committing infrastructure spend.
               </p>
+              <p>
+                Rather than treating generative AI economics as an opaque post-deployment cloud invoice surprise, ComputeCanvas enables teams to answer:
+              </p>
+              <ul className="docs-list">
+                <li>What will this topology cost per month under steady-state request volumes?</li>
+                <li>How does adding a semantic cache shift our token expenditure and tail latency?</li>
+                <li>Where is the primary critical-path bottleneck in our multi-stage pipeline?</li>
+                <li>What is the deterministic causal consequence of switching 70% of traffic to a fast utility model?</li>
+                <li>How can we prove and share these engineering trade-offs with verifiable reproducibility?</li>
+              </ul>
             </section>
 
-            {/* Section 2: Six Core Building Blocks */}
+            {/* 2. Architecture Graph */}
             <section className="docs-section">
-              <h2 className="docs-title">2. The Six V1 Building Blocks</h2>
+              <h2 className="docs-title">2. Architecture Graph &amp; Core Building Blocks</h2>
               <p>
-                ComputeCanvas V1 focuses on six architectural levers that materially influence the modeled cost and latency of the supported workloads:
+                Systems in ComputeCanvas are modeled as directed acyclic topologies composed of six fundamental building blocks:
               </p>
               <div className="docs-components-grid">
                 <div className="doc-component-card">
                   <span className="doc-pill text-mono">INGRESS</span>
                   <h3>API Ingress Gateway</h3>
-                  <p>Handles incoming client traffic, TLS termination, and rate gating ($1.00 / 1M requests, ~12ms latency).</p>
+                  <p>Handles incoming client traffic, edge TLS termination, and rate gating ($1.00 / 1M requests, ~12ms base latency).</p>
                 </div>
                 <div className="doc-component-card">
                   <span className="doc-pill text-mono">CACHE</span>
                   <h3>Semantic Cache</h3>
-                  <p>Intercepts incoming prompts and serves exact/semantic cache hits, skipping model inference entirely ($65/mo base + memory, ~5ms).</p>
+                  <p>Intercepts inbound queries to return cached completions, eliminating downstream token inference ($65/mo base + memory tier, ~5ms).</p>
                 </div>
                 <div className="doc-component-card">
                   <span className="doc-pill text-mono">ROUTER</span>
                   <h3>Complexity Router</h3>
-                  <p>Analyzes prompt intent and dynamically steers queries between fast low-cost models and high-depth frontier models ($0.50 / 1M requests, ~8ms).</p>
+                  <p>Evaluates prompt difficulty and dynamically steers queries between fast utility and high-depth frontier models ($0.50 / 1M requests, ~8ms).</p>
                 </div>
                 <div className="doc-component-card">
                   <span className="doc-pill text-mono">RETRIEVAL</span>
                   <h3>Vector Database</h3>
-                  <p>Stores document chunk embeddings and executes approximate nearest-neighbor search for RAG ($120/mo cluster base + $0.20/1M queries, ~45ms).</p>
+                  <p>Stores document chunk embeddings and executes vector similarity searches for RAG pipelines ($120/mo cluster + $0.20 / 1M queries, ~45ms).</p>
                 </div>
                 <div className="doc-component-card">
                   <span className="doc-pill text-mono">FAST MODEL</span>
                   <h3>Fast Reasoning Model</h3>
-                  <p>Sub-150ms models (e.g. GPT-4o Mini, Gemini 2.0 Flash) priced at $0.10–0.15 / 1M input tokens and $0.40–0.60 / 1M output tokens.</p>
+                  <p>Sub-150ms utility inference tier (e.g. GPT-4o Mini, Gemini 2.0 Flash) priced at $0.15 / 1M input and $0.60 / 1M output tokens.</p>
                 </div>
                 <div className="doc-component-card">
                   <span className="doc-pill text-mono">FRONTIER</span>
                   <h3>Frontier Reasoning Model</h3>
-                  <p>High-intelligence tier (e.g. GPT-4o, Claude 3.5 Sonnet) priced at $2.50–3.00 / 1M input tokens and $10.00–15.00 / 1M output tokens (~380–420ms).</p>
+                  <p>High-intelligence tier (e.g. GPT-4o, Claude 3.5 Sonnet) priced at $2.50 / 1M input and $10.00 / 1M output tokens (~380–420ms).</p>
                 </div>
               </div>
             </section>
 
-            {/* Section 3: Mathematical Model */}
+            {/* 3. Workload Model */}
             <section className="docs-section">
-              <h2 className="docs-title">3. Deterministic Cost &amp; Latency Formulation</h2>
+              <h2 className="docs-title">3. Workload Model</h2>
               <p>
-                ComputeCanvas computes economics deterministically using standard provider pricing metrics:
+                Workloads define the operational traffic environment driving the architecture. Every simulation is parameterized by:
+              </p>
+              <ul className="docs-list">
+                <li><strong>Monthly Requests:</strong> Inbound query volume across the billing cycle (e.g. 2,500,000 req/mo).</li>
+                <li><strong>Average Input Tokens:</strong> User prompt tokens plus system preamble and context window load (default 1,200 tokens).</li>
+                <li><strong>Average Output Tokens:</strong> Model completion length generated per uncached query (default 400 tokens).</li>
+                <li><strong>Cache Hit Rate:</strong> Proportion of traffic intercepted before hitting LLM inference (0%–90%).</li>
+                <li><strong>Concurrency:</strong> Peak concurrent execution threads, governing queue saturation and tail latency multiplier.</li>
+              </ul>
+            </section>
+
+            {/* 4. Cost Model */}
+            <section className="docs-section">
+              <h2 className="docs-title">4. Cost Model Formulation</h2>
+              <p>
+                Economics are computed deterministically from active graph wires and unit rate specifications:
               </p>
               <div className="docs-code-block">
                 <code>
-{`// 1. Effective Uncached Volume
+{`// 1. Effective Uncached Requests
 UncachedRequests = TotalRequests × (1 - CacheHitRate)
 
-// 2. Model Inference Cost
-ModelSpend = ∑ [ UncachedRequests × RouteShare × 
-  ((InputTokens / 1M × InputPrice) + (OutputTokens / 1M × OutputPrice)) ]
+// 2. Model Inference Spend
+ModelCost = ∑ [ UncachedRequests × RouteShare × 
+  ((InputTokens / 1,000,000 × InputPrice) + (OutputTokens / 1,000,000 × OutputPrice)) ]
 
-// 3. Infrastructure Spend
-InfraSpend = (TotalRequests / 1M × GatewayFee)
-           + (CacheBase + MemoryFee)
-           + (VectorDBBase + UncachedRequests × QueryFee)
+// 3. Infrastructure Fixed & Variable Spend
+InfraCost = (TotalRequests / 1,000,000 × IngressTariff)
+          + (CacheBaseCost + MemoryStorageAllocation)
+          + (VectorDBClusterBase + UncachedRequests × QueryTariff)
 
-Modeled Monthly Cost = ModelSpend + InfraSpend`}
+// 4. Total Modeled Monthly Cost
+ModeledMonthlyCost = ModelCost + InfraCost`}
                 </code>
               </div>
-              <p style={{ marginTop: 'var(--space-4)' }}>
-                <strong>Modeled Tail Latency:</strong>
+            </section>
+
+            {/* 5. Cache Model */}
+            <section className="docs-section">
+              <h2 className="docs-title">5. Cache Model</h2>
+              <p>
+                The Semantic Cache operates as an upstream filter. Hits terminate at the cache tier, incurring single-digit latency (~5ms) and zero downstream inference token charges. Misses pass through to the complexity router or models at full token unit rates.
               </p>
               <div className="docs-code-block">
                 <code>
-{`// Critical Path Decomposition
-IngressLatency   = 5 - 12 ms (TLS termination & rate gating)
-CacheHitLatency  = IngressLatency + CacheLookupLatency (~17 ms)
-CacheMissLatency = IngressLatency + CacheLookupLatency + RouterLatency + VectorLookupLatency + ModelInferenceLatency
-Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × CacheMissLatency)
-
-// Transparency Note:
-// P95 is a model-derived estimate based on configured latency and saturation assumptions,
-// not a telemetry measurement from live production infrastructure.`}
+{`CacheHitTraffic   = TotalRequests × CacheHitRate       // Incurs 0 model inference cost
+CacheMissTraffic  = TotalRequests × (1 - CacheHitRate) // Propagated downstream to model tiers
+CacheMonthlyCost  = BaseInstanceCost ($65) + MemoryCost`}
                 </code>
               </div>
             </section>
 
-            {/* Section 4: Quality Scoring Methodology */}
+            {/* 6. Routing Model */}
             <section className="docs-section">
-              <h2 className="docs-title">4. Model Capability Tiers &amp; Grounding Taxonomy</h2>
+              <h2 className="docs-title">6. Complexity Routing Model</h2>
               <p>
-                To provide honest, defensible architectural trade-off analysis, ComputeCanvas classifies pipelines into discrete qualitative capability tiers rather than single composite percentages:
+                The Complexity Router splits uncached queries across downstream model tiers using normalized traffic shares:
               </p>
               <div className="docs-code-block">
                 <code>
-{`// 1. Frontier Reasoning
-// Pure frontier model execution (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro) for complex synthesis.
+{`FastTierVolume     = CacheMissTraffic × FastRouteShare     // e.g. 70% to Fast Model
+FrontierTierVolume = CacheMissTraffic × FrontierRouteShare // e.g. 30% to Frontier Model
 
-// 2. Context-Grounded Frontier
-// Frontier reasoning augmented with active Vector Database retrieval for domain verification.
-
-// 3. Blended Routing
-// Dynamic complexity routing steering requests across fast utility and frontier models.
-
-// 4. Fast Utility
-// Low-latency, high-throughput utility inference (GPT-4o Mini, Gemini 2.0 Flash) for classification & extraction.`}
+// Conservation Constraint:
+∑ RouteShares == 1.0 (Checked by graph validator)`}
                 </code>
               </div>
-              <p style={{ marginTop: 'var(--space-4)' }}>
-                <strong>Benchmark Citations:</strong> Unit rates and baseline performance are cross-referenced with public provider documentation and benchmarks from{' '}
-                <a href="https://artificialanalysis.ai" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}>
-                  Artificial Analysis
-                </a>{' '}
-                and the{' '}
-                <a href="https://chat.lmsys.org" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}>
-                  LMSYS Chatbot Arena
-                </a>.
+            </section>
+
+            {/* 7. Latency Model */}
+            <section className="docs-section">
+              <h2 className="docs-title">7. Latency Model &amp; Tail Decomposition</h2>
+              <p>
+                ComputeCanvas decomposes the critical execution path into individual network, queue, and computation stages. P95 latency is modeled from baseline component benchmarks scaled by non-linear concurrency queue factors:
+              </p>
+              <div className="docs-code-block">
+                <code>
+{`// Critical Path Latency Formulation
+CacheHitLatency  = IngressLatency (~12ms) + CacheLookupLatency (~5ms) = ~17ms
+CacheMissLatency = IngressLatency + CacheLookupLatency + RouterLatency (~8ms) 
+                 + VectorSearchLatency (~45ms if present) + ModelInferenceLatency (~380ms)
+
+QueueMultiplier  = (1 + (Concurrency / NominalCapacity))^1.8
+ModeledP95       = ((CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × CacheMissLatency)) × QueueMultiplier
+
+// Modeled Percentiles:
+ModeledP50 ≈ ModeledP95 × 0.65
+ModeledP90 ≈ ModeledP95 × 0.90
+ModeledP99 ≈ ModeledP95 × 1.35`}
+                </code>
+              </div>
+            </section>
+
+            {/* 8. Bottleneck Methodology */}
+            <section className="docs-section">
+              <h2 className="docs-title">8. Primary Bottleneck Methodology</h2>
+              <p>
+                Every simulation computes component-level cost percentages and critical-path latency contributions. The <strong>Primary Bottleneck</strong> identifies the single component exerting the greatest economic or latency pressure on the topology:
+              </p>
+              <ul className="docs-list">
+                <li><strong>Economic Bottleneck:</strong> The component accounting for the largest percentage of total monthly spend (typically Frontier Model in unrouted architectures).</li>
+                <li><strong>Latency Bottleneck:</strong> The critical-path stage contributing the highest tail duration (typically sequential retrieval or generation phases).</li>
+              </ul>
+            </section>
+
+            {/* 9. Historical Bill Calibration */}
+            <section className="docs-section">
+              <h2 className="docs-title">9. Historical Bill Calibration (&ldquo;Anchor to My Bill&rdquo;)</h2>
+              <p>
+                Theoretical equations model steady-state prompt transactions. In production environments, unmodeled tokens (developer testing, retry loops, system preambles, and background agents) often create variance against list-price models.
+              </p>
+              <p>
+                Entering your <strong>Last Month&apos;s AI Bill</strong> and <strong>Monthly Request Count</strong> establishes an empirical calibration factor (&kappa;):
+              </p>
+              <div className="docs-code-block">
+                <code>
+{`CalibrationFactor (κ) = ActualHistoricalBill / SimulatedTheoreticalBaselineCost
+CalibratedMonthlyCost = ModeledMonthlyCost × κ`}
+                </code>
+              </div>
+              <p style={{ marginTop: '8px' }}>
+                This preserves your historical empirical reality while allowing you to deterministically explore comparative architectural optimizations.
               </p>
             </section>
 
-            {/* Section 5: Anchor to My Bill */}
+            {/* 10. Model Assumption Registry */}
             <section className="docs-section">
-              <h2 className="docs-title">5. &ldquo;Anchor to My Bill&rdquo; Calibration</h2>
+              <h2 className="docs-title">10. Model Assumption Registry</h2>
               <p>
-                Theoretical formulas often underestimate real-world cloud bills due to retry loops, system prompt overhead, agent tool definitions, or background token spikes.
+                All unit prices, latency baselines, and infrastructure parameters originate from the public <Link href="/assumptions" style={{ color: '#FFFFFF', textDecoration: 'underline' }}>Model Assumption Registry</Link>. Each entry documents:
+              </p>
+              <ul className="docs-list">
+                <li><strong>Pricing Snapshot:</strong> Point-in-time timestamp (Snapshot 2026-03).</li>
+                <li><strong>Source Type:</strong> Provider published documentation or internal reference benchmark.</li>
+                <li><strong>Registry Version:</strong> Immutable schema and rate tier identifier (v1.4).</li>
+                <li><strong>Status:</strong> Active validation status.</li>
+              </ul>
+            </section>
+
+            {/* 11. URL Sharing & Reproducibility */}
+            <section className="docs-section">
+              <h2 className="docs-title">11. Zero-Backend URL Sharing &amp; Reproducibility</h2>
+              <p>
+                ComputeCanvas implements pure client-side state serialization under RFC 4648 &sect; 5 Base64URL. Clicking <strong>Share Architecture</strong> encodes the complete topology, workload parameters, and calibration factors directly into the URL query parameter (<code>/simulator?data=...</code>).
               </p>
               <p>
-                Entering your <strong>Last Month&apos;s AI Bill</strong> and <strong>Monthly Request Count</strong> calculates your actual empirical cost-per-request and applies a proportional calibration scale across your architecture. This enables you to test potential changes (e.g. &ldquo;What if we route 70% of traffic to Gemini Flash?&rdquo;) while remaining anchored to your real baseline.
+                Every simulation generates a persistent snapshot identity (e.g. <code>CC-ROUTER-CACHE-ARC-2026-03-V1-4</code>) enabling verifiable reproduction across engineering teams, code reviews, and technical design documents without requiring server databases or user accounts.
               </p>
             </section>
 
-            {/* Section 6: Zero-Backend Link Sharing */}
+            {/* 12. Comparison Mode */}
             <section className="docs-section">
-              <h2 className="docs-title">6. Zero-Backend State Sharing &amp; Privacy</h2>
+              <h2 className="docs-title">12. Side-by-Side Architecture Comparison</h2>
               <p>
-                ComputeCanvas uses RFC 4648 § 5 Base64URL client serialization. Clicking <strong>Share Architecture</strong> encodes the complete graph topology, workload sliders, and calibration parameters directly into the URL query string (`/simulator?data=...`).
+                The Workbench comparison mode contrasts your active design against the clean baseline architecture:
               </p>
-              <p>
-                There is <strong>no backend database</strong> and <strong>no account required</strong>. Recipients receive the exact same architecture, components, and economics instantaneously.
-              </p>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: '8px' }}>
-                <em>Notice:</em> Because state is contained entirely in the URL query string, never put proprietary credentials, API keys, or secret infrastructure IP addresses into custom component labels.
-              </p>
+              <ul className="docs-list">
+                <li><strong>Economic Delta:</strong> Absolute and percentage monthly spend differences.</li>
+                <li><strong>Latency Delta:</strong> Millisecond changes across P95 critical-path latency.</li>
+                <li><strong>Topology Changes:</strong> Component additions, removals, and routing reallocation.</li>
+              </ul>
             </section>
 
-            {/* Section 7: Limitations */}
+            {/* 13. Calculation Trace 2.0 */}
             <section className="docs-section">
-              <h2 className="docs-title">7. Intended Use &amp; Limitations</h2>
+              <h2 className="docs-title">13. Calculation Trace 2.0</h2>
               <p>
-                ComputeCanvas is an architecture planning and comparative decision instrument. It models steady-state expected behavior under specified traffic assumptions.
+                The Calculation Trace exposes every intermediate arithmetic step between workload inputs and total monthly cost. It includes:
+              </p>
+              <ul className="docs-list">
+                <li>Line-by-line token and dollar arithmetic.</li>
+                <li>Interactive formula toggle for inspecting mathematical equations.</li>
+                <li>One-click copyable markdown formatted for pull requests and architecture decision records (ADRs).</li>
+              </ul>
+            </section>
+
+            {/* 14. Causal Delta 2.0 */}
+            <section className="docs-section">
+              <h2 className="docs-title">14. Causal Delta 2.0</h2>
+              <p>
+                Whenever an architecture or workload parameter changes, Causal Delta deconstructs the outcome into three structured stages:
+              </p>
+              <div className="docs-code-block">
+                <code>
+{`1. ARCHITECTURAL CHANGE    → What parameter or topology wire was altered?
+2. DETERMINISTIC CAUSE     → Why did the simulation model shift?
+3. ECONOMIC CONSEQUENCE    → What is the exact dollar and latency delta vs baseline?`}
+                </code>
+              </div>
+            </section>
+
+            {/* 15. Capability Taxonomy */}
+            <section className="docs-section">
+              <h2 className="docs-title">15. Capability Tiers &amp; Objective Trade-Offs</h2>
+              <p>
+                Rather than using subjective or marketing-biased scores, ComputeCanvas categorizes architectures into objective functional tiers:
+              </p>
+              <ul className="docs-list">
+                <li><strong>Frontier Priority:</strong> Maximum reasoning depth for complex multi-step synthesis.</li>
+                <li><strong>Context-Grounded Frontier:</strong> Frontier reasoning augmented with vector retrieval for domain grounding.</li>
+                <li><strong>Blended Routing:</strong> Dynamic complexity classification balancing cost and capability across tiers.</li>
+                <li><strong>Utility Priority:</strong> High-throughput, sub-150ms utility execution for extraction and classification.</li>
+              </ul>
+            </section>
+
+            {/* 16. Intended Use & Limitations */}
+            <section className="docs-section">
+              <h2 className="docs-title">16. Operational Scope &amp; Limitations</h2>
+              <p>
+                ComputeCanvas produces deterministic estimates based on configurable assumptions and published provider benchmarks. It is designed for architectural comparison, planning, and pre-deployment cost modeling.
               </p>
               <div className="docs-code-block" style={{ marginTop: '8px' }}>
                 <code>
-{`// Model Limitations Disclosure:
-- Results depend on workload assumptions, token distributions, and provider list pricing.
-- Concurrency spikes, rate-limit 429 retries, and network jitter alter production latency.
-- Secondary infrastructure outside the modeled graph (storage, egress, fine-tuning) is not included.
-- Use results to compare architectures, not as financial invoice guarantees.`}
+{`// Model Disclosures:
+- Results reflect steady-state traffic and published unit list pricing.
+- Network jitter, rate-limit retries (HTTP 429), and traffic spikes alter real latency.
+- Ancillary infrastructure (long-term object storage, custom fine-tuning) is outside scope.
+- Use results to compare architecture trade-offs, not as legally binding billing guarantees.`}
                 </code>
               </div>
             </section>
 
-            {/* Section 8: Engineering Decision Instrument & Reproducibility */}
-            <section className="docs-section">
-              <h2 className="docs-title">8. Decision Instrument &amp; Reproducibility (CC 3.2)</h2>
-              <p>
-                ComputeCanvas 3.2 elevates the workspace from a simulation tool into an <strong>engineering decision instrument</strong>. It answers not just &ldquo;What is the cost?&rdquo; but &ldquo;Why did it change, which component dominates, and how can the analysis be reproduced?&rdquo;
-              </p>
-              <div className="docs-components-grid" style={{ marginTop: 'var(--space-4)' }}>
-                <div className="doc-component-card">
-                  <span className="doc-pill text-mono">BASELINE VS CURRENT</span>
-                  <h3>State Comparison</h3>
-                  <p>Tracks active parameter modifications against the template baseline. Inspect deltas across requests, hit rates, routing splits, and economics without memorizing previous states.</p>
-                </div>
-                <div className="doc-component-card">
-                  <span className="doc-pill text-mono">CAUSAL DELTA 2.0</span>
-                  <h3>Structured Causality</h3>
-                  <p>Deconstructs every parameter change into <em>Architectural Change</em>, <em>Deterministic Cause</em>, and <em>Modeled Consequence</em> without stochastic or hallucinated explanations.</p>
-                </div>
-                <div className="doc-component-card">
-                  <span className="doc-pill text-mono">TRACE 2.0</span>
-                  <h3>Calculation Sheet &amp; Formulas</h3>
-                  <p>Displays line-by-line discrete arithmetic for every token and dollar. Includes formula mode toggle and 1-click plain text markdown export for pull requests and architecture reviews.</p>
-                </div>
-                <div className="doc-component-card">
-                  <span className="doc-pill text-mono">PROVENANCE</span>
-                  <h3>Registry &amp; Snapshot IDs</h3>
-                  <p>Every simulation is tagged with an immutable deterministic snapshot ID (e.g. <code>CC-ROUTING-2026-03-V1.4</code>) cross-referenced with registry versions and pricing snapshot dates.</p>
-                </div>
-              </div>
-            </section>
-
+            {/* CTA */}
             <div className="docs-cta-card">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Evaluate your system in the workbench</h3>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
@@ -256,6 +350,15 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
           color: var(--color-text);
           margin-bottom: var(--space-3);
         }
+        .docs-list {
+          margin: var(--space-3) 0 0 var(--space-5);
+          color: var(--color-text-secondary);
+          font-size: 0.90625rem;
+          line-height: 1.6;
+        }
+        .docs-list li {
+          margin-bottom: 6px;
+        }
         .docs-components-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -276,7 +379,7 @@ Estimated P95    = (CacheHitRate × CacheHitLatency) + ((1 - CacheHitRate) × Ca
         .doc-component-card p {
           font-size: 0.8125rem;
           color: var(--color-text-secondary);
-          line-height: 1.4;
+          line-height: 1.45;
           margin: 0;
         }
         .doc-pill {

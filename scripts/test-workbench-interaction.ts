@@ -61,8 +61,8 @@ async function runWorkbenchTests() {
   assert(!!node1, 'First node (API Ingress) inserted successfully');
   assert(stateAfter1.selectedNodeId === id1, 'First node is immediately selected');
 
-  // Canvas center is (1000/2 - 204/2) = 398, (700/2 - 82/2) = 309
-  assert(node1!.x === 398 && node1!.y === 309, `First node placed precisely at visible canvas center (${node1?.x}, ${node1?.y})`);
+  // Canvas center is (1000/2 - 224/2) = 388, (700/2 - 86/2) = 307
+  assert(node1!.x === 388 && node1!.y === 307, `First node placed precisely at visible canvas center (${node1?.x}, ${node1?.y})`);
 
   // Test 3: Insert 2nd node (Semantic Cache) -> must avoid collision with 1st node
   const id2 = store.addNode('cache', 'Semantic Cache');
