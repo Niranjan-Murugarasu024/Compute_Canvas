@@ -574,12 +574,15 @@ export default function SpatialCanvas({
             <circle cx="1" cy="1" r="0.75" fill="#24242A" />
           </pattern>
 
-          {/* Edge arrow markers */}
-          <marker id="edge-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <polygon points="0 0, 6 3, 0 6" fill="var(--color-border-strong)" />
+          {/* Edge arrow markers — fixed pixel size, tip at refX so it lands exactly on node border */}
+          <marker id="edge-arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="var(--color-border-strong)" stroke="none" />
           </marker>
-          <marker id="edge-arrow-selected" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <polygon points="0 0, 6 3, 0 6" fill="#FFFFFF" />
+          <marker id="edge-arrow-selected" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#FFFFFF" stroke="none" />
+          </marker>
+          <marker id="edge-arrow-dimmed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#3A3A42" stroke="none" />
           </marker>
         </defs>
 
@@ -594,25 +597,70 @@ export default function SpatialCanvas({
             const to = nodeMap.get(edge.target);
             if (!from || !to) return null;
 
-            const fromX = (from.x ?? 100) + NODE_WIDTH / 2;
-            const fromY = (from.y ?? 100) + NODE_HEIGHT;
-            const toX = (to.x ?? 100) + NODE_WIDTH / 2;
-            const toY = (to.y ?? 100);
+            const fx = from.x ?? 100;
+            const fy = from.y ?? 100;
+            const tx = to.x ?? 100;
+            const ty = to.y ?? 100;
 
-            // Smooth cubic bezier curve
-            const dy = Math.max(36, Math.abs(toY - fromY) / 2);
-            const pathData = `M ${fromX} ${fromY} C ${fromX} ${fromY + dy}, ${toX} ${toY - dy}, ${toX} ${toY}`;
+            // Smart port selection: pick exit/entry ports based on relative position
+            // to avoid ugly U-curves when nodes are side-by-side
+            const dx = tx - fx;
+            const dy = ty - fy;
+            const isHorizontal = Math.abs(dx) > Math.abs(dy) * 0.8;
+
+            let fromX: number, fromY: number, toX: number, toY: number;
+            let cp1x: number, cp1y: number, cp2x: number, cp2y: number;
+
+            if (isHorizontal && dx > 0) {
+              // Source is to the LEFT of target → exit right-center, enter left-center
+              fromX = fx + NODE_WIDTH;
+              fromY = fy + NODE_HEIGHT / 2;
+              toX = tx;
+              toY = ty + NODE_HEIGHT / 2;
+              const dist = Math.max(60, Math.abs(dx) * 0.45);
+              cp1x = fromX + dist; cp1y = fromY;
+              cp2x = toX - dist;   cp2y = toY;
+            } else if (isHorizontal && dx < 0) {
+              // Source is to the RIGHT of target → exit left-center, enter right-center
+              fromX = fx;
+              fromY = fy + NODE_HEIGHT / 2;
+              toX = tx + NODE_WIDTH;
+              toY = ty + NODE_HEIGHT / 2;
+              const dist = Math.max(60, Math.abs(dx) * 0.45);
+              cp1x = fromX - dist; cp1y = fromY;
+              cp2x = toX + dist;   cp2y = toY;
+            } else {
+              // Vertical / diagonal → classic bottom-center to top-center
+              fromX = fx + NODE_WIDTH / 2;
+              fromY = fy + NODE_HEIGHT;
+              toX = tx + NODE_WIDTH / 2;
+              toY = ty;
+              const offset = Math.max(40, Math.abs(dy) * 0.45);
+              cp1x = fromX; cp1y = fromY + offset;
+              cp2x = toX;   cp2y = toY - offset;
+            }
+
+            const pathData = `M ${fromX} ${fromY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${toX} ${toY}`;
+
+            // Accurate cubic bezier midpoint at t=0.5
+            const t = 0.5;
+            const mt = 1 - t;
+            const midX = mt*mt*mt*fromX + 3*mt*mt*t*cp1x + 3*mt*t*t*cp2x + t*t*t*toX;
+            const midY = mt*mt*mt*fromY + 3*mt*mt*t*cp1y + 3*mt*t*t*cp2y + t*t*t*toY;
 
             const isDirectlySelected = selectedEdgeIndex === idx;
             const isInActiveCausalPath = selectedNodeId !== null && activePathEdgeIndices.has(idx);
             const isHighlighted = isDirectlySelected || isInActiveCausalPath;
             const isDimmed = selectedNodeId !== null && !isHighlighted;
 
+            const edgeColor = isHighlighted ? '#FFFFFF' : isDimmed ? '#2E2E35' : 'var(--color-border-strong)';
+            const markerRef = isHighlighted ? 'url(#edge-arrow-selected)' : isDimmed ? 'url(#edge-arrow-dimmed)' : 'url(#edge-arrow)';
+
             return (
               <g
                 key={`edge-${edge.source}-${edge.target}-${idx}`}
                 className="canvas-edge-group"
-                style={{ opacity: isDimmed ? 0.2 : 1, transition: 'opacity 0.2s' }}
+                style={{ opacity: 1, transition: 'opacity 0.2s' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedEdge(idx);
@@ -624,43 +672,51 @@ export default function SpatialCanvas({
                 {/* Visible connection path */}
                 <path
                   d={pathData}
-                  stroke={isHighlighted ? '#FFFFFF' : isDimmed ? '#27272A' : 'var(--color-border-strong)'}
-                  strokeWidth={isHighlighted ? 2.5 : 1.5}
+                  stroke={edgeColor}
+                  strokeWidth={isHighlighted ? 2.5 : isDimmed ? 1 : 1.5}
                   fill="none"
-                  markerEnd={isHighlighted ? 'url(#edge-arrow-selected)' : 'url(#edge-arrow)'}
-                  style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
+                  markerEnd={markerRef}
+                  style={{ transition: 'stroke 0.2s, stroke-width 0.2s, opacity 0.2s', opacity: isDimmed ? 0.2 : 1 }}
                 />
 
-                {/* Traffic share percentage badge — Static Engineering Visualization (Section 19) */}
+                {/* Traffic share percentage badge — placed at actual bezier midpoint */}
                 {edge.trafficShare !== undefined && (() => {
-                  let badgeText = `${Math.round(edge.trafficShare * 100)}% ROUTE`;
+                  let badgeText = `${Math.round(edge.trafficShare * 100)}%`;
                   if (to.type === 'fast-model') badgeText = `${Math.round(edge.trafficShare * 100)}% FAST`;
                   else if (to.type === 'frontier-model') badgeText = `${Math.round(edge.trafficShare * 100)}% FRONTIER`;
                   else if (from.type === 'cache') badgeText = `${Math.round(edge.trafficShare * 100)}% MISS`;
-                  else if (to.label) badgeText = `${Math.round(edge.trafficShare * 100)}% ${to.label.toUpperCase()}`;
+                  else if (to.label) badgeText = `${Math.round(edge.trafficShare * 100)}% ROUTE`;
 
-                  const badgeWidth = Math.max(68, badgeText.length * 7.8 + 20);
+                  const charCount = badgeText.length;
+                  const badgeWidth = Math.max(52, charCount * 7.4 + 18);
+                  const badgeStroke = isHighlighted ? '#FFFFFF' : 'var(--color-border-strong)';
+                  const badgeFill = isHighlighted ? '#1E1E28' : '#0E0E12';
+                  const textFill = isHighlighted ? '#FFFFFF' : '#A0A0B0';
+
                   return (
-                    <g transform={`translate(${(fromX + toX) / 2}, ${(fromY + toY) / 2})`}>
+                    <g
+                      transform={`translate(${midX}, ${midY})`}
+                      style={{ opacity: isDimmed ? 0.2 : 1, transition: 'opacity 0.2s' }}
+                    >
                       <rect
                         x={-badgeWidth / 2}
-                        y="-12"
+                        y="-11"
                         width={badgeWidth}
-                        height="24"
+                        height="22"
                         rx="3"
-                        fill="#111114"
-                        stroke={isHighlighted ? '#FFFFFF' : 'var(--color-border-strong)'}
+                        fill={badgeFill}
+                        stroke={badgeStroke}
                         strokeWidth={isHighlighted ? 1.5 : 1}
                       />
                       <text
                         x="0"
-                        y="5"
+                        y="4.5"
                         textAnchor="middle"
-                        fill={isHighlighted ? '#FFFFFF' : '#FFFFFF'}
-                        fontSize="12.5"
+                        fill={textFill}
+                        fontSize="11.5"
                         fontFamily="var(--font-mono)"
                         fontWeight="600"
-                        letterSpacing="0.02em"
+                        letterSpacing="0.04em"
                       >
                         {badgeText}
                       </text>
@@ -825,27 +881,49 @@ export default function SpatialCanvas({
                   {latencyText}{costPctText ? ` · ${costPctText}` : ''}
                 </text>
 
-                {/* Input Port (Top Center) */}
+                {/* Input Port — Top Center */}
                 <circle
                   cx={NODE_WIDTH / 2}
                   cy="0"
-                  r="4.5"
+                  r="3.5"
                   className="connection-port port-input"
                   fill="#09090B"
                   stroke="#3F3F46"
                   strokeWidth="1.5"
                 />
 
-                {/* Output Port (Bottom Center) - Drag to connect */}
+                {/* Output Port — Bottom Center (drag to connect) */}
                 <circle
                   cx={NODE_WIDTH / 2}
                   cy={NODE_HEIGHT}
-                  r="5"
+                  r="4"
                   className="connection-port port-output"
-                  fill="#FFFFFF"
-                  stroke="#09090B"
+                  fill="#27272A"
+                  stroke="#52525B"
                   strokeWidth="1.5"
                   onPointerDown={(e) => handlePortPointerDown(e, node)}
+                />
+
+                {/* Right Port — for horizontal connections */}
+                <circle
+                  cx={NODE_WIDTH}
+                  cy={NODE_HEIGHT / 2}
+                  r="3.5"
+                  fill="#09090B"
+                  stroke="#3F3F46"
+                  strokeWidth="1.5"
+                  style={{ pointerEvents: 'none' }}
+                />
+
+                {/* Left Port — for horizontal connections */}
+                <circle
+                  cx="0"
+                  cy={NODE_HEIGHT / 2}
+                  r="3.5"
+                  fill="#09090B"
+                  stroke="#3F3F46"
+                  strokeWidth="1.5"
+                  style={{ pointerEvents: 'none' }}
                 />
               </g>
             );
