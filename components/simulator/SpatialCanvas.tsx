@@ -713,7 +713,7 @@ export default function SpatialCanvas({
                         y="4.5"
                         textAnchor="middle"
                         fill={textFill}
-                        fontSize="11.5"
+                        fontSize="12.5"
                         fontFamily="var(--font-mono)"
                         fontWeight="600"
                         letterSpacing="0.04em"
