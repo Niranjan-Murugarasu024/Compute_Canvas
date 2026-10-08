@@ -134,7 +134,7 @@ export default function HeroInteractive() {
 
             {/* SVG Architecture diagram */}
             <div className="instrument__diagram" role="img" aria-label="Router + Cache architecture: API Ingress → Semantic Cache → Complexity Router → Fast Model (70%) / Frontier Model (30%)">
-              <svg viewBox="0 0 680 176" className="instrument__svg" aria-hidden="true">
+              <svg viewBox="0 0 710 176" className="instrument__svg" aria-hidden="true">
                 <defs>
                   {/* Engineering grid */}
                   <pattern id="hgrid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -146,65 +146,68 @@ export default function HeroInteractive() {
                   <marker id="harrow-active" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                     <polygon points="0 0, 6 3, 0 6" fill="#A1A1AA" />
                   </marker>
+                  <marker id="harrow-frontier" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <polygon points="0 0, 6 3, 0 6" fill="#FFFFFF" />
+                  </marker>
                 </defs>
 
                 {/* Grid background */}
                 <rect width="100%" height="100%" fill="url(#hgrid)" />
 
                 {/* Connection lines */}
-                <line x1="130" y1="88" x2="164" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
-                <line x1="288" y1="88" x2="322" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
+                <line x1="118" y1="88" x2="144" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
+                <line x1="260" y1="88" x2="286" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
                 {/* Router → Fast */}
-                <path d="M 456 88 C 476 88, 484 46, 506 46" stroke="#52525B" strokeWidth="1.5" fill="none" markerEnd="url(#harrow-active)" />
+                <path d="M 414 88 C 470 88, 482 46, 538 46" stroke="#52525B" strokeWidth="1.5" fill="none" markerEnd="url(#harrow-active)" />
                 {/* Router → Frontier */}
-                <path d="M 456 88 C 476 88, 484 130, 506 130" stroke="#FFFFFF" strokeWidth="2" fill="none" markerEnd="url(#harrow-active)" />
-
-                {/* Traffic % badge labels */}
-                <g transform="translate(458, 36)">
-                  <rect x="-4" y="-12" width="76" height="22" rx="3" fill="#111114" stroke="#3F3F46" strokeWidth="1" />
-                  <text x="34" y="3" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600">{fastRouting}% FAST</text>
-                </g>
-                <g transform="translate(458, 120)">
-                  <rect x="-4" y="-12" width="94" height="22" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="1.5" />
-                  <text x="43" y="3" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700">{frontierRouting}% FRONTIER</text>
-                </g>
+                <path d="M 414 88 C 470 88, 482 130, 538 130" stroke="#FFFFFF" strokeWidth="2" fill="none" markerEnd="url(#harrow-frontier)" />
 
                 {/* Node: API Ingress */}
                 <g transform="translate(14, 60)">
-                  <rect width="116" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                  <rect width="104" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">GATEWAY</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">API Ingress</text>
                 </g>
 
                 {/* Node: Semantic Cache */}
-                <g transform="translate(164, 60)">
-                  <rect width="124" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                <g transform="translate(144, 60)">
+                  <rect width="116" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">CACHE</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Semantic Cache</text>
                 </g>
 
                 {/* Node: Complexity Router */}
-                <g transform="translate(322, 60)">
-                  <rect width="134" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                <g transform="translate(286, 60)">
+                  <rect width="128" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">ROUTER</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Complexity Router</text>
                 </g>
 
                 {/* Node: Fast Model */}
-                <g transform="translate(506, 18)">
+                <g transform="translate(538, 18)">
                   <rect width="158" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">FAST TIER</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Fast Model</text>
                 </g>
 
                 {/* Node: Frontier Model (bottleneck) */}
-                <g transform="translate(506, 102)">
+                <g transform="translate(538, 102)">
                   <rect width="158" height="56" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="2" />
-                  {/* Bottleneck indicator */}
-                  <rect x="76" y="7" width="74" height="16" rx="2" fill="#FFFFFF" />
-                  <text x="113" y="19" textAnchor="middle" fill="#09090B" fontSize="10" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">BOTTLENECK</text>
+                  {/* Bottleneck indicator with clean separation from FRONTIER tag */}
+                  <rect x="76" y="7" width="70" height="16" rx="2" fill="#FFFFFF" />
+                  <text x="111" y="19" textAnchor="middle" fill="#09090B" fontSize="10" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">BOTTLENECK</text>
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">FRONTIER</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Frontier Model</text>
+                </g>
+
+                {/* Traffic % badge labels — rendered on top of wires at the bezier midpoints */}
+                <g transform="translate(476, 60)">
+                  <rect x="-37" y="-11" width="74" height="22" rx="3" fill="#111114" stroke="#3F3F46" strokeWidth="1" />
+                  <text x="0" y="4.5" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600">{fastRouting}% FAST</text>
+                </g>
+                <g transform="translate(476, 114)">
+                  <rect x="-46" y="-11" width="92" height="22" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="1.5" />
+                  <text x="0" y="4.5" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700">{frontierRouting}% FRONTIER</text>
                 </g>
               </svg>
             </div>
