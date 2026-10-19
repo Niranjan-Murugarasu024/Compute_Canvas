@@ -300,7 +300,7 @@ export function EveryRequestSection() {
             <div className="console-diagnostic-panel">
               <div className="diagnostic-header-row">
                 <span className="diagnostic-badge text-mono">PRIMARY DIAGNOSTIC</span>
-                <span className="diagnostic-sep text-mono">//</span>
+                <span className="diagnostic-sep text-mono">{'//'}</span>
                 <span className="diagnostic-subject text-mono">{activeSubsystem.diagnosticTitle}</span>
               </div>
               <p className="diagnostic-desc">

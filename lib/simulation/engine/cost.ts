@@ -14,6 +14,7 @@ import {
 import { type ResolvedGraph } from './graph';
 import { type TrafficPropagationResult } from './traffic';
 import { roundCurrency, safeDivide } from './precision';
+import { type EnginePricingBundle } from '../../registry/adapter';
 
 export const MODEL_PRICING: Record<string, PricingRecord> = {
   // Fast Models
@@ -224,8 +225,12 @@ export interface CostModelResult {
 export function calculateCosts(
   workload: Workload,
   graph: ResolvedGraph,
-  traffic: TrafficPropagationResult
+  traffic: TrafficPropagationResult,
+  pricingBundle?: EnginePricingBundle
 ): CostModelResult {
+  const modelsMap = pricingBundle?.models || MODEL_PRICING;
+  const infraPricing = pricingBundle?.infra || INFRA_PRICING;
+
   const requestsPerMonth = workload.requestsPerMonth;
   const avgInputTokens = workload.avgInputTokens;
   const avgOutputTokens = workload.avgOutputTokens;
@@ -235,8 +240,8 @@ export function calculateCosts(
 
   // 1. Ingress Gateway Cost
   const apiNodes = graph.apiNodes;
-  const ingressCost = (requestsPerMonth / 1_000_000) * INFRA_PRICING.apiGateway.perMillionRequests * Math.max(1, apiNodes.length);
-  const ingressLatency = INFRA_PRICING.apiGateway.latencyMs;
+  const ingressCost = (requestsPerMonth / 1_000_000) * infraPricing.apiGateway.perMillionRequests * Math.max(1, apiNodes.length);
+  const ingressLatency = infraPricing.apiGateway.latencyMs;
 
   apiNodes.forEach(api => {
     nodeMetrics.set(api.id, {
@@ -250,11 +255,11 @@ export function calculateCosts(
 
   // 2. Semantic Cache Cost
   let cacheCost = 0;
-  const cacheLookupLatency = INFRA_PRICING.cache.lookupLatencyMs;
+  const cacheLookupLatency = infraPricing.cache.lookupLatencyMs;
   if (graph.hasCache) {
     const cacheNodes = graph.cacheNodes;
     const cachedGBHours = Math.max(1, requestsPerMonth / 500_000) * 730;
-    cacheCost = INFRA_PRICING.cache.baseMonthlyCost * cacheNodes.length + cachedGBHours * INFRA_PRICING.cache.perGBHour;
+    cacheCost = infraPricing.cache.baseMonthlyCost * cacheNodes.length + cachedGBHours * infraPricing.cache.perGBHour;
 
     cacheNodes.forEach(c => {
       nodeMetrics.set(c.id, {
@@ -269,13 +274,13 @@ export function calculateCosts(
 
   // 3. Vector DB Cost
   let vectorDbCost = 0;
-  const vectorLookupLatency = INFRA_PRICING.vectorDb.lookupLatencyMs;
+  const vectorLookupLatency = infraPricing.vectorDb.lookupLatencyMs;
   if (graph.hasVectorDb) {
     const vectorNodes = graph.vectorNodes;
     const vectorQueries = uncachedRequests;
-    vectorDbCost = (INFRA_PRICING.vectorDb.baseMonthlyCost * vectorNodes.length) +
-      (vectorQueries / 1_000_000) * INFRA_PRICING.vectorDb.perMillionQueries * 100 +
-      10 * INFRA_PRICING.vectorDb.perGBStorage;
+    vectorDbCost = (infraPricing.vectorDb.baseMonthlyCost * vectorNodes.length) +
+      (vectorQueries / 1_000_000) * infraPricing.vectorDb.perMillionQueries * 100 +
+      10 * infraPricing.vectorDb.perGBStorage;
 
     vectorNodes.forEach(v => {
       nodeMetrics.set(v.id, {
@@ -290,10 +295,10 @@ export function calculateCosts(
 
   // 4. Complexity Router Cost
   let routerCost = 0;
-  const routerLatency = INFRA_PRICING.router.latencyMs;
+  const routerLatency = infraPricing.router.latencyMs;
   if (graph.hasRouter) {
     const routerNodes = graph.routerNodes;
-    routerCost = (uncachedRequests / 1_000_000) * INFRA_PRICING.router.perMillionRequests;
+    routerCost = (uncachedRequests / 1_000_000) * infraPricing.router.perMillionRequests;
 
     routerNodes.forEach(r => {
       nodeMetrics.set(r.id, {
@@ -320,7 +325,7 @@ export function calculateCosts(
     const node = alloc.node;
     const defaultModelId = node.type === 'fast-model' ? 'gpt-4o-mini' : 'gpt-4o';
     const modelId = node.modelId || defaultModelId;
-    const pricing = MODEL_PRICING[modelId] || (node.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']);
+    const pricing = modelsMap[modelId] || (node.type === 'fast-model' ? modelsMap['gpt-4o-mini'] : modelsMap['gpt-4o']);
 
     const nodeRequests = alloc.routedRequests;
     const inputCost = (nodeRequests * avgInputTokens / 1_000_000) * pricing.inputPricePer1M;
@@ -363,7 +368,7 @@ export function calculateCosts(
     const node = graph.modelNodes[0];
     const defaultModelId = node.type === 'fast-model' ? 'gpt-4o-mini' : 'gpt-4o';
     const modelId = node.modelId || defaultModelId;
-    const pricing = MODEL_PRICING[modelId] || MODEL_PRICING['gpt-4o'];
+    const pricing = modelsMap[modelId] || modelsMap['gpt-4o'];
     weightedModelLatency = pricing.baselineLatencyMs;
   }
 

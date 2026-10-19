@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    name: Build, Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Core Test Suites
+        run: npm run test:all
+
+      - name: Run Snapshot UI Tests
+        run: npx tsx scripts/test-snapshot-ui.ts
+
+      - name: Run Multi-Snapshot Invariant Tests
+        run: npx tsx scripts/test-multi-snapshot.ts
+
+      - name: Run Registry v2 Tests
+        run: npx tsx scripts/test-registry-v2.ts
+
+      - name: Run Cryptographic SHA-256 Vector Tests
+        run: npx tsx scripts/test-sha256-vectors.ts
+
+      - name: Run Baseline Differential Tests
+        run: npx tsx scripts/test-baseline-differential.ts

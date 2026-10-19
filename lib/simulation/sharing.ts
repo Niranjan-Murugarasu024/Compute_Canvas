@@ -7,7 +7,6 @@ import {
   type Architecture,
   type Workload,
   type BillCalibration,
-  validateArchitecture,
 } from './engine';
 
 export interface V1ShareState {
@@ -56,12 +55,13 @@ export function encodeArchitectureState(state: {
   architecture: Architecture;
   workload: Workload;
   calibration?: BillCalibration;
+  pricingSnapshot?: string;
 }): string {
   const sharePayload: V1ShareState = {
     version: 1,
     schemaVersion: '1.0',
     registryVersion: 'v1.4',
-    pricingSnapshot: '2026-03',
+    pricingSnapshot: state.pricingSnapshot || '2026-03',
     architecture: {
       id: state.architecture.id || 'custom',
       name: state.architecture.name || 'Custom Architecture',
@@ -166,13 +166,17 @@ export function decodeArchitectureState(encoded: string): {
       edges: sanitizedEdges,
     };
 
+    const targetPricingSnapshot = (parsed.pricingSnapshot && typeof parsed.pricingSnapshot === 'string')
+      ? parsed.pricingSnapshot
+      : '2026-03';
+
     return {
       success: true,
       data: {
         version: 1,
         schemaVersion: parsed.schemaVersion || '1.0',
         registryVersion: parsed.registryVersion || 'v1.4',
-        pricingSnapshot: parsed.pricingSnapshot || '2026-03',
+        pricingSnapshot: targetPricingSnapshot,
         architecture: sanitizedArch,
         workload: sanitizedWorkload,
         calibration: parsed.calibration ? {

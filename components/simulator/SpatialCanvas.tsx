@@ -7,11 +7,16 @@ import {
   type ArchEdge,
   type Architecture,
   type SimulationResult,
-  MODEL_PRICING,
   TEMPLATES_MAP,
   formatCurrency,
   formatLatency,
 } from '@/lib/simulation/engine';
+import {
+  getSnapshot,
+  BASELINE_SNAPSHOT,
+  resolveRegistryPricing,
+  BASELINE_ENGINE_BUNDLE,
+} from '@/lib/registry';
 
 interface DragState {
   nodeId: string;
@@ -35,9 +40,11 @@ const NODE_HEIGHT = 86;
 export default function SpatialCanvas({
   simulation,
   architecture: propArchitecture,
+  pricingSnapshot,
 }: {
   simulation: SimulationResult;
   architecture?: Architecture;
+  pricingSnapshot?: string;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -344,27 +351,52 @@ export default function SpatialCanvas({
     [architecture.edges, selectedEdgeIndex]
   );
 
-  const FAST_MODELS = useMemo(
-    () =>
-      Object.entries(MODEL_PRICING)
-        .filter(([_, p]) => p.category === 'fast')
-        .map(([id, p]) => ({ id, name: p.product, cost: `$${p.inputPricePer1M}/M` })),
-    []
-  );
+  const activeSnapshot = useMemo(() => {
+    return getSnapshot(pricingSnapshot || store.pricingSnapshot || '') || BASELINE_SNAPSHOT;
+  }, [pricingSnapshot, store.pricingSnapshot]);
 
-  const FRONTIER_MODELS = useMemo(
-    () =>
-      Object.entries(MODEL_PRICING)
-        .filter(([_, p]) => p.category === 'frontier')
-        .map(([id, p]) => ({ id, name: p.product, cost: `$${p.inputPricePer1M}/M` })),
-    []
-  );
+  const pricingBundle = useMemo(() => {
+    const res = resolveRegistryPricing(activeSnapshot.metadata.snapshotId);
+    return res.ok ? res.bundle : BASELINE_ENGINE_BUNDLE;
+  }, [activeSnapshot]);
+
+  const FAST_MODELS = useMemo(() => {
+    return activeSnapshot.models
+      .filter(m => m.category === 'fast')
+      .map(m => {
+        const p = pricingBundle.models[m.id];
+        const costStr = p ? `$${p.inputPricePer1M}/M` : '';
+        return {
+          id: m.id,
+          name: m.product,
+          cost: costStr,
+          status: m.status,
+          isActive: m.status === 'ACTIVE',
+        };
+      });
+  }, [activeSnapshot, pricingBundle]);
+
+  const FRONTIER_MODELS = useMemo(() => {
+    return activeSnapshot.models
+      .filter(m => m.category === 'frontier')
+      .map(m => {
+        const p = pricingBundle.models[m.id];
+        const costStr = p ? `$${p.inputPricePer1M}/M` : '';
+        return {
+          id: m.id,
+          name: m.product,
+          cost: costStr,
+          status: m.status,
+          isActive: m.status === 'ACTIVE',
+        };
+      });
+  }, [activeSnapshot, pricingBundle]);
 
   // Boundary-aware contextual node toolbar positioning (always remains within visible canvas)
   const nodeToolbarPos = useMemo(() => {
-    if (!selectedNode || !containerRef.current) return null;
-    const cw = containerRef.current.clientWidth || canvasDimensions?.width || 800;
-    const ch = containerRef.current.clientHeight || canvasDimensions?.height || 600;
+    if (!selectedNode) return null;
+    const cw = canvasDimensions?.width || 800;
+    const ch = canvasDimensions?.height || 600;
 
     const nx = selectedNode.x ?? 100;
     const ny = selectedNode.y ?? 100;
@@ -397,13 +429,13 @@ export default function SpatialCanvas({
 
   // Boundary-aware contextual edge toolbar positioning
   const edgeToolbarPos = useMemo(() => {
-    if (!selectedEdge || !containerRef.current) return null;
+    if (!selectedEdge) return null;
     const from = nodeMap.get(selectedEdge.source);
     const to = nodeMap.get(selectedEdge.target);
     if (!from || !to) return null;
 
-    const cw = containerRef.current.clientWidth || canvasDimensions?.width || 800;
-    const ch = containerRef.current.clientHeight || canvasDimensions?.height || 600;
+    const cw = canvasDimensions?.width || 800;
+    const ch = canvasDimensions?.height || 600;
 
     const midX = ((from.x ?? 100) + (to.x ?? 100) + NODE_WIDTH) / 2;
     const midY = ((from.y ?? 100) + (to.y ?? 100) + NODE_HEIGHT) / 2;
@@ -1003,9 +1035,14 @@ export default function SpatialCanvas({
               onChange={(e) => updateNodeModel(selectedNode.id, e.target.value)}
               aria-label="Select Fast Reasoning Model"
             >
+              {selectedNode.modelId && !FAST_MODELS.some(m => m.id === selectedNode.modelId) && (
+                <option value={selectedNode.modelId} disabled>
+                  {selectedNode.modelId} [UNLISTED / INVALID]
+                </option>
+              )}
               {FAST_MODELS.map(m => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.cost})
+                <option key={m.id} value={m.id} disabled={!m.isActive}>
+                  {m.name} {!m.isActive ? `[${m.status} - Historical Only]` : `(${m.cost})`}
                 </option>
               ))}
             </select>
@@ -1019,9 +1056,14 @@ export default function SpatialCanvas({
               onChange={(e) => updateNodeModel(selectedNode.id, e.target.value)}
               aria-label="Select Frontier Reasoning Model"
             >
+              {selectedNode.modelId && !FRONTIER_MODELS.some(m => m.id === selectedNode.modelId) && (
+                <option value={selectedNode.modelId} disabled>
+                  {selectedNode.modelId} [UNLISTED / INVALID]
+                </option>
+              )}
               {FRONTIER_MODELS.map(m => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.cost})
+                <option key={m.id} value={m.id} disabled={!m.isActive}>
+                  {m.name} {!m.isActive ? `[${m.status} - Historical Only]` : `(${m.cost})`}
                 </option>
               ))}
             </select>

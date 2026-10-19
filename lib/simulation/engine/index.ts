@@ -10,12 +10,12 @@ import {
   type SimulationResult,
   type CapabilityTier,
 } from './types';
-import { ENGINE_VERSION } from './version';
+import { ENGINE_VERSION, PRICING_SNAPSHOT, MODEL_REGISTRY_VERSION } from './version';
 import { normalizeSimulationInput } from './input';
 import { validateArchitecture } from './validation';
 import { resolveGraph } from './graph';
 import { propagateTraffic } from './traffic';
-import { calculateCosts, MODEL_PRICING } from './cost';
+import { calculateCosts } from './cost';
 import { calculateLatency } from './latency';
 import { calculateCapacity } from './capacity';
 import { calculateThroughputRPS } from './throughput';
@@ -24,6 +24,7 @@ import { calculateComponentContributions } from './contribution';
 import { generateCalculationTrace } from './trace';
 import { getEngineProvenance } from './provenance';
 import { formatNumber } from './precision';
+import { resolveRegistryPricing, validateArchitectureModels } from '../../registry/adapter';
 
 /**
  * Canonical simulate() pipeline for ComputeCanvas Engine 4.0.
@@ -64,10 +65,111 @@ export function simulate(
     { category: 'Semantic Cache Rate', detail: `${Math.round(cacheHitRate * 100)}% on cache hits` }
   );
 
+  // Resolve pricing snapshot via registry adapter
+  const pricingResolution = resolveRegistryPricing(normalized.pricingSnapshot);
+  if (!pricingResolution.ok) {
+    const errMsg = pricingResolution.message;
+    return {
+      monthlyCost: 0,
+      costPerRequest: 0,
+      p95Latency: 0,
+      latencies: {
+        p50: 0,
+        p90: 0,
+        p95: 0,
+        p99: 0,
+        ttftMs: 0,
+        generationMs: 0,
+        queueingMs: 0,
+        networkMs: 0,
+        cachePathMs: 0,
+        criticalPathMs: 0,
+        criticalPathSegments: [],
+        latencyDisclaimer: 'Estimated P95 is a model-derived metric based on configured latency and saturation assumptions, not a live production measurement.',
+      },
+      capacityUtilization: 0,
+      capabilityTier: 'Quality Not Modeled',
+      capabilityDescription: 'Snapshot resolution failed.',
+      qualityEstimate: 0,
+      throughputRPS: 0,
+      costBreakdown: {
+        models: 0,
+        cache: 0,
+        vectorDb: 0,
+        ingress: 0,
+        router: 0,
+        total: 0,
+        subsystems: [],
+        model: 0,
+        compute: 0,
+        network: 0,
+        observability: 0,
+      },
+      bottleneck: {
+        nodeId: '',
+        componentName: 'No Active Flow',
+        componentType: 'api',
+        metricType: 'cost',
+        impactPercentage: 0,
+        costSharePercentage: 0,
+        latencySharePercentage: 0,
+        explanation: errMsg,
+      },
+      nodeMetrics: new Map(),
+      validation: {
+        isValid: false,
+        errors: [errMsg],
+        warnings: [],
+        reachableNodeIds: new Set<string>(),
+        hasModel: false,
+        hasApi: false,
+      },
+      warnings: [{ type: 'validation', message: errMsg, severity: 'critical' as const }],
+      assumptions,
+      calculationTrace: {
+        totalRequests: requestsPerMonth,
+        cacheHitRate,
+        cachedRequests: 0,
+        uncachedRequests: 0,
+        avgInputTokens,
+        avgOutputTokens,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        modelInputCost: 0,
+        modelOutputCost: 0,
+        totalModelCost: 0,
+        cacheCost: 0,
+        ingressCost: 0,
+        routerCost: 0,
+        vectorDbCost: 0,
+        totalCost: 0,
+        costPerRequest: 0,
+        models: [],
+        steps: [],
+      },
+      engineVersion: ENGINE_VERSION,
+      provenance: getEngineProvenance({
+        engineVersion: normalized.engineVersion || ENGINE_VERSION,
+        pricingSnapshot: normalized.pricingSnapshot || PRICING_SNAPSHOT,
+        modelRegistryVersion: normalized.modelRegistryVersion,
+        assumptionVersion: normalized.assumptionVersion,
+      }),
+    };
+  }
+
+  const pricingBundle = pricingResolution.bundle;
+
+  // Validate architecture model availability against the active snapshot
+  const modelValidation = validateArchitectureModels(arch, pricingBundle);
+  if (!modelValidation.isValid) {
+    validation.isValid = false;
+    validation.errors.push(...modelValidation.errors);
+  }
+
   const provenance = getEngineProvenance({
-    engineVersion: normalized.engineVersion || ENGINE_VERSION,
-    pricingSnapshot: normalized.pricingSnapshot,
-    modelRegistryVersion: normalized.modelRegistryVersion,
+    engineVersion: normalized.engineVersion || pricingBundle.engineVersion || ENGINE_VERSION,
+    pricingSnapshot: normalized.pricingSnapshot || pricingBundle.pricingSnapshot || PRICING_SNAPSHOT,
+    modelRegistryVersion: normalized.modelRegistryVersion || pricingBundle.modelRegistryVersion || MODEL_REGISTRY_VERSION,
     assumptionVersion: normalized.assumptionVersion,
   });
 
@@ -156,7 +258,7 @@ export function simulate(
   const traffic = propagateTraffic(workload, arch, graph);
 
   // 3. Cost Engine
-  const cost = calculateCosts(workload, graph, traffic);
+  const cost = calculateCosts(workload, graph, traffic, pricingBundle);
 
   // 4. Latency Engine
   const latency = calculateLatency(graph, traffic.effectiveCacheRate, cost.weightedModelLatency);
@@ -207,8 +309,8 @@ export function simulate(
     const node = graph.modelNodes[0];
     const defaultModelId = node.type === 'fast-model' ? 'gpt-4o-mini' : 'gpt-4o';
     const modelId = node.modelId || defaultModelId;
-    const pricing = MODEL_PRICING[modelId] || (node.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']);
-    rawQuality = pricing.qualityScore ?? (node.type === 'fast-model' ? 82 : 95);
+    const pricing = pricingBundle.models[modelId] || (node.type === 'fast-model' ? pricingBundle.models['gpt-4o-mini'] : pricingBundle.models['gpt-4o']);
+    rawQuality = pricing?.qualityScore ?? (node.type === 'fast-model' ? 82 : 95);
   } else if (graph.modelNodes.length > 1) {
     let weightedScoreSum = 0;
     let totalShare = 0;
@@ -218,8 +320,8 @@ export function simulate(
       const share = edge?.trafficShare !== undefined ? edge.trafficShare : 1 / graph.modelNodes.length;
       const defaultModelId = m.type === 'fast-model' ? 'gpt-4o-mini' : 'gpt-4o';
       const modelId = m.modelId || defaultModelId;
-      const pricing = MODEL_PRICING[modelId] || (m.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']);
-      const score = pricing.qualityScore ?? (m.type === 'fast-model' ? 82 : 95);
+      const pricing = pricingBundle.models[modelId] || (m.type === 'fast-model' ? pricingBundle.models['gpt-4o-mini'] : pricingBundle.models['gpt-4o']);
+      const score = pricing?.qualityScore ?? (m.type === 'fast-model' ? 82 : 95);
       weightedScoreSum += score * share;
       totalShare += share;
     });

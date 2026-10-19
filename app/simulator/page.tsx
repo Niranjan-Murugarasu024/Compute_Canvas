@@ -14,6 +14,7 @@ interface PageProps {
   searchParams: Promise<{
     template?: string;
     data?: string;
+    snapshot?: string;
   }>;
 }
 
@@ -23,6 +24,7 @@ export default async function SimulatorPage({ searchParams }: PageProps) {
   let initialArchitecture = undefined;
   let initialWorkload = undefined;
   let initialCalibration = undefined;
+  let initialPricingSnapshot: string | undefined = params?.snapshot ? String(params.snapshot).trim() : undefined;
 
   if (params?.data && typeof params.data === 'string') {
     const decoded = decodeArchitectureState(params.data);
@@ -30,6 +32,9 @@ export default async function SimulatorPage({ searchParams }: PageProps) {
       initialArchitecture = decoded.data.architecture;
       initialWorkload = decoded.data.workload;
       initialCalibration = decoded.data.calibration;
+      if (!initialPricingSnapshot && decoded.data.pricingSnapshot) {
+        initialPricingSnapshot = decoded.data.pricingSnapshot;
+      }
     }
   } else if (params?.template && typeof params.template === 'string') {
     const query = params.template.toLowerCase();
@@ -49,6 +54,7 @@ export default async function SimulatorPage({ searchParams }: PageProps) {
           initialArchitecture={initialArchitecture}
           initialWorkload={initialWorkload}
           initialCalibration={initialCalibration}
+          initialPricingSnapshot={initialPricingSnapshot}
         />
       </Suspense>
     </SimulatorErrorBoundary>

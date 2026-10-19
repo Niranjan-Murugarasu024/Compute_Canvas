@@ -25,7 +25,9 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
   const { savedArchitectures, loadArchitecture } = useArchitectureStore();
 
   // Resolve architecture from template, query param, or saved architectures
-  const resolved = useMemo<{ arch: Architecture; workload: Workload; name: string; description: string }>(() => {
+  const resolved = useMemo<{ arch: Architecture; workload: Workload; name: string; description: string; pricingSnapshot: string }>(() => {
+    const snapshotParam = searchParams.get('snapshot') || undefined;
+
     // 1. Try URL encoded base64 state data
     const queryData = searchParams.get('data');
     if (queryData) {
@@ -36,6 +38,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           workload: decoded.data.workload,
           name: decoded.data.architecture.name || 'Shared Architecture',
           description: 'Custom architecture snapshot shared from ComputeCanvas Workbench.',
+          pricingSnapshot: snapshotParam || decoded.data.pricingSnapshot || 'snap-cc-3b3fbd4cbab4e979',
         };
       }
     }
@@ -48,6 +51,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         workload: saved.workload,
         name: saved.name,
         description: 'Persistent workspace architecture shared from ComputeCanvas.',
+        pricingSnapshot: snapshotParam || 'snap-cc-3b3fbd4cbab4e979',
       };
     }
 
@@ -58,13 +62,18 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
       workload: template.defaultWorkload,
       name: template.name,
       description: template.description,
+      pricingSnapshot: snapshotParam || 'snap-cc-3b3fbd4cbab4e979',
     };
   }, [id, searchParams, savedArchitectures]);
 
-  const sim = useMemo(() => simulate(resolved.workload, resolved.arch), [resolved]);
+  const sim = useMemo(() => simulate({
+    workload: resolved.workload,
+    architecture: resolved.arch,
+    pricingSnapshot: resolved.pricingSnapshot,
+  }), [resolved]);
 
   const handleFork = () => {
-    loadArchitecture(resolved.arch, resolved.workload);
+    loadArchitecture(resolved.arch, resolved.workload, undefined, resolved.pricingSnapshot);
     router.push('/simulator');
   };
 
@@ -79,6 +88,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
               <div className="share-header-left">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
                   <span className="badge badge--neutral">SHARED ARTIFACT</span>
+                  <span className="badge badge--primary text-mono">SNAPSHOT: {resolved.pricingSnapshot}</span>
                   <span className="text-caption text-mono" style={{ color: 'var(--color-text-muted)' }}>
                     computecanvas.io/s/{id}
                   </span>
@@ -104,35 +114,49 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
             </div>
           </div>
 
+          {!sim.validation.isValid && (
+            <div className="validation-warning-banner" role="alert" style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid #EF4444',
+              borderRadius: 'var(--radius-md, 8px)',
+              padding: '14px 18px',
+              marginBottom: 'var(--space-4)',
+              color: '#FCA5A5',
+            }}>
+              <strong style={{ color: '#EF4444' }}>Architecture Validation Warning: </strong>
+              {sim.validation.errors.join(' • ')}
+            </div>
+          )}
+
           {/* Primary Metrics Strip */}
           <div className="share-metrics-strip">
             <div className="share-metric-card">
               <span className="metric-tag">MODELED MONTHLY COST</span>
-              <span className="metric-number text-mono" style={{ color: 'var(--color-cost)' }}>
-                {formatCurrency(sim.monthlyCost)}
+              <span className="metric-number text-mono" style={{ color: !sim.validation.isValid ? '#EF4444' : 'var(--color-cost)' }}>
+                {!sim.validation.isValid ? 'INVALID CONFIG' : formatCurrency(sim.monthlyCost)}
               </span>
               <span className="metric-subtext text-mono">
-                ${(sim.costPerRequest * 1000).toFixed(3)} / 1K requests
+                {!sim.validation.isValid ? 'Simulation blocked by validation failure' : `$${(sim.costPerRequest * 1000).toFixed(3)} / 1K requests`}
               </span>
             </div>
 
             <div className="share-metric-card">
               <span className="metric-tag">MODELED TAIL LATENCY</span>
-              <span className="metric-number text-mono" style={{ color: 'var(--color-performance)' }}>
-                {formatLatency(sim.p95Latency)}
+              <span className="metric-number text-mono" style={{ color: !sim.validation.isValid ? '#EF4444' : 'var(--color-performance)' }}>
+                {!sim.validation.isValid ? 'BLOCKED' : formatLatency(sim.p95Latency)}
               </span>
               <span className="metric-subtext text-mono">
-                {Math.round(sim.p95Latency * 0.65)}ms P50 est.
+                {!sim.validation.isValid ? 'Calculations withheld for rejected architecture' : `${Math.round(sim.p95Latency * 0.65)}ms P50 est.`}
               </span>
             </div>
 
             <div className="share-metric-card">
               <span className="metric-tag">CAPACITY UTILIZATION</span>
-              <span className="metric-number text-mono" style={{ color: sim.capacityUtilization > 90 ? 'var(--color-warning)' : 'var(--color-capacity)' }}>
-                {sim.capacityUtilization.toFixed(0)}%
+              <span className="metric-number text-mono" style={{ color: !sim.validation.isValid ? 'var(--color-text-muted)' : (sim.capacityUtilization > 90 ? 'var(--color-warning)' : 'var(--color-capacity)') }}>
+                {!sim.validation.isValid ? 'N/A' : `${sim.capacityUtilization.toFixed(0)}%`}
               </span>
               <span className="metric-subtext text-mono">
-                {sim.capacityUtilization > 100 ? 'Exceeds capacity' : 'Healthy operating window'}
+                {!sim.validation.isValid ? 'Simulation withheld' : (sim.capacityUtilization > 100 ? 'Exceeds capacity' : 'Healthy operating window')}
               </span>
             </div>
 

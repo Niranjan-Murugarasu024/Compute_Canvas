@@ -99,15 +99,23 @@ export default function CommandPalette({
     return commands.filter(c => c.label.toLowerCase().includes(q) || c.category.toLowerCase().includes(q) || c.detail?.toLowerCase().includes(q));
   }, [commands, query]);
 
-  useEffect(() => {
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (prevQuery !== query) {
+    setPrevQuery(query);
     setSelectedIndex(0);
-  }, [query]);
+  }
+
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (!isOpen) {
+      setQuery('');
+    }
+  }
 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
-    } else {
-      setQuery('');
     }
   }, [isOpen]);
 

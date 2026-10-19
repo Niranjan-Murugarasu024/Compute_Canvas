@@ -23,10 +23,16 @@ import {
   type SimulationResult,
   type CalculationTrace,
   type CausalDeltaDetails,
-  MODEL_PRICING,
   INFRA_PRICING,
   TEMPLATES,
 } from '@/lib/simulation/engine';
+import {
+  getAllSnapshots,
+  getSnapshot,
+  BASELINE_SNAPSHOT,
+  resolveRegistryPricing,
+  BASELINE_ENGINE_BUNDLE,
+} from '@/lib/registry';
 import {
   encodeArchitectureState,
   decodeArchitectureState,
@@ -46,6 +52,7 @@ export interface SimulatorClientProps {
   initialArchitecture?: Architecture;
   initialWorkload?: Workload;
   initialCalibration?: BillCalibration;
+  initialPricingSnapshot?: string;
 }
 
 // ── 6 Core V1 Building Blocks ──
@@ -111,10 +118,12 @@ const CORE_COMPONENTS: {
 function SimulatorQuerySync({
   onLoadShare,
   onLoadTemplate,
+  onSelectSnapshot,
   onError,
 }: {
   onLoadShare: (data: V1ShareState) => void;
   onLoadTemplate: (templateId: string) => void;
+  onSelectSnapshot: (snapshotId: string) => void;
   onError: (msg: string) => void;
 }) {
   const searchParams = useSearchParams();
@@ -122,6 +131,22 @@ function SimulatorQuerySync({
 
   useEffect(() => {
     if (!searchParams) return;
+
+    // Snapshot query parameter evaluation
+    const snapshotParam = searchParams.get('snapshot');
+    if (snapshotParam) {
+      const snapKey = `snapshot:${snapshotParam}`;
+      if (processedParamRef.current !== snapKey) {
+        processedParamRef.current = snapKey;
+        const resolved = getSnapshot(snapshotParam);
+        if (resolved) {
+          onSelectSnapshot(resolved.metadata.snapshotId);
+        } else {
+          onError(`Unknown pricing snapshot identifier "${snapshotParam}". Recovered safely to default snapshot (${BASELINE_SNAPSHOT.metadata.snapshotId}).`);
+          onSelectSnapshot(BASELINE_SNAPSHOT.metadata.snapshotId);
+        }
+      }
+    }
 
     const queryData = searchParams.get('data');
     if (queryData) {
@@ -131,6 +156,15 @@ function SimulatorQuerySync({
 
       const decoded = decodeArchitectureState(queryData);
       if (decoded.success && decoded.data) {
+        if (!snapshotParam && decoded.data.pricingSnapshot) {
+          const snap = getSnapshot(decoded.data.pricingSnapshot);
+          if (snap) {
+            onSelectSnapshot(snap.metadata.snapshotId);
+          } else {
+            onError(`Shared snapshot identifier "${decoded.data.pricingSnapshot}" is unknown. Recovered safely to default snapshot (${BASELINE_SNAPSHOT.metadata.snapshotId}).`);
+            onSelectSnapshot(BASELINE_SNAPSHOT.metadata.snapshotId);
+          }
+        }
         onLoadShare(decoded.data);
       } else {
         onError('SHARED ARCHITECTURE COULD NOT BE RESTORED. The link may be corrupted or from an incompatible version. A clean baseline workspace has been loaded.');
@@ -146,7 +180,7 @@ function SimulatorQuerySync({
 
       onLoadTemplate(templateParam);
     }
-  }, [searchParams, onLoadShare, onLoadTemplate, onError]);
+  }, [searchParams, onLoadShare, onLoadTemplate, onSelectSnapshot, onError]);
 
   return null;
 }
@@ -156,14 +190,24 @@ export default function SimulatorClient({
   initialArchitecture,
   initialWorkload,
   initialCalibration,
+  initialPricingSnapshot,
 }: SimulatorClientProps) {
   const store = useArchitectureStore();
   const [hasUserModified, setHasUserModified] = useState(false);
 
+  // Snapshot selection state
+  const selectedSnapshotId = store.pricingSnapshot || initialPricingSnapshot || BASELINE_SNAPSHOT.metadata.snapshotId;
+  const availableSnapshots = useMemo(() => getAllSnapshots(), []);
+  const activeSnapshot = useMemo(() => getSnapshot(selectedSnapshotId) || BASELINE_SNAPSHOT, [selectedSnapshotId]);
+  const activePricingBundle = useMemo(() => {
+    const res = resolveRegistryPricing(selectedSnapshotId);
+    return res.ok ? res.bundle : BASELINE_ENGINE_BUNDLE;
+  }, [selectedSnapshotId]);
+
   // Synchronize store on client mount
   useEffect(() => {
     if (initialArchitecture) {
-      store.loadArchitecture(initialArchitecture, initialWorkload, initialCalibration);
+      store.loadArchitecture(initialArchitecture, initialWorkload, initialCalibration, initialPricingSnapshot);
     }
   }, []);
 
@@ -183,11 +227,15 @@ export default function SimulatorClient({
   // Selected template & Toast messaging
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(initialTemplateId || 'router-cache');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
+
   const showToast = useCallback((msg: string) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
-    toastTimerRef.current = setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
   // Baseline state tracking (Sections 6, 7, 8, 9)
@@ -276,9 +324,9 @@ export default function SimulatorClient({
     store.removeEdge(source, target);
   }, [store, recordForUndo]);
 
-  const loadArchitecture = useCallback((arch: Architecture, wl?: Workload, cal?: BillCalibration) => {
+  const loadArchitecture = useCallback((arch: Architecture, wl?: Workload, cal?: BillCalibration, snap?: string) => {
     setHasUserModified(true);
-    store.loadArchitecture(arch, wl, cal);
+    store.loadArchitecture(arch, wl, cal, snap);
   }, [store]);
 
   // Deterministic baseline deltas & identity calculation (Sections 6, 7, 8, 31)
@@ -321,10 +369,22 @@ export default function SimulatorClient({
     if (!isModified) return;
     setHistoryPast(past => [...past.slice(-25), { arch: architecture, workload: workload, calibration: calibration }]);
     setHistoryFuture([]);
-    store.loadArchitecture(baselineSnapshot.arch, baselineSnapshot.workload, baselineSnapshot.calibration);
+    store.loadArchitecture(baselineSnapshot.arch, baselineSnapshot.workload, baselineSnapshot.calibration, BASELINE_SNAPSHOT.metadata.snapshotId);
     setHasUserModified(false);
     showToast('Reset to exact baseline state.');
   }, [isModified, baselineSnapshot, architecture, workload, calibration, store, showToast]);
+
+  const handleSelectSnapshot = useCallback((snapshotId: string) => {
+    const snap = getSnapshot(snapshotId);
+    if (!snap) {
+      showToast(`Unknown snapshot ID "${snapshotId}".`);
+      return;
+    }
+    const canonicalId = snap.metadata.snapshotId;
+    store.setPricingSnapshot(canonicalId);
+    setHasUserModified(true);
+    showToast(`Active registry snapshot: ${snap.metadata.label} (${canonicalId})`);
+  }, [store, showToast]);
 
   // Local UI states
   const [leftTab, setLeftTab] = useState<'all' | 'components' | 'workload' | 'calibration'>('all');
@@ -340,8 +400,12 @@ export default function SimulatorClient({
 
   // 1. Authoritative deterministic simulation
   const result: SimulationResult = useMemo(
-    () => simulate(workload, architecture),
-    [workload, architecture]
+    () => simulate({
+      workload,
+      architecture,
+      pricingSnapshot: selectedSnapshotId,
+    }),
+    [workload, architecture, selectedSnapshotId]
   );
 
   // 2. Calibrated economics
@@ -412,14 +476,19 @@ export default function SimulatorClient({
   // Share architecture action: Base64URL encode and open share modal with disclosure (Section 26)
   const handleShare = useCallback(() => {
     try {
-      const encoded = encodeArchitectureState({ architecture, workload, calibration });
+      const encoded = encodeArchitectureState({
+        architecture,
+        workload,
+        calibration,
+        pricingSnapshot: selectedSnapshotId,
+      });
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://computecanvas.io';
-      const shareUrl = `${origin}/simulator?data=${encoded}`;
+      const shareUrl = `${origin}/simulator?data=${encoded}&snapshot=${encodeURIComponent(selectedSnapshotId)}`;
       setShareModalUrl(shareUrl);
     } catch {
       showToast('Architecture URL could not be generated.');
     }
-  }, [architecture, workload, calibration, showToast]);
+  }, [architecture, workload, calibration, selectedSnapshotId, showToast]);
 
   // Export JSON specification (Section 32)
   const handleExport = useCallback(() => {
@@ -483,7 +552,8 @@ export default function SimulatorClient({
   };
 
   const handleLoadShare = useCallback((data: V1ShareState) => {
-    loadArchitecture(data.architecture, data.workload, data.calibration);
+    const snapId = data.pricingSnapshot || BASELINE_SNAPSHOT.metadata.snapshotId;
+    loadArchitecture(data.architecture, data.workload, data.calibration, snapId);
     setBaselineSnapshot({
       arch: data.architecture,
       workload: data.workload,
@@ -596,6 +666,7 @@ export default function SimulatorClient({
         <SimulatorQuerySync
           onLoadShare={handleLoadShare}
           onLoadTemplate={handleLoadTemplate}
+          onSelectSnapshot={handleSelectSnapshot}
           onError={handleSyncError}
         />
       </Suspense>
@@ -620,6 +691,23 @@ export default function SimulatorClient({
               {TEMPLATES.map(t => (
                 <option key={t.id} value={t.id}>
                   {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Canonical Registry Snapshot Selector (Phase B.2) */}
+          <div className="template-selector-group snapshot-selector-group">
+            <span className="template-label text-caption">REGISTRY SNAPSHOT:</span>
+            <select
+              className="template-select-dropdown text-mono snapshot-select-dropdown"
+              value={selectedSnapshotId}
+              onChange={(e) => handleSelectSnapshot(e.target.value)}
+              aria-label="Select Pricing Registry Snapshot"
+            >
+              {availableSnapshots.map(s => (
+                <option key={s.metadata.snapshotId} value={s.metadata.snapshotId}>
+                  {s.metadata.label} ({s.metadata.snapshotId})
                 </option>
               ))}
             </select>
@@ -748,11 +836,58 @@ export default function SimulatorClient({
 
       {/* Validation Banner (if architecture cannot be simulated reliably) */}
       {!result.validation.isValid && (
-        <div className="validation-warning-banner" role="alert">
-          <span className="warning-icon">⚠</span>
-          <div className="warning-text">
-            <strong>Architecture Validation Notice: </strong>
-            {result.validation.errors.join(' • ')}
+        <div
+          className="validation-warning-banner validation-error-card"
+          role="alert"
+          style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid #EF4444',
+            borderRadius: 'var(--radius-md, 8px)',
+            padding: '16px 20px',
+            margin: '12px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span className="warning-icon" style={{ color: '#EF4444', fontSize: '1.35rem', lineHeight: 1 }}>⚠</span>
+            <div className="warning-text" style={{ flex: 1 }}>
+              <div style={{ color: '#F87171', fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>
+                SIMULATION BLOCKED — INVALID ARCHITECTURE CONFIGURATION
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: '#FCA5A5', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                {result.validation.errors.map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderTop: '1px solid rgba(239, 68, 68, 0.25)',
+            paddingTop: '10px',
+            marginTop: '2px',
+            fontSize: '0.8125rem',
+            color: '#D1D5DB',
+            gap: '12px',
+          }}>
+            <span>
+              <strong>Resolution Path:</strong> Select an active model for the affected component in the canvas editor, or switch to an alternate registry snapshot.
+            </span>
+            {selectedSnapshotId !== BASELINE_SNAPSHOT.metadata.snapshotId && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm text-mono"
+                onClick={() => handleSelectSnapshot(BASELINE_SNAPSHOT.metadata.snapshotId)}
+                style={{ borderColor: 'rgba(239, 68, 68, 0.6)', color: '#FFFFFF' }}
+              >
+                Switch to Baseline ({BASELINE_SNAPSHOT.metadata.snapshotId})
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -760,73 +895,101 @@ export default function SimulatorClient({
       {/* Engineering Telemetry Rail (Sections 13, 15, 27) */}
       <section className="simulator-telemetry-strip" aria-label="Modeled Simulation Telemetry">
         <div
-          className="telemetry-cell telemetry-cell--clickable"
-          onClick={() => setIsCalculationModalOpen(true)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsCalculationModalOpen(true)}
-          title="Click to inspect step-by-step deterministic calculation trace"
+          className={`telemetry-cell ${result.validation.isValid ? 'telemetry-cell--clickable' : ''}`}
+          onClick={() => { if (result.validation.isValid) setIsCalculationModalOpen(true); }}
+          role={result.validation.isValid ? 'button' : undefined}
+          tabIndex={result.validation.isValid ? 0 : undefined}
+          onKeyDown={(e) => { if (result.validation.isValid && (e.key === 'Enter' || e.key === ' ')) setIsCalculationModalOpen(true); }}
+          title={result.validation.isValid ? "Click to inspect step-by-step deterministic calculation trace" : "Simulation blocked by validation failure"}
         >
           <div className="telemetry-cell-header">
             <span className="telemetry-cell-label">MODELED MONTHLY COST</span>
-            <span className={`telemetry-mode-tag text-mono ${calibrated.isCalibrated ? 'mode-calibrated' : 'mode-live'}`}>
-              {calibrated.isCalibrated ? 'CALIBRATED ESTIMATE' : 'MODELED'}
-            </span>
+            {!result.validation.isValid ? (
+              <span className="telemetry-mode-tag text-mono" style={{ backgroundColor: '#7F1D1D', color: '#FCA5A5' }}>
+                INVALID CONFIG
+              </span>
+            ) : (
+              <span className={`telemetry-mode-tag text-mono ${calibrated.isCalibrated ? 'mode-calibrated' : 'mode-live'}`}>
+                {calibrated.isCalibrated ? 'CALIBRATED ESTIMATE' : 'MODELED'}
+              </span>
+            )}
           </div>
-          <div className="telemetry-cell-value text-mono">
-            {calibrated.isCalibrated ? formatCurrency(calibrated.calibratedMonthlyCost) : formatCurrency(result.monthlyCost)}
-            <span className="telemetry-unit">/mo</span>
+          <div className="telemetry-cell-value text-mono" style={{ color: !result.validation.isValid ? '#EF4444' : undefined }}>
+            {!result.validation.isValid ? (
+              'INVALID CONFIG'
+            ) : (
+              <>
+                {calibrated.isCalibrated ? formatCurrency(calibrated.calibratedMonthlyCost) : formatCurrency(result.monthlyCost)}
+                <span className="telemetry-unit">/mo</span>
+              </>
+            )}
           </div>
-          <div className="telemetry-cell-subtext text-mono">
-            {calibrated.isCalibrated
-              ? `Factor: ${calibrated.calibrationFactor.toFixed(2)}× (Raw: ${formatCurrency(calibrated.simulatedBaselineCost)})`
-              : `$${result.costPerRequest.toFixed(4)} / req · Show Calculation →`}
+          <div className="telemetry-cell-subtext text-mono" style={{ color: !result.validation.isValid ? '#FCA5A5' : undefined }}>
+            {!result.validation.isValid
+              ? 'Estimates withheld · Non-active or unrecognized model'
+              : calibrated.isCalibrated
+                ? `Factor: ${calibrated.calibrationFactor.toFixed(2)}× (Raw: ${formatCurrency(calibrated.simulatedBaselineCost)})`
+                : `$${result.costPerRequest.toFixed(4)} / req · Show Calculation →`}
           </div>
         </div>
 
         <div
-          className="telemetry-cell telemetry-cell--clickable"
-          onClick={() => setIsLatencyModalOpen(true)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsLatencyModalOpen(true)}
-          title="Click to inspect modeled tail latency critical path and deterministic percentile estimates"
+          className={`telemetry-cell ${result.validation.isValid ? 'telemetry-cell--clickable' : ''}`}
+          onClick={() => { if (result.validation.isValid) setIsLatencyModalOpen(true); }}
+          role={result.validation.isValid ? 'button' : undefined}
+          tabIndex={result.validation.isValid ? 0 : undefined}
+          onKeyDown={(e) => { if (result.validation.isValid && (e.key === 'Enter' || e.key === ' ')) setIsLatencyModalOpen(true); }}
+          title={result.validation.isValid ? "Click to inspect modeled tail latency critical path and deterministic percentile estimates" : "Calculations withheld for rejected architecture"}
         >
           <div className="telemetry-cell-header">
             <span className="telemetry-cell-label">MODELED TAIL LATENCY</span>
-            <span className="telemetry-mode-tag text-mono mode-live">MODELED TAIL</span>
+            {!result.validation.isValid ? (
+              <span className="telemetry-mode-tag text-mono" style={{ backgroundColor: '#7F1D1D', color: '#FCA5A5' }}>
+                BLOCKED
+              </span>
+            ) : (
+              <span className="telemetry-mode-tag text-mono mode-live">MODELED TAIL</span>
+            )}
           </div>
-          <div className="telemetry-cell-value text-mono" style={{ color: 'var(--color-performance, #FAFAFA)' }}>
-            {formatLatency(result.p95Latency)}
+          <div className="telemetry-cell-value text-mono" style={{ color: !result.validation.isValid ? '#EF4444' : 'var(--color-performance, #FAFAFA)' }}>
+            {!result.validation.isValid ? 'BLOCKED' : formatLatency(result.p95Latency)}
           </div>
-          <div className="telemetry-cell-subtext text-mono">
-            est. P50 {formatLatency(result.latencies.p50)} · est. P90 {formatLatency(result.latencies.p90)} · est. P99 {formatLatency(result.latencies.p99)}
+          <div className="telemetry-cell-subtext text-mono" style={{ color: !result.validation.isValid ? '#FCA5A5' : undefined }}>
+            {!result.validation.isValid
+              ? 'Calculations withheld for rejected architecture'
+              : `est. P50 ${formatLatency(result.latencies.p50)} · est. P90 ${formatLatency(result.latencies.p90)} · est. P99 ${formatLatency(result.latencies.p99)}`}
           </div>
         </div>
 
         <div className="telemetry-cell">
           <div className="telemetry-cell-header">
             <span className="telemetry-cell-label">BOTTLENECK</span>
-            <span className="telemetry-mode-tag text-mono mode-warning">DOMINANT FACTOR</span>
+            <span className="telemetry-mode-tag text-mono mode-warning">
+              {!result.validation.isValid ? 'ERROR' : 'DOMINANT FACTOR'}
+            </span>
           </div>
-          <div className="telemetry-cell-value text-mono">
-            {result.bottleneck.componentName.toUpperCase()}
+          <div className="telemetry-cell-value text-mono" style={{ color: !result.validation.isValid ? '#EF4444' : undefined, fontSize: !result.validation.isValid ? '1rem' : undefined }}>
+            {!result.validation.isValid ? 'VALIDATION BLOCKED' : result.bottleneck.componentName.toUpperCase()}
           </div>
           <div className="telemetry-cell-subtext text-mono">
-            {result.bottleneck.impactPercentage}% COST SHARE
+            {!result.validation.isValid ? 'Resolve model lifecycle errors' : `${result.bottleneck.impactPercentage}% COST SHARE`}
           </div>
         </div>
 
         <div className="telemetry-cell">
           <div className="telemetry-cell-header">
-            <span className="telemetry-cell-label">CAPABILITY / TRADEOFF</span>
-            <span className="telemetry-mode-tag text-mono mode-neutral">BALANCED</span>
+            <span className="telemetry-cell-label">CAPABILITY / SNAPSHOT</span>
+            <span className={`telemetry-mode-tag text-mono ${!result.validation.isValid ? 'mode-warning' : 'mode-live'}`} title={`Canonical Hash: ${activeSnapshot.metadata.contentHash}`}>
+              {!result.validation.isValid ? 'BLOCKED' : activeSnapshot.metadata.snapshotId}
+            </span>
           </div>
-          <div className="telemetry-cell-value text-mono" style={{ fontSize: '1.25rem', letterSpacing: '0.01em' }}>
-            {result.capabilityTier || 'BALANCED'}
+          <div className="telemetry-cell-value text-mono" style={{ fontSize: '1.125rem', letterSpacing: '0.01em', color: !result.validation.isValid ? '#EF4444' : undefined }}>
+            {!result.validation.isValid ? 'INVALID' : (result.capabilityTier || 'BALANCED')}
           </div>
           <div className="telemetry-cell-subtext text-mono" style={{ fontSize: '0.75rem' }}>
-            {result.capabilityDescription || 'Architectural tradeoff tier'}
+            {!result.validation.isValid
+              ? 'Action required to resume simulation'
+              : `${activeSnapshot.metadata.label} (${activeSnapshot.metadata.snapshotId})`}
           </div>
         </div>
       </section>
@@ -1132,7 +1295,7 @@ export default function SimulatorClient({
         {/* ── CENTER COLUMN: Architecture Canvas ── */}
         <main className="simulator-canvas-center">
           <div className="canvas-wrapper-outer">
-            <SpatialCanvas simulation={result} architecture={architecture} />
+            <SpatialCanvas simulation={result} architecture={architecture} pricingSnapshot={selectedSnapshotId} />
           </div>
         </main>
 
@@ -1142,9 +1305,9 @@ export default function SimulatorClient({
           {(selectedNode && selectedNodeTrafficInfo) ? (() => {
             const causalInfo = getComponentCausalRole(selectedNode, workload, architecture, result);
             const modelRecord = selectedNodeTrafficInfo.isModel
-              ? ((selectedNode.modelId && MODEL_PRICING[selectedNode.modelId])
-                  ? MODEL_PRICING[selectedNode.modelId]
-                  : (selectedNode.type === 'fast-model' ? MODEL_PRICING['gpt-4o-mini'] : MODEL_PRICING['gpt-4o']))
+              ? ((selectedNode.modelId && activePricingBundle.models[selectedNode.modelId])
+                  ? activePricingBundle.models[selectedNode.modelId]
+                  : (selectedNode.type === 'fast-model' ? activePricingBundle.models['gpt-4o-mini'] : activePricingBundle.models['gpt-4o']))
               : null;
 
             const costSharePct = selectedNodeMetrics?.costPercentage ?? 0;

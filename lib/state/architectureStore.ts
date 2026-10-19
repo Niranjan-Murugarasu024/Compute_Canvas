@@ -4,7 +4,6 @@ import {
   type Architecture,
   type Workload,
   type ArchNode,
-  type ArchEdge,
   type SimulationResult,
   type BillCalibration,
   DEFAULT_V1_ARCHITECTURE,
@@ -51,6 +50,8 @@ interface ArchitectureState {
   architecture: Architecture;
   workload: Workload;
   calibration: BillCalibration;
+  pricingSnapshot: string;
+  setPricingSnapshot: (id: string) => void;
   previousState: PreviousEconomicsState | null;
 
   selectedNodeId: string | null;
@@ -125,7 +126,7 @@ interface ArchitectureState {
   resetView: () => void;
   fitToView: () => void;
   saveCurrentArchitecture: (customName?: string) => string;
-  loadArchitecture: (arch: Architecture, workload?: Workload, calibration?: BillCalibration) => void;
+  loadArchitecture: (arch: Architecture, workload?: Workload, calibration?: BillCalibration, pricingSnapshot?: string) => void;
   deleteSavedArchitecture: (id: string) => void;
   addScenario: (name?: string) => void;
   removeScenario: (id: string) => void;
@@ -302,6 +303,8 @@ export const useArchitectureStore = create<ArchitectureState>()(
       architecture: DEFAULT_ARCH,
       workload: DEFAULT_V1_WORKLOAD,
       calibration: DEFAULT_V1_CALIBRATION,
+      pricingSnapshot: 'snap-cc-3b3fbd4cbab4e979',
+      setPricingSnapshot: (pricingSnapshot) => set({ pricingSnapshot }),
       previousState: null,
       selectedNodeId: null,
       selectedEdgeIndex: null,
@@ -935,7 +938,11 @@ export const useArchitectureStore = create<ArchitectureState>()(
         const state = get();
         const id = state.architecture.id || `arch-${Date.now().toString(36)}`;
         const name = customName || state.architecture.name || 'Architecture Spec';
-        const sim = simulate(state.workload, state.architecture);
+        const sim = simulate({
+          workload: state.workload,
+          architecture: state.architecture,
+          pricingSnapshot: state.pricingSnapshot,
+        });
 
         const newSaved: SavedArchitecture = {
           id,
@@ -967,10 +974,15 @@ export const useArchitectureStore = create<ArchitectureState>()(
         return id;
       },
 
-      loadArchitecture: (arch, workload, calibration) => {
+      loadArchitecture: (arch, workload, calibration, pricingSnapshot) => {
         const state = get();
         const prepared = initializeNodePositions(JSON.parse(JSON.stringify(arch)));
-        const prevSim = simulate(state.workload, state.architecture);
+        const targetSnapshot = pricingSnapshot || state.pricingSnapshot || 'snap-cc-3b3fbd4cbab4e979';
+        const prevSim = simulate({
+          workload: state.workload,
+          architecture: state.architecture,
+          pricingSnapshot: state.pricingSnapshot,
+        });
 
         set({
           previousState: {
@@ -985,6 +997,7 @@ export const useArchitectureStore = create<ArchitectureState>()(
           architecture: prepared,
           workload: workload ? { ...workload } : state.workload,
           calibration: calibration ? { ...calibration } : state.calibration,
+          pricingSnapshot: targetSnapshot,
           selectedNodeId: null,
           selectedEdgeIndex: null,
           pan: { x: 0, y: 0 },
