@@ -395,6 +395,10 @@ export function explainEconomicsDelta(
   currentArch: Architecture,
   currentSim: SimulationResult
 ): string {
+  if (!currentSim.validation.isValid) {
+    return 'Simulation withheld: architecture configuration is invalid.';
+  }
+
   if (!prevSim || !prevArch || !prevWorkload) {
     return 'Baseline architecture simulation loaded.';
   }
@@ -492,6 +496,30 @@ export function computeCausalDeltaDetails(
       causalSubsystem: 'Ingress / Models',
       causalDescription: 'Baseline architecture loaded.',
       actionableRecommendation: 'Adjust workload parameters or add caching to evaluate cost optimizations.',
+    };
+  }
+
+  if (!currentSim.validation.isValid) {
+    return {
+      baselineCost: prevSim ? prevSim.monthlyCost : 0,
+      currentCost: 0,
+      costDelta: 0,
+      baselineLatency: prevSim ? prevSim.p95Latency : 0,
+      currentLatency: 0,
+      latencyDelta: 0,
+      parameterChanges: [],
+      primaryCause: 'Simulation withheld: architecture configuration is invalid.',
+      summary: 'Simulation withheld: architecture configuration is invalid.',
+      deltaCost: 0,
+      deltaCostPercentage: 0,
+      costTrend: 'neutral',
+      deltaLatency: 0,
+      deltaLatencyPercentage: 0,
+      latencyTrend: 'neutral',
+      causalFactor: 'Invalid Configuration',
+      causalSubsystem: 'Validation',
+      causalDescription: 'Simulation withheld: architecture configuration is invalid.',
+      actionableRecommendation: 'Resolve configuration or pricing snapshot errors to evaluate causal delta.',
     };
   }
 

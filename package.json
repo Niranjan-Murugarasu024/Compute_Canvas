@@ -13,7 +13,11 @@
     "test:workbench": "npx tsx scripts/test-workbench-interaction.ts",
     "test:regression": "npx tsx scripts/test-regression-suite.ts",
     "test:waitlist": "npx tsx scripts/test-waitlist-api.ts",
-    "test:all": "npx tsx scripts/test-engine-v4.ts && npx tsx scripts/test-v1-scenarios.ts && npx tsx scripts/test-workbench-interaction.ts && npx tsx scripts/test-regression-suite.ts && npx tsx scripts/test-cc32-workbench.ts && npx tsx scripts/test-mathematical-invariants.ts && npx tsx scripts/test-shared-state.ts && npx tsx scripts/test-cc33-readability.ts && npx tsx scripts/test-waitlist-api.ts"
+    "test:all": "npx tsx scripts/test-engine-v4.ts && npx tsx scripts/test-v1-scenarios.ts && npx tsx scripts/test-workbench-interaction.ts && npx tsx scripts/test-regression-suite.ts && npx tsx scripts/test-cc32-workbench.ts && npx tsx scripts/test-mathematical-invariants.ts && npx tsx scripts/test-shared-state.ts && npx tsx scripts/test-cc33-readability.ts && npx tsx scripts/test-waitlist-api.ts && npx tsx scripts/test-registry-v2.ts && npx tsx scripts/test-sha256-vectors.ts && npx tsx scripts/test-baseline-differential.ts && npx tsx scripts/test-multi-snapshot.ts && npx tsx scripts/test-snapshot-ui.ts && npx tsx scripts/test-snapshot-comparison.ts",
+    "test:registry": "npx tsx scripts/test-registry-v2.ts",
+    "test:snapshots": "npx tsx scripts/test-multi-snapshot.ts",
+    "test:ui-snapshots": "npx tsx scripts/test-snapshot-ui.ts",
+    "test:comparison": "npx tsx scripts/test-snapshot-comparison.ts"
   },
   "dependencies": {
     "framer-motion": "^13.4.3",

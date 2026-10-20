@@ -1,6 +1,5 @@
 import { simulate, TEMPLATES } from '../lib/simulation/engine';
 import { MODEL_PRICING, INFRA_PRICING } from '../lib/simulation/engine/cost';
-import { BASELINE_SNAPSHOT, getSnapshot } from '../lib/registry';
 
 console.log('──────────────────────────────────────────────────────────');
 console.log('MODULE 2 PHASE 2: BASELINE MATHEMATICAL EQUIVALENCE AUDIT');
@@ -65,7 +64,7 @@ for (const modelId of allModels) {
     name: `Direct ${modelId}`,
     nodes: [
       { id: 'api-1', type: 'api' as const, label: 'API Ingress' },
-      { id: 'model-1', type: (MODEL_PRICING[modelId].category === 'fast' ? 'fast-model' : 'frontier-model') as any, label: modelId, modelId },
+      { id: 'model-1', type: (MODEL_PRICING[modelId].category === 'fast' ? 'fast-model' : 'frontier-model') as 'fast-model' | 'frontier-model', label: modelId, modelId },
     ],
     edges: [
       { source: 'api-1', target: 'model-1' },

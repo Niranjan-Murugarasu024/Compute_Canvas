@@ -15,6 +15,7 @@ import {
 } from '@/lib/simulation/engine';
 import { decodeArchitectureState } from '@/lib/simulation/sharing';
 import { useArchitectureStore } from '@/lib/state/architectureStore';
+import { DEFAULT_SNAPSHOT_ID } from '@/lib/registry';
 
 export default function SharedArchitecturePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
           workload: decoded.data.workload,
           name: decoded.data.architecture.name || 'Shared Architecture',
           description: 'Custom architecture snapshot shared from ComputeCanvas Workbench.',
-          pricingSnapshot: snapshotParam || decoded.data.pricingSnapshot || 'snap-cc-3b3fbd4cbab4e979',
+          pricingSnapshot: snapshotParam || decoded.data.pricingSnapshot || DEFAULT_SNAPSHOT_ID,
         };
       }
     }
@@ -51,7 +52,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
         workload: saved.workload,
         name: saved.name,
         description: 'Persistent workspace architecture shared from ComputeCanvas.',
-        pricingSnapshot: snapshotParam || 'snap-cc-3b3fbd4cbab4e979',
+        pricingSnapshot: snapshotParam || DEFAULT_SNAPSHOT_ID,
       };
     }
 
@@ -62,7 +63,7 @@ export default function SharedArchitecturePage({ params }: { params: Promise<{ i
       workload: template.defaultWorkload,
       name: template.name,
       description: template.description,
-      pricingSnapshot: snapshotParam || 'snap-cc-3b3fbd4cbab4e979',
+      pricingSnapshot: snapshotParam || DEFAULT_SNAPSHOT_ID,
     };
   }, [id, searchParams, savedArchitectures]);
 

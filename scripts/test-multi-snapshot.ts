@@ -21,8 +21,6 @@ import {
   resolveRegistryPricing,
   validateArchitectureModels,
   resolveNodePricing,
-  UnknownSnapshotError,
-  BASELINE_ENGINE_BUNDLE,
 } from '../lib/registry/adapter';
 import { simulate, type Architecture, type Workload } from '../lib/simulation/engine';
 import { encodeArchitectureState, decodeArchitectureState, type V1ShareState } from '../lib/simulation/sharing';

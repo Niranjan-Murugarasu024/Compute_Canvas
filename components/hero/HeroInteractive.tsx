@@ -509,9 +509,12 @@ export default function HeroInteractive() {
           background: var(--color-bg);
           padding: 16px 20px;
           border-bottom: 1px solid var(--color-border);
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
 
         .instrument__svg {
+          min-width: 540px;
           width: 100%;
           height: auto;
           display: block;

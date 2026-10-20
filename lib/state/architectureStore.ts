@@ -16,6 +16,7 @@ import {
 } from '@/lib/simulation/engine';
 import { type RegionalDeployment } from '@/lib/simulation/multiRegion';
 import { type CommentItem, type ArchitectureVersion } from '@/lib/collaboration/types';
+import { DEFAULT_SNAPSHOT_ID } from '@/lib/registry';
 
 export type CanvasLens = 'architecture' | 'topology' | 'economics' | 'performance' | 'reliability';
 
@@ -303,7 +304,7 @@ export const useArchitectureStore = create<ArchitectureState>()(
       architecture: DEFAULT_ARCH,
       workload: DEFAULT_V1_WORKLOAD,
       calibration: DEFAULT_V1_CALIBRATION,
-      pricingSnapshot: 'snap-cc-3b3fbd4cbab4e979',
+      pricingSnapshot: DEFAULT_SNAPSHOT_ID,
       setPricingSnapshot: (pricingSnapshot) => set({ pricingSnapshot }),
       previousState: null,
       selectedNodeId: null,
@@ -977,7 +978,7 @@ export const useArchitectureStore = create<ArchitectureState>()(
       loadArchitecture: (arch, workload, calibration, pricingSnapshot) => {
         const state = get();
         const prepared = initializeNodePositions(JSON.parse(JSON.stringify(arch)));
-        const targetSnapshot = pricingSnapshot || state.pricingSnapshot || 'snap-cc-3b3fbd4cbab4e979';
+        const targetSnapshot = pricingSnapshot || state.pricingSnapshot || DEFAULT_SNAPSHOT_ID;
         const prevSim = simulate({
           workload: state.workload,
           architecture: state.architecture,

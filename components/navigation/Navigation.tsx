@@ -80,7 +80,8 @@ export default function Navigation() {
           <div className="cc-nav__actions">
             {!isWorkbench ? (
               <Link href="/simulator" className="cc-nav__cta btn btn-primary btn-sm">
-                OPEN WORKBENCH →
+                <span className="cc-nav__cta-text cc-nav__cta-text--full">OPEN WORKBENCH →</span>
+                <span className="cc-nav__cta-text cc-nav__cta-text--compact">WORKBENCH →</span>
               </Link>
             ) : (
               <div className="cc-nav__status text-mono" aria-label="Workbench status: online">
@@ -167,7 +168,7 @@ export default function Navigation() {
           grid-template-columns: auto 1fr auto;
           align-items: center;
           height: 100%;
-          gap: 40px;
+          gap: 32px;
         }
 
         /* ── Brand ── */
@@ -215,7 +216,7 @@ export default function Navigation() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 32px;
+          gap: 28px;
           height: 100%;
         }
 
@@ -239,6 +240,11 @@ export default function Navigation() {
           color: #FFFFFF;
         }
 
+        .cc-nav__link:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: -2px;
+        }
+
         .cc-nav__link--active {
           color: #FFFFFF;
           border-bottom-color: #FFFFFF;
@@ -255,11 +261,25 @@ export default function Navigation() {
 
         .cc-nav__cta {
           font-family: var(--font-ui);
-          font-size: 0.84375rem; /* 13.5px */
+          font-size: 0.8125rem; /* 13px */
           font-weight: 600;
           letter-spacing: 0.02em;
-          height: 38px;
+          height: 36px;
           padding: 0 16px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          white-space: nowrap;
+          border-radius: var(--radius-sm, 3px);
+          transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .cc-nav__cta-text--full {
+          display: inline;
+        }
+
+        .cc-nav__cta-text--compact {
+          display: none;
         }
 
         .cc-nav__status {
@@ -391,7 +411,7 @@ export default function Navigation() {
         }
 
         /* ── Responsive breakpoint ── */
-        @media (max-width: 820px) {
+        @media (max-width: 860px) {
           .cc-nav__links {
             display: none;
           }
@@ -402,22 +422,43 @@ export default function Navigation() {
             display: block;
           }
           .cc-nav__inner {
-            grid-template-columns: auto auto;
-            gap: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
           }
           .cc-nav__actions {
             gap: 8px;
           }
           .cc-nav__cta {
+            height: 32px;
+            padding: 0 12px;
+            font-size: 0.75rem;
+          }
+          .cc-nav__cta-text--full {
             display: none;
+          }
+          .cc-nav__cta-text--compact {
+            display: inline;
           }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 520px) {
           .cc-nav__engine {
             display: none;
           }
           .cc-nav__divider {
+            display: none;
+          }
+          .cc-nav__cta {
+            height: 30px;
+            padding: 0 10px;
+            font-size: 0.6875rem;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .cc-nav__cta {
             display: none;
           }
         }

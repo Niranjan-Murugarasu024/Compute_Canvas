@@ -4,7 +4,6 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useArchitectureStore } from '@/lib/state/architectureStore';
 import {
   type ArchNode,
-  type ArchEdge,
   type Architecture,
   type SimulationResult,
   TEMPLATES_MAP,
@@ -13,9 +12,8 @@ import {
 } from '@/lib/simulation/engine';
 import {
   getSnapshot,
-  BASELINE_SNAPSHOT,
+  DEFAULT_SNAPSHOT_ID,
   resolveRegistryPricing,
-  BASELINE_ENGINE_BUNDLE,
 } from '@/lib/registry';
 
 interface DragState {
@@ -352,15 +350,18 @@ export default function SpatialCanvas({
   );
 
   const activeSnapshot = useMemo(() => {
-    return getSnapshot(pricingSnapshot || store.pricingSnapshot || '') || BASELINE_SNAPSHOT;
+    const snapId = pricingSnapshot || store.pricingSnapshot || DEFAULT_SNAPSHOT_ID;
+    return getSnapshot(snapId) || null;
   }, [pricingSnapshot, store.pricingSnapshot]);
 
   const pricingBundle = useMemo(() => {
+    if (!activeSnapshot) return null;
     const res = resolveRegistryPricing(activeSnapshot.metadata.snapshotId);
-    return res.ok ? res.bundle : BASELINE_ENGINE_BUNDLE;
+    return res.ok ? res.bundle : null;
   }, [activeSnapshot]);
 
   const FAST_MODELS = useMemo(() => {
+    if (!activeSnapshot || !pricingBundle) return [];
     return activeSnapshot.models
       .filter(m => m.category === 'fast')
       .map(m => {
@@ -377,6 +378,7 @@ export default function SpatialCanvas({
   }, [activeSnapshot, pricingBundle]);
 
   const FRONTIER_MODELS = useMemo(() => {
+    if (!activeSnapshot || !pricingBundle) return [];
     return activeSnapshot.models
       .filter(m => m.category === 'frontier')
       .map(m => {
@@ -459,7 +461,7 @@ export default function SpatialCanvas({
   }, [selectedEdge, nodeMap, zoom, pan, canvasDimensions]);
 
   // Path Analysis: Compute full upstream & downstream transitive closure for selected node (Section 18)
-  const { upstreamNodeIds, downstreamNodeIds, activePathNodeIds, activePathEdgeIndices } = useMemo(() => {
+  const { upstreamNodeIds, downstreamNodeIds, activePathEdgeIndices } = useMemo(() => {
     if (!selectedNodeId) {
       return {
         upstreamNodeIds: new Set<string>(),

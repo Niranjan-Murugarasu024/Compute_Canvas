@@ -66,7 +66,7 @@ async function runWaitlistTests() {
   const dataAuthorized = await resAuthorized.json();
   if (resAuthorized.status === 200 && dataAuthorized.total > 0 && Array.isArray(dataAuthorized.leads)) {
     console.log(`✅ PASSED: Authorized GET retrieved ${dataAuthorized.total} leads cleanly`);
-    const found = dataAuthorized.leads.some((l: any) => l.email === testEmail);
+    const found = dataAuthorized.leads.some((l: { email?: string }) => l.email === testEmail);
     if (found) {
       console.log('✅ PASSED: Newly created lead verified in retrieved dataset');
     } else {

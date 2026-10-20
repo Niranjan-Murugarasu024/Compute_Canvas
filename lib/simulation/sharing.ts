@@ -14,6 +14,7 @@ export interface V1ShareState {
   schemaVersion?: string;
   registryVersion?: string;
   pricingSnapshot?: string;
+  comparisonSnapshot?: string;
   architecture: Architecture;
   workload: Workload;
   calibration?: BillCalibration;
@@ -56,12 +57,14 @@ export function encodeArchitectureState(state: {
   workload: Workload;
   calibration?: BillCalibration;
   pricingSnapshot?: string;
+  comparisonSnapshot?: string;
 }): string {
   const sharePayload: V1ShareState = {
     version: 1,
     schemaVersion: '1.0',
     registryVersion: 'v1.4',
     pricingSnapshot: state.pricingSnapshot || '2026-03',
+    comparisonSnapshot: state.comparisonSnapshot ? String(state.comparisonSnapshot).trim() : undefined,
     architecture: {
       id: state.architecture.id || 'custom',
       name: state.architecture.name || 'Custom Architecture',
@@ -170,6 +173,10 @@ export function decodeArchitectureState(encoded: string): {
       ? parsed.pricingSnapshot
       : '2026-03';
 
+    const targetComparisonSnapshot = (parsed.comparisonSnapshot && typeof parsed.comparisonSnapshot === 'string')
+      ? parsed.comparisonSnapshot.trim()
+      : undefined;
+
     return {
       success: true,
       data: {
@@ -177,6 +184,7 @@ export function decodeArchitectureState(encoded: string): {
         schemaVersion: parsed.schemaVersion || '1.0',
         registryVersion: parsed.registryVersion || 'v1.4',
         pricingSnapshot: targetPricingSnapshot,
+        comparisonSnapshot: targetComparisonSnapshot,
         architecture: sanitizedArch,
         workload: sanitizedWorkload,
         calibration: parsed.calibration ? {

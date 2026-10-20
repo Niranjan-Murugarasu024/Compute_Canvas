@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/navigation/Navigation';
 import SpatialCanvas from '@/components/simulator/SpatialCanvas';
-import SimulatorErrorBoundary from '@/components/simulator/SimulatorErrorBoundary';
 import { useArchitectureStore } from '@/lib/state/architectureStore';
 import {
   simulate,
@@ -21,17 +20,16 @@ import {
   type Workload,
   type BillCalibration,
   type SimulationResult,
-  type CalculationTrace,
   type CausalDeltaDetails,
-  INFRA_PRICING,
   TEMPLATES,
 } from '@/lib/simulation/engine';
+import SnapshotComparisonModal from '@/components/simulator/SnapshotComparisonModal';
 import {
   getAllSnapshots,
   getSnapshot,
-  BASELINE_SNAPSHOT,
+  DEFAULT_SNAPSHOT_ID,
+  LATEST_SNAPSHOT_ID,
   resolveRegistryPricing,
-  BASELINE_ENGINE_BUNDLE,
 } from '@/lib/registry';
 import {
   encodeArchitectureState,
@@ -44,7 +42,6 @@ import {
   getComponentCausalRole,
   formatCalculationTraceAsText,
   buildExportSpecification,
-  type ParameterDeltaItem,
 } from '@/lib/simulation/workbenchInstrument';
 
 export interface SimulatorClientProps {
@@ -53,6 +50,7 @@ export interface SimulatorClientProps {
   initialWorkload?: Workload;
   initialCalibration?: BillCalibration;
   initialPricingSnapshot?: string;
+  initialComparisonSnapshot?: string;
 }
 
 // ── 6 Core V1 Building Blocks ──
@@ -119,11 +117,15 @@ function SimulatorQuerySync({
   onLoadShare,
   onLoadTemplate,
   onSelectSnapshot,
+  onSelectComparisonSnapshot,
+  onOpenComparison,
   onError,
 }: {
   onLoadShare: (data: V1ShareState) => void;
   onLoadTemplate: (templateId: string) => void;
   onSelectSnapshot: (snapshotId: string) => void;
+  onSelectComparisonSnapshot: (snapshotId: string) => void;
+  onOpenComparison: () => void;
   onError: (msg: string) => void;
 }) {
   const searchParams = useSearchParams();
@@ -133,7 +135,7 @@ function SimulatorQuerySync({
     if (!searchParams) return;
 
     // Snapshot query parameter evaluation
-    const snapshotParam = searchParams.get('snapshot');
+    const snapshotParam = searchParams.get('refSnapshot') || searchParams.get('snapshot');
     if (snapshotParam) {
       const snapKey = `snapshot:${snapshotParam}`;
       if (processedParamRef.current !== snapKey) {
@@ -142,10 +144,22 @@ function SimulatorQuerySync({
         if (resolved) {
           onSelectSnapshot(resolved.metadata.snapshotId);
         } else {
-          onError(`Unknown pricing snapshot identifier "${snapshotParam}". Recovered safely to default snapshot (${BASELINE_SNAPSHOT.metadata.snapshotId}).`);
-          onSelectSnapshot(BASELINE_SNAPSHOT.metadata.snapshotId);
+          onSelectSnapshot(snapshotParam);
+          onError(`Unknown pricing snapshot identifier "${snapshotParam}". Silent fallback to baseline is blocked to prevent untracked cost variance.`);
         }
       }
+    }
+
+    // Comparison snapshot parameter evaluation (Module 3-C)
+    const compareParam = searchParams.get('compareSnapshot') || searchParams.get('compSnapshot');
+    if (compareParam) {
+      const resolvedComp = getSnapshot(compareParam);
+      if (resolvedComp) {
+        onSelectComparisonSnapshot(resolvedComp.metadata.snapshotId);
+      } else {
+        onSelectComparisonSnapshot(compareParam);
+      }
+      onOpenComparison();
     }
 
     const queryData = searchParams.get('data');
@@ -161,9 +175,18 @@ function SimulatorQuerySync({
           if (snap) {
             onSelectSnapshot(snap.metadata.snapshotId);
           } else {
-            onError(`Shared snapshot identifier "${decoded.data.pricingSnapshot}" is unknown. Recovered safely to default snapshot (${BASELINE_SNAPSHOT.metadata.snapshotId}).`);
-            onSelectSnapshot(BASELINE_SNAPSHOT.metadata.snapshotId);
+            onSelectSnapshot(decoded.data.pricingSnapshot);
+            onError(`Shared pricing snapshot identifier "${decoded.data.pricingSnapshot}" is unknown. Silent fallback to baseline is blocked.`);
           }
+        }
+        if (decoded.data.comparisonSnapshot) {
+          const compSnap = getSnapshot(decoded.data.comparisonSnapshot);
+          if (compSnap) {
+            onSelectComparisonSnapshot(compSnap.metadata.snapshotId);
+          } else {
+            onSelectComparisonSnapshot(decoded.data.comparisonSnapshot);
+          }
+          onOpenComparison();
         }
         onLoadShare(decoded.data);
       } else {
@@ -180,7 +203,7 @@ function SimulatorQuerySync({
 
       onLoadTemplate(templateParam);
     }
-  }, [searchParams, onLoadShare, onLoadTemplate, onSelectSnapshot, onError]);
+  }, [searchParams, onLoadShare, onLoadTemplate, onSelectSnapshot, onSelectComparisonSnapshot, onOpenComparison, onError]);
 
   return null;
 }
@@ -191,25 +214,34 @@ export default function SimulatorClient({
   initialWorkload,
   initialCalibration,
   initialPricingSnapshot,
+  initialComparisonSnapshot,
 }: SimulatorClientProps) {
   const store = useArchitectureStore();
   const [hasUserModified, setHasUserModified] = useState(false);
 
   // Snapshot selection state
-  const selectedSnapshotId = store.pricingSnapshot || initialPricingSnapshot || BASELINE_SNAPSHOT.metadata.snapshotId;
+  const selectedSnapshotId = store.pricingSnapshot || initialPricingSnapshot || DEFAULT_SNAPSHOT_ID;
+  const [comparisonSnapshotId, setComparisonSnapshotId] = useState<string>(
+    initialComparisonSnapshot || LATEST_SNAPSHOT_ID
+  );
   const availableSnapshots = useMemo(() => getAllSnapshots(), []);
-  const activeSnapshot = useMemo(() => getSnapshot(selectedSnapshotId) || BASELINE_SNAPSHOT, [selectedSnapshotId]);
+  const activeSnapshot = useMemo(() => getSnapshot(selectedSnapshotId) || null, [selectedSnapshotId]);
   const activePricingBundle = useMemo(() => {
     const res = resolveRegistryPricing(selectedSnapshotId);
-    return res.ok ? res.bundle : BASELINE_ENGINE_BUNDLE;
+    return res.ok ? res.bundle : null;
   }, [selectedSnapshotId]);
 
   // Synchronize store on client mount
   useEffect(() => {
     if (initialArchitecture) {
-      store.loadArchitecture(initialArchitecture, initialWorkload, initialCalibration, initialPricingSnapshot);
+      useArchitectureStore.getState().loadArchitecture(
+        initialArchitecture,
+        initialWorkload,
+        initialCalibration,
+        initialPricingSnapshot
+      );
     }
-  }, []);
+  }, [initialArchitecture, initialWorkload, initialCalibration, initialPricingSnapshot]);
 
   // Use initialArchitecture directly for SSR & initial client hydration
   const architecture = (!hasUserModified && initialArchitecture) ? initialArchitecture : store.architecture;
@@ -219,9 +251,7 @@ export default function SimulatorClient({
   const {
     previousState,
     selectedNodeId,
-    selectedEdgeIndex,
     setSelectedNode,
-    setSelectedEdge,
   } = store;
 
   // Selected template & Toast messaging
@@ -254,7 +284,7 @@ export default function SimulatorClient({
   // Session change history and deterministic undo / redo stacks (Sections 10, 11)
   const [historyPast, setHistoryPast] = useState<Array<{ arch: Architecture; workload: Workload; calibration: BillCalibration }>>([]);
   const [historyFuture, setHistoryFuture] = useState<Array<{ arch: Architecture; workload: Workload; calibration: BillCalibration }>>([]);
-  const [sessionChangeLog, setSessionChangeLog] = useState<Array<{ id: string; label: string; change: string; timestamp: number }>>([]);
+  const [, setSessionChangeLog] = useState<Array<{ id: string; label: string; change: string; timestamp: number }>>([]);
 
   // Command palette, comparison modal, and formula view states (Sections 12, 13, 24, 52)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -300,30 +330,6 @@ export default function SimulatorClient({
     return store.addNode(type, label, x, y);
   }, [store, recordForUndo]);
 
-  const removeNode = useCallback((id: string) => {
-    recordForUndo('Removed component');
-    setHasUserModified(true);
-    store.removeNode(id);
-  }, [store, recordForUndo]);
-
-  const updateNodeModel = useCallback((id: string, modelId: string) => {
-    recordForUndo('Target model updated');
-    setHasUserModified(true);
-    store.updateNodeModel(id, modelId);
-  }, [store, recordForUndo]);
-
-  const updateEdgeShare = useCallback((source: string, target: string, share: number) => {
-    recordForUndo(`Routing allocation: ${Math.round(share * 100)}%`);
-    setHasUserModified(true);
-    store.updateEdgeShare(source, target, share);
-  }, [store, recordForUndo]);
-
-  const removeEdge = useCallback((source: string, target: string) => {
-    recordForUndo('Connection removed');
-    setHasUserModified(true);
-    store.removeEdge(source, target);
-  }, [store, recordForUndo]);
-
   const loadArchitecture = useCallback((arch: Architecture, wl?: Workload, cal?: BillCalibration, snap?: string) => {
     setHasUserModified(true);
     store.loadArchitecture(arch, wl, cal, snap);
@@ -335,10 +341,6 @@ export default function SimulatorClient({
   }, [baselineSnapshot, workload, architecture]);
 
   const isModified = baselineDeltas.modifiedCount > 0;
-
-  const baselineSim = useMemo(() => {
-    return simulate(baselineSnapshot.workload, baselineSnapshot.arch);
-  }, [baselineSnapshot]);
 
   const simulationSnapshotId = useMemo(() => {
     return generateSimulationSnapshotId(architecture.name || selectedTemplateId);
@@ -369,7 +371,7 @@ export default function SimulatorClient({
     if (!isModified) return;
     setHistoryPast(past => [...past.slice(-25), { arch: architecture, workload: workload, calibration: calibration }]);
     setHistoryFuture([]);
-    store.loadArchitecture(baselineSnapshot.arch, baselineSnapshot.workload, baselineSnapshot.calibration, BASELINE_SNAPSHOT.metadata.snapshotId);
+    store.loadArchitecture(baselineSnapshot.arch, baselineSnapshot.workload, baselineSnapshot.calibration, DEFAULT_SNAPSHOT_ID);
     setHasUserModified(false);
     showToast('Reset to exact baseline state.');
   }, [isModified, baselineSnapshot, architecture, workload, calibration, store, showToast]);
@@ -377,7 +379,9 @@ export default function SimulatorClient({
   const handleSelectSnapshot = useCallback((snapshotId: string) => {
     const snap = getSnapshot(snapshotId);
     if (!snap) {
-      showToast(`Unknown snapshot ID "${snapshotId}".`);
+      store.setPricingSnapshot(snapshotId);
+      setHasUserModified(true);
+      showToast(`Unknown snapshot ID "${snapshotId}". Simulation blocked.`);
       return;
     }
     const canonicalId = snap.metadata.snapshotId;
@@ -492,6 +496,11 @@ export default function SimulatorClient({
 
   // Export JSON specification (Section 32)
   const handleExport = useCallback(() => {
+    if (!result.validation.isValid) {
+      showToast('Cannot export specification: current architecture configuration is invalid.');
+      return;
+    }
+
     const payload = buildExportSpecification(
       architecture,
       workload,
@@ -552,7 +561,7 @@ export default function SimulatorClient({
   };
 
   const handleLoadShare = useCallback((data: V1ShareState) => {
-    const snapId = data.pricingSnapshot || BASELINE_SNAPSHOT.metadata.snapshotId;
+    const snapId = data.pricingSnapshot || DEFAULT_SNAPSHOT_ID;
     loadArchitecture(data.architecture, data.workload, data.calibration, snapId);
     setBaselineSnapshot({
       arch: data.architecture,
@@ -667,6 +676,8 @@ export default function SimulatorClient({
           onLoadShare={handleLoadShare}
           onLoadTemplate={handleLoadTemplate}
           onSelectSnapshot={handleSelectSnapshot}
+          onSelectComparisonSnapshot={(snapId) => setComparisonSnapshotId(snapId)}
+          onOpenComparison={() => setIsCompareModalOpen(true)}
           onError={handleSyncError}
         />
       </Suspense>
@@ -705,6 +716,11 @@ export default function SimulatorClient({
               onChange={(e) => handleSelectSnapshot(e.target.value)}
               aria-label="Select Pricing Registry Snapshot"
             >
+              {!availableSnapshots.some(s => s.metadata.snapshotId === selectedSnapshotId) && (
+                <option value={selectedSnapshotId} disabled>
+                  [INVALID SNAPSHOT: {selectedSnapshotId}]
+                </option>
+              )}
               {availableSnapshots.map(s => (
                 <option key={s.metadata.snapshotId} value={s.metadata.snapshotId}>
                   {s.metadata.label} ({s.metadata.snapshotId})
@@ -878,14 +894,14 @@ export default function SimulatorClient({
             <span>
               <strong>Resolution Path:</strong> Select an active model for the affected component in the canvas editor, or switch to an alternate registry snapshot.
             </span>
-            {selectedSnapshotId !== BASELINE_SNAPSHOT.metadata.snapshotId && (
+            {selectedSnapshotId !== DEFAULT_SNAPSHOT_ID && (
               <button
                 type="button"
                 className="btn btn-secondary btn-sm text-mono"
-                onClick={() => handleSelectSnapshot(BASELINE_SNAPSHOT.metadata.snapshotId)}
+                onClick={() => handleSelectSnapshot(DEFAULT_SNAPSHOT_ID)}
                 style={{ borderColor: 'rgba(239, 68, 68, 0.6)', color: '#FFFFFF' }}
               >
-                Switch to Baseline ({BASELINE_SNAPSHOT.metadata.snapshotId})
+                Switch to Baseline ({DEFAULT_SNAPSHOT_ID})
               </button>
             )}
           </div>
@@ -979,8 +995,8 @@ export default function SimulatorClient({
         <div className="telemetry-cell">
           <div className="telemetry-cell-header">
             <span className="telemetry-cell-label">CAPABILITY / SNAPSHOT</span>
-            <span className={`telemetry-mode-tag text-mono ${!result.validation.isValid ? 'mode-warning' : 'mode-live'}`} title={`Canonical Hash: ${activeSnapshot.metadata.contentHash}`}>
-              {!result.validation.isValid ? 'BLOCKED' : activeSnapshot.metadata.snapshotId}
+            <span className={`telemetry-mode-tag text-mono ${!result.validation.isValid ? 'mode-warning' : 'mode-live'}`} title={`Canonical Hash: ${activeSnapshot?.metadata.contentHash || 'N/A'}`}>
+              {!result.validation.isValid ? 'BLOCKED' : (activeSnapshot?.metadata.snapshotId || 'UNKNOWN')}
             </span>
           </div>
           <div className="telemetry-cell-value text-mono" style={{ fontSize: '1.125rem', letterSpacing: '0.01em', color: !result.validation.isValid ? '#EF4444' : undefined }}>
@@ -988,8 +1004,8 @@ export default function SimulatorClient({
           </div>
           <div className="telemetry-cell-subtext text-mono" style={{ fontSize: '0.75rem' }}>
             {!result.validation.isValid
-              ? 'Action required to resume simulation'
-              : `${activeSnapshot.metadata.label} (${activeSnapshot.metadata.snapshotId})`}
+              ? (result.validation.errors[0] || 'Action required to resume simulation')
+              : `${activeSnapshot?.metadata.label} (${activeSnapshot?.metadata.snapshotId})`}
           </div>
         </div>
       </section>
@@ -1304,7 +1320,7 @@ export default function SimulatorClient({
           {/* Subsystem Inspection Card (Sections 14, 15, 16, 17, 30, 38) */}
           {(selectedNode && selectedNodeTrafficInfo) ? (() => {
             const causalInfo = getComponentCausalRole(selectedNode, workload, architecture, result);
-            const modelRecord = selectedNodeTrafficInfo.isModel
+            const modelRecord = (selectedNodeTrafficInfo.isModel && activePricingBundle)
               ? ((selectedNode.modelId && activePricingBundle.models[selectedNode.modelId])
                   ? activePricingBundle.models[selectedNode.modelId]
                   : (selectedNode.type === 'fast-model' ? activePricingBundle.models['gpt-4o-mini'] : activePricingBundle.models['gpt-4o']))
@@ -2301,9 +2317,7 @@ export default function SimulatorClient({
                   setCommandPaletteSelectedIndex(0);
                 }}
                 onKeyDown={e => {
-                  const filtered = commandPaletteItems.filter(item =>
-                    item.label.toLowerCase().includes(commandPaletteQuery.toLowerCase())
-                  );
+                  const filtered = filteredCommands;
                   if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     setCommandPaletteSelectedIndex(idx => (idx + 1) % Math.max(1, filtered.length));
@@ -2324,20 +2338,18 @@ export default function SimulatorClient({
               <span className="cmd-palette-esc">ESC</span>
             </div>
             <div className="cmd-palette-results">
-              {commandPaletteItems
-                .filter(item => item.label.toLowerCase().includes(commandPaletteQuery.toLowerCase()))
-                .map((item, index) => (
-                  <button
-                    key={item.id}
-                    className={`cmd-palette-item ${index === commandPaletteSelectedIndex ? 'active' : ''}`}
-                    onClick={() => item.action()}
-                    onMouseEnter={() => setCommandPaletteSelectedIndex(index)}
-                  >
-                    <span className="cmd-palette-item-label">{item.label}</span>
-                    {item.shortcut && <kbd className="cmd-palette-item-shortcut">{item.shortcut}</kbd>}
-                  </button>
-                ))}
-              {commandPaletteItems.filter(item => item.label.toLowerCase().includes(commandPaletteQuery.toLowerCase())).length === 0 && (
+              {filteredCommands.map((item, index) => (
+                <button
+                  key={item.id}
+                  className={`cmd-palette-item ${index === commandPaletteSelectedIndex ? 'active' : ''}`}
+                  onClick={() => item.action()}
+                  onMouseEnter={() => setCommandPaletteSelectedIndex(index)}
+                >
+                  <span className="cmd-palette-item-label">{item.label}</span>
+                  {item.shortcut && <kbd className="cmd-palette-item-shortcut">{item.shortcut}</kbd>}
+                </button>
+              ))}
+              {filteredCommands.length === 0 && (
                 <div className="cmd-palette-empty">No matching commands found.</div>
               )}
             </div>
@@ -2345,151 +2357,22 @@ export default function SimulatorClient({
         </div>
       )}
 
-      {/* Sections 52 & 53: Architecture Comparison Modal (Baseline vs Current) */}
+      {/* Module 3-C: Multi-Snapshot Visual Comparison & Delta Inspector Modal */}
       {isCompareModalOpen && (
-        <div
-          className="dialog-backdrop"
-          onClick={() => setIsCompareModalOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="compare-modal-title"
-        >
-          <div className="dialog-window dialog-lg" onClick={e => e.stopPropagation()}>
-            <div className="dialog-header">
-              <div>
-                <h3 id="compare-modal-title" className="dialog-title">ARCHITECTURAL COMPARISON: BASELINE VS CURRENT</h3>
-                <p className="dialog-subtitle">Deterministic analytical delta across simulation parameters and modeled consequences.</p>
-              </div>
-              <button
-                onClick={() => setIsCompareModalOpen(false)}
-                className="dialog-close-btn"
-                aria-label="Close Comparison"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="dialog-body">
-              <div className="table-responsive">
-                <table className="comparison-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '28%' }}>PARAMETER / METRIC</th>
-                      <th style={{ width: '24%' }}>BASELINE</th>
-                      <th style={{ width: '24%' }}>CURRENT</th>
-                      <th style={{ width: '24%' }}>DELTA</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Monthly Requests</td>
-                      <td>{formatNumber(baselineSnapshot.workload.requestsPerMonth)} req</td>
-                      <td>{formatNumber(workload.requestsPerMonth)} req</td>
-                      <td className={baselineDeltas.requestsDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
-                        {baselineDeltas.requestsDeltaText}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Cache Hit Rate</td>
-                      <td>{Math.round(baselineSnapshot.workload.cacheHitRate * 100)}%</td>
-                      <td>{Math.round(workload.cacheHitRate * 100)}%</td>
-                      <td className={baselineDeltas.cacheDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
-                        {baselineDeltas.cacheDeltaText}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Routing Distribution</td>
-                      <td>{baselineDeltas.baselineRoutingSummary}</td>
-                      <td>{baselineDeltas.currentRoutingSummary}</td>
-                      <td className={baselineDeltas.routingDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
-                        {baselineDeltas.routingDeltaText}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Topology Nodes</td>
-                      <td>{baselineSnapshot.arch.nodes.length} nodes</td>
-                      <td>{architecture.nodes.length} nodes</td>
-                      <td className={baselineDeltas.topologyDeltaText !== 'Unchanged' ? 'delta-modified' : ''}>
-                        {baselineDeltas.topologyDeltaText}
-                      </td>
-                    </tr>
-                    <tr className="comparison-section-divider">
-                      <td colSpan={4}>MODELED CONSEQUENCES (DETERMINISTIC SIMULATION)</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Modeled Monthly Cost</strong></td>
-                      <td><strong>{formatCurrency(baselineSim.monthlyCost)}</strong></td>
-                      <td><strong>{formatCurrency(result.monthlyCost)}</strong></td>
-                      <td className="delta-cost">
-                        <strong>
-                          {result.monthlyCost - baselineSim.monthlyCost > 0 ? '+' : ''}
-                          {formatCurrency(result.monthlyCost - baselineSim.monthlyCost)}
-                        </strong>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong>Modeled Tail Latency</strong></td>
-                      <td>{formatLatency(baselineSim.p95Latency)}</td>
-                      <td>{formatLatency(result.p95Latency)}</td>
-                      <td>
-                        {result.p95Latency - baselineSim.p95Latency > 0 ? '+' : ''}
-                        {Math.round(result.p95Latency - baselineSim.p95Latency)} ms
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Primary Bottleneck</td>
-                      <td>{baselineSim.bottleneck.componentName}</td>
-                      <td>{result.bottleneck.componentName}</td>
-                      <td>
-                        {baselineSim.bottleneck.componentName === result.bottleneck.componentName ? (
-                          <span className="badge-tag">UNALTERED</span>
-                        ) : (
-                          <span className="badge-tag-shifted">SHIFTED</span>
-                        )}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="comparison-notes">
-                <p>
-                  <strong>Analytical Guarantee:</strong> In ComputeCanvas, baseline comparisons are computed purely from deterministic graph evaluations. No stochastic simulation, mock averages, or random iterations are utilized.
-                </p>
-              </div>
-            </div>
-
-            <div className="dialog-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                {isModified && (
-                  <button
-                    onClick={() => {
-                      handleResetToBaseline();
-                      setIsCompareModalOpen(false);
-                    }}
-                    className="btn btn-outline btn-sm"
-                  >
-                    ↺ Reset to Baseline State
-                  </button>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={handleExport}
-                  className="btn btn-outline btn-sm"
-                >
-                  Export Specification
-                </button>
-                <button
-                  onClick={() => setIsCompareModalOpen(false)}
-                  className="btn btn-primary btn-sm"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SnapshotComparisonModal
+          isOpen={isCompareModalOpen}
+          onClose={() => setIsCompareModalOpen(false)}
+          architecture={architecture}
+          workload={workload}
+          calibration={calibration}
+          initialReferenceSnapshotId={selectedSnapshotId}
+          initialComparisonSnapshotId={comparisonSnapshotId}
+          onApplySnapshotToWorkbench={(snapId) => {
+            handleSelectSnapshot(snapId);
+            showToast(`Applied ${snapId} to Workbench.`);
+          }}
+          showToast={showToast}
+        />
       )}
 
       {/* Section 13: Keyboard Shortcuts Modal */}

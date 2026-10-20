@@ -22,13 +22,13 @@ import assert from 'node:assert';
 import {
   BASELINE_SNAPSHOT,
   OCTOBER_2026_SNAPSHOT,
-  getAllSnapshots,
   getSnapshot,
   resolveRegistryPricing,
-  validateArchitectureModels,
 } from '../lib/registry';
 import {
   simulate,
+  explainEconomicsDelta,
+  computeCausalDeltaDetails,
   DEFAULT_V1_ARCHITECTURE,
   DEFAULT_V1_WORKLOAD,
   type Architecture,
@@ -383,6 +383,185 @@ runTest('14. Verified snapshot registry hashes match immutable pins', () => {
   assert.strictEqual(OCTOBER_2026_SNAPSHOT.metadata.snapshotId, 'snap-cc-382481fe0de34aaf');
 });
 
+// 15. Valid legacy alias '2026-03' resolves strictly to March 2026 baseline
+runTest('15. Valid legacy alias "2026-03" resolves strictly to baseline snapshot without variance', () => {
+  const snap = getSnapshot('2026-03');
+  assert.ok(snap, 'Alias 2026-03 must resolve');
+  assert.strictEqual(snap.metadata.snapshotId, BASELINE_SNAPSHOT.metadata.snapshotId);
+  assert.strictEqual(snap.metadata.snapshotId, 'snap-cc-3b3fbd4cbab4e979');
+
+  const res = resolveRegistryPricing('2026-03');
+  assert.strictEqual(res.ok, true);
+  if (!res.ok) return;
+  assert.strictEqual(res.bundle.snapshotId, BASELINE_SNAPSHOT.metadata.snapshotId);
+  assert.strictEqual(res.bundle.isBaseline, true);
+
+  const sim = simulate({
+    workload: DEFAULT_V1_WORKLOAD,
+    architecture: DEFAULT_V1_ARCHITECTURE,
+    pricingSnapshot: '2026-03',
+  });
+  assert.strictEqual(sim.validation.isValid, true);
+  assert.strictEqual(sim.monthlyCost, 2505.8);
+});
+
+// 16. Legacy share payload without snapshot field defaults to 2026-03 and baseline numbers
+runTest('16. Legacy share payload with missing snapshot field follows legacy baseline semantics', () => {
+  const legacyPayload = {
+    architecture: DEFAULT_V1_ARCHITECTURE,
+    workload: DEFAULT_V1_WORKLOAD,
+  };
+  const encoded = encodeArchitectureState(legacyPayload);
+  const decoded = decodeArchitectureState(encoded);
+
+  assert.strictEqual(decoded.success, true);
+  assert.ok(decoded.data);
+  assert.strictEqual(decoded.data.pricingSnapshot, '2026-03');
+
+  const snap = getSnapshot(decoded.data.pricingSnapshot);
+  assert.ok(snap);
+  assert.strictEqual(snap.metadata.snapshotId, BASELINE_SNAPSHOT.metadata.snapshotId);
+
+  const sim = simulate({
+    workload: decoded.data.workload,
+    architecture: decoded.data.architecture,
+    pricingSnapshot: decoded.data.pricingSnapshot,
+  });
+  assert.strictEqual(sim.validation.isValid, true);
+  assert.strictEqual(sim.monthlyCost, 2505.8);
+});
+
+// 17. Unknown canonical snapshot ID fails closed into an invalid state
+runTest('17. Unknown canonical snapshot ID fails closed and produces invalid simulation state', () => {
+  const unknownId = 'snap-cc-unknown-canonical-999';
+  assert.strictEqual(getSnapshot(unknownId), undefined);
+
+  const res = resolveRegistryPricing(unknownId);
+  assert.strictEqual(res.ok, false);
+  if (res.ok) return;
+  assert.strictEqual(res.error, 'UNKNOWN_SNAPSHOT');
+  assert.strictEqual(res.requestedId, unknownId);
+
+  const sim = simulate({
+    workload: DEFAULT_V1_WORKLOAD,
+    architecture: DEFAULT_V1_ARCHITECTURE,
+    pricingSnapshot: unknownId,
+  });
+
+  assert.strictEqual(sim.validation.isValid, false);
+  assert.strictEqual(sim.monthlyCost, 0);
+  assert.strictEqual(sim.costPerRequest, 0);
+  assert.strictEqual(sim.p95Latency, 0);
+  assert.ok(sim.validation.errors.length > 0);
+  assert.ok(sim.validation.errors[0].includes('Unknown pricing snapshot identifier'));
+  assert.ok(sim.validation.errors[0].includes(unknownId));
+  assert.strictEqual(sim.warnings[0].severity, 'critical');
+});
+
+// 18. Unavailable snapshot in shared URL fails closed without silent substitution
+runTest('18. Unavailable snapshot in shared URL fails closed without silent substitution', () => {
+  const sharedWithUnavailable = {
+    architecture: DEFAULT_V1_ARCHITECTURE,
+    workload: DEFAULT_V1_WORKLOAD,
+    pricingSnapshot: 'snap-cc-nonexistent-archive',
+  };
+
+  const encoded = encodeArchitectureState(sharedWithUnavailable);
+  const decoded = decodeArchitectureState(encoded);
+
+  assert.strictEqual(decoded.success, true);
+  assert.ok(decoded.data);
+  assert.strictEqual(decoded.data.pricingSnapshot, 'snap-cc-nonexistent-archive');
+
+  // Verify that resolution fails closed
+  const resolved = getSnapshot(decoded.data.pricingSnapshot);
+  assert.strictEqual(resolved, undefined);
+
+  // Simulating with the decoded snapshot must fail closed
+  const sim = simulate({
+    workload: decoded.data.workload,
+    architecture: decoded.data.architecture,
+    pricingSnapshot: decoded.data.pricingSnapshot,
+  });
+  assert.strictEqual(sim.validation.isValid, false);
+  assert.strictEqual(sim.monthlyCost, 0);
+  assert.ok(sim.validation.errors[0].includes('snap-cc-nonexistent-archive'));
+});
+
+// 19. Prevention of invalid configuration masquerading as successful zero-cost result
+runTest('19. Prevention of invalid configuration appearing as a successful zero-cost result', () => {
+  const invalidSim = simulate({
+    workload: DEFAULT_V1_WORKLOAD,
+    architecture: DEFAULT_V1_ARCHITECTURE,
+    pricingSnapshot: 'snap-cc-corrupt-ref',
+  });
+
+  assert.strictEqual(invalidSim.validation.isValid, false);
+  assert.strictEqual(invalidSim.monthlyCost, 0);
+
+  // Causal delta and explanation must withhold savings claims
+  const baselineSim = simulate(DEFAULT_V1_WORKLOAD, DEFAULT_V1_ARCHITECTURE);
+  const explanation = explainEconomicsDelta(
+    DEFAULT_V1_WORKLOAD,
+    DEFAULT_V1_ARCHITECTURE,
+    baselineSim,
+    DEFAULT_V1_WORKLOAD,
+    DEFAULT_V1_ARCHITECTURE,
+    invalidSim
+  );
+
+  assert.strictEqual(explanation, 'Simulation withheld: architecture configuration is invalid.');
+
+  const deltaDetails = computeCausalDeltaDetails(
+    DEFAULT_V1_WORKLOAD,
+    DEFAULT_V1_ARCHITECTURE,
+    baselineSim,
+    DEFAULT_V1_WORKLOAD,
+    DEFAULT_V1_ARCHITECTURE,
+    invalidSim
+  );
+
+  assert.strictEqual(deltaDetails.primaryCause, 'Simulation withheld: architecture configuration is invalid.');
+  assert.strictEqual(deltaDetails.causalFactor, 'Invalid Configuration');
+  assert.strictEqual(deltaDetails.costDelta, 0);
+});
+
+// 20. Canonical model ID preservation and round-tripping across valid snapshots
+runTest('20. Canonical model ID preservation and round-tripping across valid snapshots', () => {
+  const mixedArch: Architecture = {
+    id: 'multi-model-arch',
+    name: 'Multi Model Arch',
+    nodes: [
+      { id: 'ingress', type: 'api', label: 'API Ingress' },
+      { id: 'fast', type: 'fast-model', label: 'Fast Model', modelId: 'gemini-2.0-flash' },
+      { id: 'frontier', type: 'frontier-model', label: 'Frontier Model', modelId: 'claude-3.5-sonnet' },
+    ],
+    edges: [
+      { source: 'ingress', target: 'fast', trafficShare: 0.7 },
+      { source: 'ingress', target: 'frontier', trafficShare: 0.3 },
+    ],
+  };
+
+  const payload = {
+    architecture: mixedArch,
+    workload: DEFAULT_V1_WORKLOAD,
+    pricingSnapshot: 'snap-cc-382481fe0de34aaf',
+  };
+
+  const encoded = encodeArchitectureState(payload);
+  const decoded = decodeArchitectureState(encoded);
+  assert.strictEqual(decoded.success, true);
+  assert.ok(decoded.data);
+
+  const restoredNodes = decoded.data.architecture.nodes;
+  const fastNode = restoredNodes.find(n => n.id === 'fast');
+  const frontierNode = restoredNodes.find(n => n.id === 'frontier');
+
+  assert.strictEqual(fastNode?.modelId, 'gemini-2.0-flash');
+  assert.strictEqual(frontierNode?.modelId, 'claude-3.5-sonnet');
+  assert.strictEqual(decoded.data.pricingSnapshot, 'snap-cc-382481fe0de34aaf');
+});
+
 console.log('\n─────────────────────────────────────────────────────────────');
 console.log(`Results: ${passCount} passed, ${failCount} failed`);
 console.log('─────────────────────────────────────────────────────────────\n');
@@ -390,5 +569,5 @@ console.log('──────────────────────�
 if (failCount > 0) {
   process.exit(1);
 } else {
-  console.log('Phase 3-B UI Snapshot Integration Test Suite: ALL 14 GATES PASSED.');
+  console.log(`Phase 3-B UI Snapshot Integration Test Suite: ALL ${passCount} GATES PASSED.`);
 }

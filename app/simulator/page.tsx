@@ -15,6 +15,9 @@ interface PageProps {
     template?: string;
     data?: string;
     snapshot?: string;
+    compareSnapshot?: string;
+    refSnapshot?: string;
+    compSnapshot?: string;
   }>;
 }
 
@@ -24,7 +27,16 @@ export default async function SimulatorPage({ searchParams }: PageProps) {
   let initialArchitecture = undefined;
   let initialWorkload = undefined;
   let initialCalibration = undefined;
-  let initialPricingSnapshot: string | undefined = params?.snapshot ? String(params.snapshot).trim() : undefined;
+  let initialPricingSnapshot: string | undefined = params?.refSnapshot
+    ? String(params.refSnapshot).trim()
+    : params?.snapshot
+    ? String(params.snapshot).trim()
+    : undefined;
+  let initialComparisonSnapshot: string | undefined = params?.compareSnapshot
+    ? String(params.compareSnapshot).trim()
+    : params?.compSnapshot
+    ? String(params.compSnapshot).trim()
+    : undefined;
 
   if (params?.data && typeof params.data === 'string') {
     const decoded = decodeArchitectureState(params.data);
@@ -34,6 +46,9 @@ export default async function SimulatorPage({ searchParams }: PageProps) {
       initialCalibration = decoded.data.calibration;
       if (!initialPricingSnapshot && decoded.data.pricingSnapshot) {
         initialPricingSnapshot = decoded.data.pricingSnapshot;
+      }
+      if (!initialComparisonSnapshot && decoded.data.comparisonSnapshot) {
+        initialComparisonSnapshot = decoded.data.comparisonSnapshot;
       }
     }
   } else if (params?.template && typeof params.template === 'string') {
@@ -55,6 +70,7 @@ export default async function SimulatorPage({ searchParams }: PageProps) {
           initialWorkload={initialWorkload}
           initialCalibration={initialCalibration}
           initialPricingSnapshot={initialPricingSnapshot}
+          initialComparisonSnapshot={initialComparisonSnapshot}
         />
       </Suspense>
     </SimulatorErrorBoundary>
