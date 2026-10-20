@@ -154,60 +154,65 @@ export default function HeroInteractive() {
                 {/* Grid background */}
                 <rect width="100%" height="100%" fill="url(#hgrid)" />
 
-                {/* Connection lines */}
-                <line x1="118" y1="88" x2="144" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
-                <line x1="260" y1="88" x2="286" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
-                {/* Router → Fast */}
-                <path d="M 414 88 C 470 88, 482 46, 538 46" stroke="#52525B" strokeWidth="1.5" fill="none" markerEnd="url(#harrow-active)" />
-                {/* Router → Frontier */}
-                <path d="M 414 88 C 470 88, 482 130, 538 130" stroke="#FFFFFF" strokeWidth="2" fill="none" markerEnd="url(#harrow-frontier)" />
+                {/* 1. Connector paths and arrowheads — rendered behind nodes and labels */}
+                <line x1="114" y1="88" x2="134" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
+                <line x1="248" y1="88" x2="268" y2="88" stroke="#3F3F46" strokeWidth="1.5" markerEnd="url(#harrow)" />
 
+                {/* Router → Fast: Perfectly symmetrical 30px entry curve, 96px badge corridor, 26px exit line */}
+                <path d="M 394 88 C 408 88, 412 46, 424 46" stroke="#52525B" strokeWidth="1.5" fill="none" />
+                <line x1="520" y1="46" x2="546" y2="46" stroke="#52525B" strokeWidth="1.5" markerEnd="url(#harrow-active)" />
+
+                {/* Router → Frontier: Perfectly symmetrical 30px entry curve, 96px badge corridor, 26px exit line */}
+                <path d="M 394 88 C 408 88, 412 130, 424 130" stroke="#FFFFFF" strokeWidth="2" fill="none" />
+                <line x1="520" y1="130" x2="546" y2="130" stroke="#FFFFFF" strokeWidth="2" markerEnd="url(#harrow-frontier)" />
+
+                {/* 2. Branch-label badges — Opaque backplates, identical 96x22 geometry */}
+                <g transform="translate(472, 46)">
+                  <rect x="-48" y="-11" width="96" height="22" rx="3" fill="#111114" stroke="#3F3F46" strokeWidth="1" />
+                  <text x="0" y="4.5" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600">{fastRouting}% FAST</text>
+                </g>
+                <g transform="translate(472, 130)">
+                  <rect x="-48" y="-11" width="96" height="22" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="1.5" />
+                  <text x="0" y="4.5" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700">{frontierRouting}% FRONTIER</text>
+                </g>
+
+                {/* 3. Node surfaces and text — foreground layer */}
                 {/* Node: API Ingress */}
-                <g transform="translate(14, 60)">
-                  <rect width="104" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                <g transform="translate(12, 60)">
+                  <rect width="102" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">GATEWAY</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">API Ingress</text>
                 </g>
 
                 {/* Node: Semantic Cache */}
-                <g transform="translate(144, 60)">
-                  <rect width="116" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                <g transform="translate(134, 60)">
+                  <rect width="114" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">CACHE</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Semantic Cache</text>
                 </g>
 
                 {/* Node: Complexity Router */}
-                <g transform="translate(286, 60)">
-                  <rect width="128" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                <g transform="translate(268, 60)">
+                  <rect width="126" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">ROUTER</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Complexity Router</text>
                 </g>
 
                 {/* Node: Fast Model */}
-                <g transform="translate(538, 18)">
-                  <rect width="158" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
+                <g transform="translate(546, 18)">
+                  <rect width="154" height="56" rx="3" fill="#111114" stroke="#27272A" strokeWidth="1" />
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">FAST TIER</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Fast Model</text>
                 </g>
 
                 {/* Node: Frontier Model (bottleneck) */}
-                <g transform="translate(538, 102)">
-                  <rect width="158" height="56" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="2" />
+                <g transform="translate(546, 102)">
+                  <rect width="154" height="56" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="2" />
                   {/* Bottleneck indicator with clean separation from FRONTIER tag */}
-                  <rect x="76" y="7" width="70" height="16" rx="2" fill="#FFFFFF" />
-                  <text x="111" y="19" textAnchor="middle" fill="#09090B" fontSize="10" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">BOTTLENECK</text>
+                  <rect x="74" y="7" width="70" height="16" rx="2" fill="#FFFFFF" />
+                  <text x="109" y="19" textAnchor="middle" fill="#09090B" fontSize="10" fontFamily="var(--font-mono)" fontWeight="800" letterSpacing="0.04em">BOTTLENECK</text>
                   <text x="12" y="20" fill="#A1A1AA" fontSize="11" fontFamily="var(--font-mono)" fontWeight="600" letterSpacing="0.06em">FRONTIER</text>
                   <text x="12" y="42" fill="#FFFFFF" fontSize="14" fontFamily="var(--font-ui)" fontWeight="600">Frontier Model</text>
-                </g>
-
-                {/* Traffic % badge labels — rendered on top of wires at the bezier midpoints */}
-                <g transform="translate(476, 60)">
-                  <rect x="-37" y="-11" width="74" height="22" rx="3" fill="#111114" stroke="#3F3F46" strokeWidth="1" />
-                  <text x="0" y="4.5" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600">{fastRouting}% FAST</text>
-                </g>
-                <g transform="translate(476, 114)">
-                  <rect x="-46" y="-11" width="92" height="22" rx="3" fill="#18181B" stroke="#FFFFFF" strokeWidth="1.5" />
-                  <text x="0" y="4.5" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700">{frontierRouting}% FRONTIER</text>
                 </g>
               </svg>
             </div>
