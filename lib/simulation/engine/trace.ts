@@ -23,7 +23,7 @@ export function generateCalculationTrace(
   workload: Workload,
   traffic: TrafficPropagationResult,
   cost: CostModelResult,
-  latency: LatencyModelResult
+  _latency: LatencyModelResult
 ): CalculationTrace {
   const requestsPerMonth = workload.requestsPerMonth;
   const avgInputTokens = workload.avgInputTokens;

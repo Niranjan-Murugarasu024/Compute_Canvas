@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/navigation/Navigation';
 import { Footer } from '@/components/sections/LandingSections';
 import Link from 'next/link';

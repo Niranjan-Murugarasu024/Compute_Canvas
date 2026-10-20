@@ -47,7 +47,6 @@ export default function CommandPalette({
     setLens,
     saveCurrentArchitecture,
     loadArchitecture,
-    history,
   } = useArchitectureStore();
 
   const commands: CommandItem[] = useMemo(() => [

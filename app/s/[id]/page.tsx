@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState, useMemo } from 'react';
+import { use, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/navigation/Navigation';
@@ -11,7 +11,6 @@ import {
   formatLatency,
   type Architecture,
   type Workload,
-  DEFAULT_WORKLOAD,
 } from '@/lib/simulation/engine';
 import { decodeArchitectureState } from '@/lib/simulation/sharing';
 import { useArchitectureStore } from '@/lib/state/architectureStore';

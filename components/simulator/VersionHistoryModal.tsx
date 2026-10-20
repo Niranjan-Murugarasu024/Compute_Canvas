@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { useArchitectureStore } from '@/lib/state/architectureStore';
 import {
   computeArchitectureDiff,

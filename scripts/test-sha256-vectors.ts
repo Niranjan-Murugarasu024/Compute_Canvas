@@ -1,4 +1,4 @@
-import { sha256, computeContentHash, canonicalizeJson } from '../lib/registry/hasher';
+import { sha256, computeContentHash } from '../lib/registry/hasher';
 import { createHash } from 'crypto';
 
 console.log('──────────────────────────────────────────────────────────');

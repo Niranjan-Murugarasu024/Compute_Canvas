@@ -5,14 +5,11 @@
 
 import {
   simulate,
-  validateArchitecture,
   ENGINE_VERSION,
   ENGINE_SPECIFICATION,
   MODEL_REGISTRY_VERSION,
   PRICING_SNAPSHOT,
   TEMPLATES,
-  formatCurrency,
-  formatLatency,
   formatNumber,
   type Architecture,
   type Workload,
@@ -163,6 +160,7 @@ assert(
 const originalNodeCount = baseArch.nodes.length;
 const simHigherTokens = simulate({ ...baseWorkload, avgInputTokens: 5000 }, baseArch);
 assert(
+  simHigherTokens.monthlyCost > simRun1.monthlyCost &&
   baseArch.nodes.length === originalNodeCount,
   'INVARIANT 13: Workload variation produces zero side effects on architecture objects'
 );

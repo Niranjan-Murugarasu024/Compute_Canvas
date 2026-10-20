@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -10,7 +10,6 @@ import {
   formatNumber,
   type Workload,
   type Architecture,
-  type SimulationResult,
   type CostBreakdown,
   TEMPLATES,
 } from '@/lib/simulation/engine';

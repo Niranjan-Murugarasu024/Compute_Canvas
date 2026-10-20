@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { TEMPLATES, simulate, formatCurrency, formatLatency } from '@/lib/simulation/engine';

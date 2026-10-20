@@ -1,4 +1,4 @@
-import { simulate, type Workload, type Architecture, TEMPLATES } from '../lib/simulation/engine';
+import { simulate, type Architecture, TEMPLATES } from '../lib/simulation/engine';
 
 console.log('──────────────────────────────────────────────────────────');
 console.log('COMPUTECANVAS 3.0 — MATHEMATICAL INVARIANT TEST SUITE');
